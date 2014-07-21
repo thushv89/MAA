@@ -14,6 +14,7 @@ import java.awt.List;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import javax.swing.JOptionPane;
 
 /**
  *
@@ -22,6 +23,7 @@ import java.util.Arrays;
 public class BasicParameterUI extends javax.swing.JFrame {
 
     private BasicParamModel bPModel;
+
     /**
      * Creates new form BasicParameterUI
      */
@@ -197,37 +199,53 @@ public class BasicParameterUI extends javax.swing.JFrame {
 
     private void nextBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_nextBtnActionPerformed
         ExecFrequency freq = null;
-        if(freqCmb.getSelectedIndex()==0){
-            freq=ExecFrequency.DAILY;
-        }else if(freqCmb.getSelectedIndex()==1){
+        if (freqCmb.getSelectedIndex() == 0) {
+            freq = ExecFrequency.DAILY;
+        } else if (freqCmb.getSelectedIndex() == 1) {
             freq = ExecFrequency.WEEKLY;
-        }else if(freqCmb.getSelectedIndex()==2){
+        } else if (freqCmb.getSelectedIndex() == 2) {
             freq = ExecFrequency.BI_WEEKLY;
-        }else if(freqCmb.getSelectedIndex()==3){
-            
+        } else if (freqCmb.getSelectedIndex() == 3) {
         }
-        
+
         int numStreams = (Integer) numStreamSpinner.getValue();
-        
+
         String streamIDs = streamIDTxt.getText();
         ArrayList<String> streamIDList = new ArrayList<>(Arrays.asList(streamIDs.split(",")));
-        
+
         bPModel = new BasicParamModel(freq, numStreams, streamIDList);
-        
-        BasicXMLWriter bXMLWriter = new BasicXMLWriter();
-        String loc = ImportantFileNames.CONFIG_DIRNAME+File.separator+ImportantFileNames.BASIC_CONFIG_FILENAME;
-        bXMLWriter.writeXML(bPModel,loc);
-        
-        cListener.basicConfigCompleted();
-        
+
+        if (allInputsValid(bPModel)) {
+            BasicXMLWriter bXMLWriter = new BasicXMLWriter();
+            String loc = ImportantFileNames.CONFIG_DIRNAME + File.separator + ImportantFileNames.BASIC_CONFIG_FILENAME;
+            bXMLWriter.writeXML(bPModel, loc);
+
+            cListener.basicConfigCompleted();
+        } else {
+            JOptionPane.showMessageDialog(null, "Incorrect Parameters", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+
     }//GEN-LAST:event_nextBtnActionPerformed
 
+    private boolean allInputsValid(BasicParamModel model) {
+        if (model.getNumStreams() < 1) {
+            return false;
+        }
+        if (model.getNumStreams() != model.getStreamIDs().size()) {
+            return false;
+        }
+        if (model.getStreamIDs().isEmpty()) {
+            return false;
+        }
+        return true;
+    }
     ConfigCompleteListener cListener;
-    public void setListener(ConfigCompleteListener cListener){
+
+    public void setListener(ConfigCompleteListener cListener) {
         this.cListener = cListener;
     }
-    
-    public BasicParamModel getBasicParamModel(){
+
+    public BasicParamModel getBasicParamModel() {
         return bPModel;
     }
     private void cancelBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelBtnActionPerformed

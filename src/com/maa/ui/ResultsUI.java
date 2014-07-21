@@ -7,6 +7,7 @@ package com.maa.ui;
 import com.maa.algo.ikasl.core.IKASLFacade;
 import com.maa.io.FileUtils;
 import com.maa.listeners.ConfigCompleteListener;
+import com.maa.listeners.DefaultValueListener;
 import com.maa.models.AlgoParamModel;
 import com.maa.models.BasicParamModel;
 import com.maa.models.DataParamModel;
@@ -23,7 +24,7 @@ import javax.swing.JOptionPane;
  *
  * @author Thush
  */
-public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListener{
+public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListener, DefaultValueListener{
 
     private BasicParamModel bPModel;
     private DataParamModel dPModel;
@@ -35,8 +36,12 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
     public ResultsUI() {
         initComponents();
         setLocationRelativeTo(null);
+        setVisible(true);
         
-        FileUtils.setUpInitialFolderHeirarchy();
+        ikaslList = new ArrayList<>();
+        
+        
+        FileUtils.setUpConfigDir();
         
         if (!FileUtils.allConfigFilesExist()) {
             this.setFocusableWindowState(false);
@@ -51,8 +56,11 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
             dPModel = (DataParamModel) new DataXMLParser().parseXML();
             aPModels = new AlgoXMLParser().parseMultiXML();
             
+            ImportantFileNames.DATA_DIRNAME = dPModel.getHomeDir();
+            FileUtils.setUpDataDir(bPModel.getStreamIDs());
+            
             for(AlgoParamModel aPModel : aPModels){
-                ikaslList.add(new IKASLFacade(aPModel.getStreamID(),aPModel));
+                ikaslList.add(new IKASLFacade(aPModel.getStreamID(),aPModel,this));
             }
             
             FileUtils.createDirs(bPModel.getStreamIDs(), ImportantFileNames.DATA_DIRNAME);
@@ -98,7 +106,7 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 399, Short.MAX_VALUE)
+            .addGap(0, 655, Short.MAX_VALUE)
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -122,16 +130,15 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
+                    .addGroup(jPanel2Layout.createSequentialGroup()
                         .addComponent(anomalousChk)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGap(46, 46, 46)
                         .addComponent(anomaliesInfoBtn))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
+                    .addGroup(jPanel2Layout.createSequentialGroup()
                         .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 0, Short.MAX_VALUE)))
-                .addContainerGap())
+                        .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -170,23 +177,21 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jCheckBox2)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(jPanel3Layout.createSequentialGroup()
+                        .addComponent(jCheckBox2)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(freqInfoBtn))
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addContainerGap()
                         .addComponent(jLabel2)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jComboBox2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 14, Short.MAX_VALUE)
-                        .addComponent(jLabel3)))
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addGap(18, 18, 18)
-                        .addComponent(freqInfoBtn))
-                    .addGroup(jPanel3Layout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jLabel3)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jComboBox3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap())
+                .addGap(12, 12, 12))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -246,13 +251,13 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                            .addComponent(jPanel3, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jPanel4, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(runBtn)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -412,6 +417,9 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
         this.setFocusableWindowState(true);
         aPModels = algoUI.getAlgoParamModels();
         algoUI.dispose();
+        
+        ImportantFileNames.DATA_DIRNAME = dPModel.getHomeDir();
+        FileUtils.setUpDataDir(bPModel.getStreamIDs());
     }
 
     @Override
@@ -438,6 +446,16 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
         bUI.setVisible(true);
         bUI.setListener(this);
         introUI.dispose();
+    }
+
+    @Override
+    public void useDefaultBounds(String stream) {
+        JOptionPane.showMessageDialog(null, "Stream: "+stream+" Using Default Values for Min Max Bounds", "Warning", JOptionPane.WARNING_MESSAGE);
+    }
+
+    @Override
+    public void useDefaultWeights(String stream) {
+        JOptionPane.showMessageDialog(null, "Stream: "+stream+" Using Default Values for Weights", "Warning", JOptionPane.WARNING_MESSAGE);
     }
 
 }

@@ -10,6 +10,7 @@ import com.maa.models.DataParamModel;
 import com.maa.utils.ImportantFileNames;
 import com.maa.xml.DataXMLWriter;
 import java.io.File;
+import javax.swing.JOptionPane;
 
 /**
  *
@@ -18,6 +19,7 @@ import java.io.File;
 public class DataParameterUI extends javax.swing.JFrame {
 
     private DataParamModel dPModel;
+
     /**
      * Creates new form BasicParameterUI
      */
@@ -45,6 +47,7 @@ public class DataParameterUI extends javax.swing.JFrame {
         jLabel3 = new javax.swing.JLabel();
         jLabel4 = new javax.swing.JLabel();
         homeDirTxt = new javax.swing.JTextField();
+        browseBtn = new javax.swing.JButton();
 
         jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Introduction"));
 
@@ -95,6 +98,8 @@ public class DataParameterUI extends javax.swing.JFrame {
 
         jLabel4.setText("Home Dir:");
 
+        browseBtn.setText("Browse");
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
@@ -102,12 +107,16 @@ public class DataParameterUI extends javax.swing.JFrame {
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel3)
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(jLabel3)
+                        .addGap(0, 0, Short.MAX_VALUE))
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addComponent(jLabel4)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(homeDirTxt, javax.swing.GroupLayout.PREFERRED_SIZE, 273, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addComponent(homeDirTxt)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(browseBtn)))
+                .addContainerGap())
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -117,8 +126,9 @@ public class DataParameterUI extends javax.swing.JFrame {
                 .addGap(18, 18, 18)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel4)
-                    .addComponent(homeDirTxt, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(253, Short.MAX_VALUE))
+                    .addComponent(homeDirTxt, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(browseBtn))
+                .addContainerGap(250, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -159,25 +169,35 @@ public class DataParameterUI extends javax.swing.JFrame {
     private void nextBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_nextBtnActionPerformed
         String homeDir = homeDirTxt.getText();
         dPModel = new DataParamModel(homeDir);
-        
-        DataXMLWriter dXMLWriter = new DataXMLWriter();
-        String loc = ImportantFileNames.CONFIG_DIRNAME+File.separator+ImportantFileNames.DATA_CONFIG_FILENAME;
-        dXMLWriter.writeXML(dPModel,loc);
-        
-        
-        cListener.dataConfigCompleted();
-        
+
+        if (allInputsValid(dPModel)) {
+            DataXMLWriter dXMLWriter = new DataXMLWriter();
+            String loc = ImportantFileNames.CONFIG_DIRNAME + File.separator + ImportantFileNames.DATA_CONFIG_FILENAME;
+            dXMLWriter.writeXML(dPModel, loc);
+
+            cListener.dataConfigCompleted();
+        } else {
+            JOptionPane.showMessageDialog(null, "Incorrect Parameters", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+
     }//GEN-LAST:event_nextBtnActionPerformed
 
+    private boolean allInputsValid(DataParamModel model) {
+        if (model.getHomeDir().isEmpty()) {
+            return false;
+        }
+        return true;
+    }
     ConfigCompleteListener cListener;
-    public void setListener(ConfigCompleteListener cListener){
+
+    public void setListener(ConfigCompleteListener cListener) {
         this.cListener = cListener;
     }
-    
-    public DataParamModel getDataParamModel(){
+
+    public DataParamModel getDataParamModel() {
         return dPModel;
     }
-    
+
     private void cancelBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelBtnActionPerformed
         FileUtils.cleanConfigDir();
     }//GEN-LAST:event_cancelBtnActionPerformed
@@ -218,6 +238,7 @@ public class DataParameterUI extends javax.swing.JFrame {
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton backBtn;
+    private javax.swing.JButton browseBtn;
     private javax.swing.JButton cancelBtn;
     private javax.swing.JTextField homeDirTxt;
     private javax.swing.JLabel jLabel1;

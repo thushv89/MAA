@@ -20,7 +20,9 @@ import com.maa.algo.utils.FileReader;
 import com.maa.algo.utils.LogMessages;
 import com.maa.algo.utils.Utils;
 import com.maa.enums.AggregationType;
+import com.maa.listeners.DefaultValueListener;
 import com.maa.models.AlgoParamModel;
+import com.maa.utils.DefaultValues;
 import com.maa.utils.ImportantFileNames;
 import com.maa.xml.IKASLOutputXMLWriter;
 import java.io.BufferedInputStream;
@@ -53,18 +55,21 @@ public class IKASLFacade {
     private String dir;
     private IKASLOutputXMLWriter ikaslXMLWriter;
     private String streamID;
-    
-    public IKASLFacade(String streamID, AlgoParamModel aPModel) {
+    private DefaultValueListener defListener;
+
+    public IKASLFacade(String streamID, AlgoParamModel aPModel, DefaultValueListener defListener) {
         learner = new IKASLLearner();
         generalizer = new IKASLGeneralizer();
         linkGen = new InterLinkGenerator();
         this.aPModel = aPModel;
         ikaslXMLWriter = new IKASLOutputXMLWriter();
         this.streamID = streamID;
+        this.defListener = defListener;
+        readAndSetAlgoParameters(aPModel);
     }
 
     public void runSingleStep(int currLC, ArrayList<double[]> iWeights, ArrayList<String> iNames) {
-        
+
         iWeights = Normalizer.normalizeWithBounds(iWeights, AlgoParameters.MIN_BOUNDS, AlgoParameters.MAX_BOUNDS);
 
         if (currLC == 0) {
@@ -90,7 +95,7 @@ public class IKASLFacade {
             //add it to allGLayers
             saveLastGLayer(initGLayer);
 
-            mapInputsToGNodes(currLC, initGLayer, iWeights,iNames);
+            mapInputsToGNodes(currLC, initGLayer, iWeights, iNames);
 
         } else {
             //get currLC-1 genLayer
@@ -158,7 +163,7 @@ public class IKASLFacade {
                 ObjectInput input = new ObjectInputStream(buffer);) {
             //deserialize the List
             return (GenLayer) input.readObject();
-            
+
         } catch (ClassNotFoundException ex) {
             //error
         } catch (IOException ex) {
@@ -166,7 +171,7 @@ public class IKASLFacade {
         }
         return null;
     }
-    
+
     private void mapInputsToGNodes(int currLC, GenLayer gLayer, ArrayList<double[]> prevIWeights, ArrayList<String> prevINames) {
 
         Map<String, String> testResultMap = new HashMap<String, String>();
@@ -192,12 +197,12 @@ public class IKASLFacade {
         }
         String loc = ImportantFileNames.DATA_DIRNAME + File.separator + streamID + File.separator + "LC" + currLC + ".xml";
         ikaslXMLWriter.writeXML(loc, testResultMap);
-        
+
     }
-    
+
     private void readAndSetAlgoParameters(AlgoParamModel aPModel) {
         AlgoParameters.dType = DistanceType.EUCLIDEAN;
-        
+
 
         AlgoParameters.SPREAD_FACTOR = aPModel.getSpreadFactor();
         AlgoParameters.START_LEARNING_RATE = aPModel.getLearningRate();
@@ -213,30 +218,58 @@ public class IKASLFacade {
         }
 
         FileReader fr = new FileReader();
-        ArrayList<String> minMaxList = fr.readLines(ImportantFileNames.DATA_DIRNAME + File.separator + streamID + File.separator +Constants.BOUNDS_FILE);
+        ArrayList<String> minMaxList = fr.readLines(ImportantFileNames.DATA_DIRNAME + File.separator + streamID + File.separator + Constants.BOUNDS_FILE);
 
-        String[] minStr = minMaxList.get(0).split(Constants.INPUT_TOKENIZER);
-        double[] min = new double[minStr.length];
+        if (minMaxList != null && !minMaxList.isEmpty()) {
+            String[] minStr = minMaxList.get(0).split(Constants.INPUT_TOKENIZER);
+            double[] min = new double[minStr.length];
 
-        String[] maxStr = minMaxList.get(1).split(Constants.INPUT_TOKENIZER);
-        double[] max = new double[maxStr.length];
+            String[] maxStr = minMaxList.get(1).split(Constants.INPUT_TOKENIZER);
+            double[] max = new double[maxStr.length];
 
-        for (int i = 0; i < minStr.length; i++) {
-            min[i] = Double.parseDouble(minStr[i]);
-            max[i] = Double.parseDouble(maxStr[i]);
+            for (int i = 0; i < minStr.length; i++) {
+                min[i] = Double.parseDouble(minStr[i]);
+                max[i] = Double.parseDouble(maxStr[i]);
+            }
+
+            AlgoParameters.MIN_BOUNDS = min;
+            AlgoParameters.MAX_BOUNDS = max;
+        } else {
+            double[] min = new double[AlgoParameters.DIMENSIONS];
+            double[] max = new double[AlgoParameters.DIMENSIONS];
+
+            for (int i = 0; i < min.length; i++) {
+                min[i] = DefaultValues.MIN_DEFAULT;
+                max[i] = DefaultValues.MAX_DEFAULT;
+            }
+
+            AlgoParameters.MIN_BOUNDS = min;
+            AlgoParameters.MAX_BOUNDS = max;
+            
+            defListener.useDefaultBounds(streamID);
         }
 
-        AlgoParameters.MIN_BOUNDS = min;
-        AlgoParameters.MAX_BOUNDS = max;
+        ArrayList<String> weightsStrList = fr.readLines(ImportantFileNames.DATA_DIRNAME + File.separator + streamID + File.separator + Constants.WEIGHT_FILE);
+        if (weightsStrList != null && !weightsStrList.isEmpty()) {
+            String weightsStr = weightsStrList.get(0);
+            String[] weightTokens = weightsStr.split(Constants.INPUT_TOKENIZER);
+            double[] weights = new double[weightTokens.length];
 
-        String weightsStr = fr.readLines(ImportantFileNames.DATA_DIRNAME + File.separator + streamID + File.separator + Constants.WEIGHT_FILE).get(0);
-        String[] weightTokens = weightsStr.split(Constants.INPUT_TOKENIZER);
-        double[] weights = new double[weightTokens.length];
+            for (int i = 0; i < weightTokens.length; i++) {
+                weights[i] = Double.parseDouble(weightTokens[i]);
+            }
 
-        for (int i = 0; i < weightTokens.length; i++) {
-            weights[i] = Double.parseDouble(weightTokens[i]);
+            AlgoParameters.ATTR_WEIGHTS = weights;
+        } else {
+            double[] weights = new double[AlgoParameters.DIMENSIONS];
+
+            for (int i = 0; i < weights.length; i++) {
+                weights[i] = DefaultValues.MIN_DEFAULT;
+            }
+
+            AlgoParameters.ATTR_WEIGHTS = weights;
+            
+            defListener.useDefaultWeights(streamID);
         }
-
-        AlgoParameters.ATTR_WEIGHTS = weights;
     }
 }
