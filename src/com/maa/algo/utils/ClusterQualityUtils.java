@@ -17,7 +17,7 @@ public class ClusterQualityUtils {
     
     //RMSSTD measures the homogenity of clusters
     //large values of RMSSTD mean that clusters are not homogeneous
-    public static double getRMSSTD(Map<String,String> gNodeInputs, ArrayList<double[]> iVals, ArrayList<String> iNames){
+    public static double getRMSSTD(Map<String,String> gNodeInputs, ArrayList<double[]> iVals, ArrayList<String> iNames, int dim){
     
         Map<String,double[]> inputs = new HashMap<String, double[]>();
         
@@ -30,12 +30,12 @@ public class ClusterQualityUtils {
             return -1;
         }
         
-        double sSum = getSqrSum(gNodeInputs, inputs);
+        double sSum = getSqrSum(gNodeInputs, inputs,dim);
         
         //denominator of the RMSSTD calculation
         double sumInputsOfGNodes = 0;
         
-        for(int i=0;i<AlgoParameters.DIMENSIONS;i++){
+        for(int i=0;i<dim;i++){
             for(Map.Entry<String,String> e : gNodeInputs.entrySet()){
                 sumInputsOfGNodes += (e.getValue().split(Constants.INPUT_TOKENIZER).length-1);
             }
@@ -46,7 +46,7 @@ public class ClusterQualityUtils {
     }
     
     //RS calculate the difference between clusters. The value produced is between 0 and 1
-    public static double getRS(Map<String,String> gNodeInputs, ArrayList<double[]> iVals, ArrayList<String> iNames){
+    public static double getRS(Map<String,String> gNodeInputs, ArrayList<double[]> iVals, ArrayList<String> iNames,int dim){
         
         Map<String,double[]> inputs = new HashMap<String, double[]>();
         
@@ -59,10 +59,10 @@ public class ClusterQualityUtils {
             return -1;
         }
         
-        double SSWithin = getSqrSum(gNodeInputs, inputs);
+        double SSWithin = getSqrSum(gNodeInputs, inputs,dim);
         
         double SSTotal = 0;
-        for(int i=0;i<AlgoParameters.DIMENSIONS;i++){
+        for(int i=0;i<dim;i++){
             ArrayList<Double> inputsOneDim = new ArrayList<Double>();
             for(Map.Entry<String,double[]> e : inputs.entrySet()){
                 inputsOneDim.add(e.getValue()[i]);
@@ -85,10 +85,10 @@ public class ClusterQualityUtils {
         return (SSTotal - SSWithin)/SSTotal;
     }
 
-    private static double getSqrSum(Map<String, String> gNodeInputs, Map<String, double[]> inputs) {
+    private static double getSqrSum(Map<String, String> gNodeInputs, Map<String, double[]> inputs, int dim) {
         //for each dimension
         double sSum = 0;
-        for(int i=0;i<AlgoParameters.DIMENSIONS;i++){
+        for(int i=0;i<dim;i++){
             double sSumOneDim = 0;
             for(Map.Entry<String,String> e : gNodeInputs.entrySet()){
                 

@@ -20,11 +20,11 @@ public class FuzzyGenType implements IKASLGenType {
     private static double SUGENO_LAMBDA_MEASURE = 0.05;
 
     @Override
-    public double[] generalize(Node hit, List<Node> neigh1, List<Node> neigh2) {
+    public double[] generalize(Node hit, List<Node> neigh1, List<Node> neigh2,AlgoParameters algoParam) {
 
-        int dimensions = AlgoParameters.DIMENSIONS;
-        double[] attrWeights = AlgoParameters.ATTR_WEIGHTS;
-        DistanceType distType = AlgoParameters.dType;
+        int dimensions = algoParam.getDIMENSIONS();
+        double[] attrWeights = algoParam.getATTR_WEIGHTS();
+        DistanceType distType = algoParam.getDistType();
         
         ArrayList<Node> allNodes = new ArrayList<Node>();
         ArrayList<Double> allNodesDistances = new ArrayList<Double>();

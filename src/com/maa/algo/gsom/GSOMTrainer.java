@@ -13,17 +13,20 @@ public class GSOMTrainer {
     private Map<String, LNode> nodeMap;
     private NodeGrowthHandler growthHandler;
 
-    public GSOMTrainer() {
+    private AlgoParameters algoParams;
+    
+    public GSOMTrainer(AlgoParameters algoParams) {
         nodeMap = new HashMap<String, LNode>();
         growthHandler = new NodeGrowthHandler();
+        this.algoParams = algoParams;
     }
 
     public Map<String, LNode> trainNetwork(ArrayList<String> iStrings, ArrayList<double[]> iWeights) {
         initFourNodes();	//init the map with four nodes
-        for (int i = 0; i < AlgoParameters.MAX_ITERATIONS; i++) {
+        for (int i = 0; i < algoParams.getMAX_ITERATIONS(); i++) {
             int k = 0;
-            double learningRate = Utils.getLearningRate(i, nodeMap.size());
-            double radius = Utils.getRadius(i, Utils.getTimeConst());
+            double learningRate = Utils.getLearningRate(i, nodeMap.size(),algoParams.getMAX_ITERATIONS(),algoParams.getSTART_LEARNING_RATE(),algoParams.getMAX_NEIGHBORHOOD_RADIUS());
+            double radius = Utils.getRadius(i, Utils.getTimeConst(algoParams.getMAX_ITERATIONS(),algoParams.getMAX_NEIGHBORHOOD_RADIUS()),algoParams.getDIMENSIONS());
             for (double[] input : iWeights) {
                 trainForSingleIterAndSingleInput(i, input, iStrings.get(k), learningRate, radius);
                 k++;
@@ -46,10 +49,10 @@ public class GSOMTrainer {
             this.nodeMap.put(Utils.generateIndexString(initNode.getX(), initNode.getY()), initNode);
         }   
         
-        for (int i = 0; i < AlgoParameters.MAX_ITERATIONS; i++) {
+        for (int i = 0; i < algoParams.getMAX_ITERATIONS(); i++) {
             int k = 0;
-            double learningRate = Utils.getLearningRate(i, this.nodeMap.size());
-            double radius = Utils.getRadius(i, Utils.getTimeConst());
+            double learningRate = Utils.getLearningRate(i, this.nodeMap.size(),algoParams.getMAX_ITERATIONS(),algoParams.getSTART_LEARNING_RATE(),algoParams.getMAX_NEIGHBORHOOD_RADIUS());
+            double radius = Utils.getRadius(i, Utils.getTimeConst(algoParams.getMAX_ITERATIONS(),algoParams.getMAX_NEIGHBORHOOD_RADIUS()),algoParams.getDIMENSIONS());
             
             for (double[] input : iWeights) {
                 trainForSingleIterAndSingleInput(i, input, iStrings.get(k), learningRate, radius);
@@ -62,15 +65,15 @@ public class GSOMTrainer {
     
     private void trainForSingleIterAndSingleInput(int iter, double[] input, String str, double learningRate, double radius) {
 
-        LNode winner = Utils.selectLWinner(nodeMap, input);
+        LNode winner = Utils.selectLWinner(nodeMap, input,algoParams.getDIMENSIONS(),algoParams.getATTR_WEIGHTS(),algoParams.getDistType());
 
         for (Map.Entry<String, LNode> entry : nodeMap.entrySet()) {
-            entry.setValue(Utils.adjustNeighbourWeight(entry.getValue(), winner, input, radius, learningRate));
+            entry.setValue(Utils.adjustNeighbourWeight(entry.getValue(), winner, input, radius, learningRate,algoParams.getDIMENSIONS()));
         }
 
-        winner.calcAndUpdateErr(input);
+        winner.calcAndUpdateErr(input,algoParams.getDIMENSIONS(),algoParams.getATTR_WEIGHTS(),algoParams.getDistType());
 
-        if (winner.getErrorValue() > AlgoParameters.getGT()) {
+        if (winner.getErrorValue() > algoParams.getGT()) {
             //System.out.println("Winner "+winner.getX()+","+winner.getY()+" GT exceeded");
             adjustWinnerError(winner);
         }
@@ -82,7 +85,7 @@ public class GSOMTrainer {
 
         for (int i = 0; i < 2; i++) {
             for (int j = 0; j < 2; j++) {
-                LNode initNode = new LNode(i, j, Utils.generateRandomArray(AlgoParameters.DIMENSIONS));
+                LNode initNode = new LNode(i, j, Utils.generateRandomArray(algoParams.getDIMENSIONS()));
                 nodeMap.put(Utils.generateIndexString(i, j), initNode);
             }
         }
@@ -106,13 +109,13 @@ public class GSOMTrainer {
                 && nodeMap.containsKey(nodeBottomStr)) {
             distrErrToNeighbors(winner, nodeLeftStr, nodeRightStr, nodeTopStr, nodeBottomStr);
         } else {
-            growthHandler.growNodes(nodeMap, winner); //NodeGrowthHandler takes over
+            growthHandler.growNodes(nodeMap, winner, algoParams); //NodeGrowthHandler takes over
         }
     }
 
     //distributing error to the neighbors of thw winning node
     private void distrErrToNeighbors(LNode winner, String leftK, String rightK, String topK, String bottomK) {
-        winner.setErrorValue(AlgoParameters.getGT() / 2);
+        winner.setErrorValue(algoParams.getGT() / 2);
         nodeMap.get(leftK).setErrorValue(calcErrForNeighbour(nodeMap.get(leftK)));
         nodeMap.get(rightK).setErrorValue(calcErrForNeighbour(nodeMap.get(rightK)));
         nodeMap.get(topK).setErrorValue(calcErrForNeighbour(nodeMap.get(topK)));
@@ -121,7 +124,7 @@ public class GSOMTrainer {
 
     //error calculating equation for neighbours of a winner
     private double calcErrForNeighbour(LNode node) {
-        return node.getErrorValue() + (AlgoParameters.getFD() * node.getErrorValue());
+        return node.getErrorValue() + (algoParams.getFD() * node.getErrorValue());
     }
     
     public Map<String,LNode> getMap(){

@@ -18,8 +18,8 @@ import java.util.List;
 public class AvgGenType implements IKASLGenType {
 
     @Override
-    public double[] generalize(Node hit, List<Node> neigh1, List<Node> neigh2) {
-        int dimensions = AlgoParameters.DIMENSIONS;
+    public double[] generalize(Node hit, List<Node> neigh1, List<Node> neigh2,AlgoParameters algoParam) {
+        int dimensions = algoParam.getDIMENSIONS();
 
         double[] weights;
 

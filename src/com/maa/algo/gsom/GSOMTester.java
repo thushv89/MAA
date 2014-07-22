@@ -1,6 +1,7 @@
 package com.maa.algo.gsom;
 
 import com.maa.algo.objects.LNode;
+import com.maa.algo.utils.AlgoParameters;
 import com.maa.algo.utils.Utils;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -9,15 +10,16 @@ import java.util.Map;
 public class GSOMTester {
 
     private Map<String,String> testResultMap;
-
-    public GSOMTester() {
+    AlgoParameters algoParam;
+    public GSOMTester(AlgoParameters algoParam) {
         testResultMap = new HashMap<String, String>();
+        this.algoParam = algoParam;
     }
     
     public void testGSOM(Map<String,LNode> nodeMap,ArrayList<double[]> iWeights,ArrayList<String> iStrings){
         for(int i = 0; i<iWeights.size();i++){
             
-            LNode winner = Utils.selectLWinner(nodeMap, iWeights.get(i));
+            LNode winner = Utils.selectLWinner(nodeMap, iWeights.get(i),algoParam.getDIMENSIONS(),algoParam.getATTR_WEIGHTS(),algoParam.getDistType());
             //System.out.println("Winner for "+iStrings.get(i)+" is "+winner.getX()+","+winner.getY());
             
             String winnerStr = Utils.generateIndexString(winner.getX(), winner.getY());

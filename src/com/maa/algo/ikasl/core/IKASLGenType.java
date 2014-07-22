@@ -6,6 +6,7 @@ package com.maa.algo.ikasl.core;
 
 import com.maa.algo.objects.GNode;
 import com.maa.algo.objects.Node;
+import com.maa.algo.utils.AlgoParameters;
 import java.util.List;
 
 /**
@@ -13,5 +14,5 @@ import java.util.List;
  * @author Thush
  */
 public interface IKASLGenType {
-    public double[] generalize(Node hit, List<Node> neigh1, List<Node> neigh2);
+    public double[] generalize(Node hit, List<Node> neigh1, List<Node> neigh2, AlgoParameters algoParam);
 }

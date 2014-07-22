@@ -10,6 +10,7 @@ import com.maa.models.DataParamModel;
 import com.maa.utils.ImportantFileNames;
 import com.maa.xml.DataXMLWriter;
 import java.io.File;
+import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
 /**
@@ -99,6 +100,11 @@ public class DataParameterUI extends javax.swing.JFrame {
         jLabel4.setText("Home Dir:");
 
         browseBtn.setText("Browse");
+        browseBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                browseBtnActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -201,6 +207,21 @@ public class DataParameterUI extends javax.swing.JFrame {
     private void cancelBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelBtnActionPerformed
         FileUtils.cleanConfigDir();
     }//GEN-LAST:event_cancelBtnActionPerformed
+
+    private void browseBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_browseBtnActionPerformed
+        JFileChooser chooser = new JFileChooser(".");//E:\GSOM2_v3\GSOM2
+        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        int choice = chooser.showOpenDialog(null);
+
+        if (choice != JFileChooser.APPROVE_OPTION) {
+            return;
+        }
+
+        File chosenFile = chooser.getSelectedFile();
+        //JOptionPane.showMessageDialog(null,chosenFile.getAbsolutePath());
+        homeDirTxt.setText(chosenFile.getAbsolutePath());
+        
+    }//GEN-LAST:event_browseBtnActionPerformed
 
     /**
      * @param args the command line arguments

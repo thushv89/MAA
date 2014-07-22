@@ -6,45 +6,174 @@ import com.maa.algo.enums.MiningType;
 
 public class AlgoParameters {
 
-    public static int DIMENSIONS;
-    private static double GT;
-    public static double SPREAD_FACTOR;
-    public static double MAX_NEIGHBORHOOD_RADIUS;
-    private static double FD;
-    public static double START_LEARNING_RATE;
-    public static int MAX_ITERATIONS;
-    public static DistanceType dType;
+    private int DIMENSIONS;
+    private double GT;
+    private double SPREAD_FACTOR;
+    private double MAX_NEIGHBORHOOD_RADIUS;
+    private double FD;
+    private double START_LEARNING_RATE;
+    private int MAX_ITERATIONS;
+    private DistanceType dType;
     
-    public static int LEARN_CYCLES;
-    public static GenType gType;
-    public static int HIT_THRESHOLD;
+    private GenType gType;
+    private int HIT_THRESHOLD;
 
-    private static double MERGE_THRESHOLD;
+    private double MERGE_THRESHOLD;
     
-    public static double[] MIN_BOUNDS;
-    public static double[] MAX_BOUNDS;
+    private double[] MIN_BOUNDS;
+    private double[] MAX_BOUNDS;
     
-    public static double[] ATTR_WEIGHTS;
+    private double[] ATTR_WEIGHTS;
     
-    public static double[] ANOMALY_THRESHOLDS;
+    private double[] ANOMALY_THRESHOLDS;
     
-    public static double MERGE_ONE_DIM_THRESHOLD=0.2;
+    private double MERGE_ONE_DIM_THRESHOLD=0.2;
     
-    public static MiningType MINING_TYPE;
+    private MiningType MINING_TYPE;
     
-    public static double getMergeThreshold(){
-        MERGE_THRESHOLD = Utils.calcDist(Utils.getUniformVector(0.1, DIMENSIONS), Utils.getZeroVector(DIMENSIONS), 
-                DIMENSIONS, AlgoParameters.ATTR_WEIGHTS,dType);
-        return MERGE_THRESHOLD;
+    public AlgoParameters(int dimensions, double sf, int nr, double lr, int iter, int ht, 
+            double[] minBounds, double[] maxBounds, double[] weights, GenType gType, MiningType mType,DistanceType dType){
+        this.SPREAD_FACTOR = sf;
+        this.DIMENSIONS = dimensions;
+        this.MAX_NEIGHBORHOOD_RADIUS = nr;
+        this.START_LEARNING_RATE = lr;
+        this.MAX_ITERATIONS = iter;
+        this.HIT_THRESHOLD = ht;
+        this.MIN_BOUNDS = minBounds;
+        this.MAX_BOUNDS = maxBounds;
+        this.ATTR_WEIGHTS = weights;
+        this.MINING_TYPE = mType;
+        this.dType = dType;
+        this.gType = gType;
     }
     
-    public static double getGT() {
-        GT = -DIMENSIONS * DIMENSIONS * Math.log(SPREAD_FACTOR);
+    public double getMergeThreshold(){
+        MERGE_THRESHOLD = Utils.calcDist(Utils.getUniformVector(0.1, getDIMENSIONS()), Utils.getZeroVector(getDIMENSIONS()), getDIMENSIONS(), this.getATTR_WEIGHTS(), getDistType());
+        return getMERGE_THRESHOLD();
+    }
+    
+    public double getGT() {
+        GT = -getDIMENSIONS() * getDIMENSIONS() * Math.log(getSPREAD_FACTOR());
         return GT;
     }
 
-    public static double getFD() {
-        FD = SPREAD_FACTOR / DIMENSIONS;
+    public double getFD() {
+        FD = getSPREAD_FACTOR() / getDIMENSIONS();
         return FD;
     }
+
+    /**
+     * @return the DIMENSIONS
+     */
+    public int getDIMENSIONS() {
+        return DIMENSIONS;
+    }
+
+    /**
+     * @return the SPREAD_FACTOR
+     */
+    public double getSPREAD_FACTOR() {
+        return SPREAD_FACTOR;
+    }
+
+    /**
+     * @return the MAX_NEIGHBORHOOD_RADIUS
+     */
+    public double getMAX_NEIGHBORHOOD_RADIUS() {
+        return MAX_NEIGHBORHOOD_RADIUS;
+    }
+
+    /**
+     * @return the START_LEARNING_RATE
+     */
+    public double getSTART_LEARNING_RATE() {
+        return START_LEARNING_RATE;
+    }
+
+    /**
+     * @return the MAX_ITERATIONS
+     */
+    public int getMAX_ITERATIONS() {
+        return MAX_ITERATIONS;
+    }
+
+    /**
+     * @return the HIT_THRESHOLD
+     */
+    public int getHIT_THRESHOLD() {
+        return HIT_THRESHOLD;
+    }
+
+    /**
+     * @return the MERGE_THRESHOLD
+     */
+    public double getMERGE_THRESHOLD() {
+        return MERGE_THRESHOLD;
+    }
+
+    /**
+     * @return the MIN_BOUNDS
+     */
+    public double[] getMIN_BOUNDS() {
+        return MIN_BOUNDS;
+    }
+
+    /**
+     * @return the MAX_BOUNDS
+     */
+    public double[] getMAX_BOUNDS() {
+        return MAX_BOUNDS;
+    }
+
+    /**
+     * @return the ATTR_WEIGHTS
+     */
+    public double[] getATTR_WEIGHTS() {
+        return ATTR_WEIGHTS;
+    }
+
+    /**
+     * @return the MERGE_ONE_DIM_THRESHOLD
+     */
+    public double getMERGE_ONE_DIM_THRESHOLD() {
+        return MERGE_ONE_DIM_THRESHOLD;
+    }
+
+    /**
+     * @return the MINING_TYPE
+     */
+    public MiningType getMINING_TYPE() {
+        return MINING_TYPE;
+    }
+
+    /**
+     * @return the gType
+     */
+    public GenType getGType() {
+        return gType;
+    }
+
+    /**
+     * @return the dType
+     */
+    public DistanceType getDistType() {
+        return dType;
+    }
+
+    /**
+     * @param MAX_NEIGHBORHOOD_RADIUS the MAX_NEIGHBORHOOD_RADIUS to set
+     */
+    public void setMAX_NEIGHBORHOOD_RADIUS(double MAX_NEIGHBORHOOD_RADIUS) {
+        this.MAX_NEIGHBORHOOD_RADIUS = MAX_NEIGHBORHOOD_RADIUS;
+    }
+
+    /**
+     * @param START_LEARNING_RATE the START_LEARNING_RATE to set
+     */
+    public void setSTART_LEARNING_RATE(double START_LEARNING_RATE) {
+        this.START_LEARNING_RATE = START_LEARNING_RATE;
+    }
+    
+    
 }
+

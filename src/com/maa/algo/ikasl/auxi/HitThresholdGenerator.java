@@ -24,14 +24,14 @@ import java.util.TreeMap;
  */
 public class HitThresholdGenerator {
     
-    public static ArrayList<String> getHitNodeIDsGeneral(LearnLayer lLayer, int hitThresh, double neighRad) {
+    public static ArrayList<String> getHitNodeIDsGeneral(LearnLayer lLayer, int hitThresh, double neighRad, AlgoParameters algoParams) {
         Map<String, Map<String, LNode>> lMap = lLayer.getCopyMap();
 
         ArrayList<String> selectedNodeIDs = new ArrayList<String>();
 
         //double threshold = hitThresh * Math.sqrt(neighRad) * Math.sqrt(AlgoParameters.MERGE_ONE_DIM_THRESHOLD*AlgoParameters.DIMENSIONS);
-        double distThreshold = Utils.calcDist(Utils.getUniformVector(AlgoParameters.MERGE_ONE_DIM_THRESHOLD, AlgoParameters.DIMENSIONS),
-                Utils.getZeroVector(AlgoParameters.DIMENSIONS), AlgoParameters.DIMENSIONS, AlgoParameters.ATTR_WEIGHTS, AlgoParameters.dType);
+        double distThreshold = Utils.calcDist(Utils.getUniformVector(algoParams.getMERGE_ONE_DIM_THRESHOLD(), algoParams.getDIMENSIONS()),
+                Utils.getZeroVector(algoParams.getDIMENSIONS()), algoParams.getDIMENSIONS(), algoParams.getATTR_WEIGHTS(), algoParams.getDistType());
         double threshold = hitThresh * Math.sqrt(neighRad) * Math.pow(distThreshold, 2);
 
         for (Map.Entry<String, Map<String, LNode>> eMap : lMap.entrySet()) {
@@ -86,7 +86,7 @@ public class HitThresholdGenerator {
                         pDistance = Math.sqrt(pDistance);
 
                         double eDistance = Utils.calcDist(nodes.get(i).getWeights(), nodes.get(j).getWeights(), 
-                                AlgoParameters.DIMENSIONS, AlgoParameters.ATTR_WEIGHTS, AlgoParameters.dType);
+                                algoParams.getDIMENSIONS(),algoParams.getATTR_WEIGHTS(),algoParams.getDistType());
 
                         if (pDistance < minPDist) {
                             minPDist = pDistance;
@@ -123,14 +123,14 @@ public class HitThresholdGenerator {
         return selectedNodeIDs;
     }
     
-    public static ArrayList<String> getHitNodeIDsAnomalies(LearnLayer lLayer, int hitThresh, double neighRad) {
+    public static ArrayList<String> getHitNodeIDsAnomalies(LearnLayer lLayer, int hitThresh, double neighRad, AlgoParameters algoParams) {
         Map<String, Map<String, LNode>> lMap = lLayer.getCopyMap();
 
         ArrayList<String> selectedNodeIDs = new ArrayList<String>();
 
         //double threshold = hitThresh * Math.sqrt(neighRad) * Math.sqrt(AlgoParameters.MERGE_ONE_DIM_THRESHOLD*AlgoParameters.DIMENSIONS);
-        double distThreshold = Utils.calcDist(Utils.getUniformVector(AlgoParameters.MERGE_ONE_DIM_THRESHOLD, AlgoParameters.DIMENSIONS),
-                Utils.getZeroVector(AlgoParameters.DIMENSIONS), AlgoParameters.DIMENSIONS, AlgoParameters.ATTR_WEIGHTS, AlgoParameters.dType);
+        double distThreshold = Utils.calcDist(Utils.getUniformVector(algoParams.getMERGE_ONE_DIM_THRESHOLD(),algoParams.getDIMENSIONS()),
+                Utils.getZeroVector(algoParams.getDIMENSIONS()), algoParams.getDIMENSIONS(),algoParams.getATTR_WEIGHTS(),algoParams.getDistType());
         double threshold = Math.sqrt(neighRad) * Math.pow(distThreshold, 2)/hitThresh;
 
         for (Map.Entry<String, Map<String, LNode>> eMap : lMap.entrySet()) {
@@ -193,7 +193,7 @@ public class HitThresholdGenerator {
                         pDistance = Math.sqrt(pDistance);
 
                         double eDistance = Utils.calcDist(nodes.get(i).getWeights(), nodes.get(j).getWeights(), 
-                                AlgoParameters.DIMENSIONS, AlgoParameters.ATTR_WEIGHTS, AlgoParameters.dType);
+                                algoParams.getDIMENSIONS(),algoParams.getATTR_WEIGHTS(),algoParams.getDistType());
 
                         if (pDistance < minPDist) {
                             minPDist = pDistance;

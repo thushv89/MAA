@@ -26,9 +26,9 @@ public abstract class Node{
         this.weights = weights.clone();
     }
 
-    public void adjustWeights(double[] iWeights, double influence, double learningRate) {
+    public void adjustWeights(double[] iWeights, double influence, double learningRate, int dim) {
 
-        for (int i = 0; i < AlgoParameters.DIMENSIONS; i++) {
+        for (int i = 0; i < dim; i++) {
             weights[i] += influence * learningRate * (iWeights[i] - weights[i]);
         }
     }

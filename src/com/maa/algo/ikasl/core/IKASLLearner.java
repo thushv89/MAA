@@ -28,23 +28,27 @@ import java.util.Map;
 public class IKASLLearner {
 
     private ArrayList<GNode> nonHitNodes;
-
+    private AlgoParameters algoParam;
+    
+    public IKASLLearner(AlgoParameters algoParam){
+        this.algoParam = algoParam;
+    }
 
     public LearnLayer trainAndGetLearnLayer(int currLC, ArrayList<double[]> iWeights, ArrayList<String> iNames, GenLayer prevGLayer) {
 
         //if currLC ==0 there is no prevGLayer. So ignore that parameter
         if (currLC == 0) {
-            GSOMTrainer gTrainer = new GSOMTrainer();
+            GSOMTrainer gTrainer = new GSOMTrainer(algoParam);
             gTrainer.trainNetwork(iNames, iWeights);
             Map<String, LNode> trainedMap = gTrainer.getCopyMap();
 
-            GSOMSmoothner gSmoother = new GSOMSmoothner();
+            GSOMSmoothner gSmoother = new GSOMSmoothner(algoParam);
             gSmoother.smoothGSOM(trainedMap, iWeights);
 
             GCoordAdjuster gAdjuster = new GCoordAdjuster();
             Map<String, LNode> adjustedMap = gAdjuster.adjustMapCoords(trainedMap);
 
-            GSOMTester gTester = new GSOMTester();
+            GSOMTester gTester = new GSOMTester(algoParam);
             gTester.testGSOM(adjustedMap, iWeights, iNames);
 
             LearnLayer lLayer = new LearnLayer();
@@ -71,17 +75,17 @@ public class IKASLLearner {
 
             for (Map.Entry<String, GNode> n : prevGLayer.getMap().entrySet()) {
                 if (!nonHitNodes.contains(n.getValue())) {
-                    GSOMTrainer gTrainer = new GSOMTrainer();
+                    GSOMTrainer gTrainer = new GSOMTrainer(algoParam);
                     gTrainer.trainNetwork(gNodeINames.get(n.getKey()), gNodeIWeights.get(n.getKey()));
                     Map<String, LNode> trainedMap = gTrainer.getCopyMap();
 
-                    GSOMSmoothner gSmoother = new GSOMSmoothner();
+                    GSOMSmoothner gSmoother = new GSOMSmoothner(algoParam);
                     gSmoother.smoothGSOM(trainedMap, gNodeIWeights.get(n.getKey()));
 
                     GCoordAdjuster gAdjuster = new GCoordAdjuster();
                     Map<String, LNode> adjustedMap = gAdjuster.adjustMapCoords(trainedMap);
 
-                    GSOMTester gTester = new GSOMTester();
+                    GSOMTester gTester = new GSOMTester(algoParam);
                     gTester.testGSOM(adjustedMap, gNodeIWeights.get(n.getKey()), gNodeINames.get(n.getKey()));
 
                     lLayer.addMap(n.getKey(), adjustedMap);
@@ -114,7 +118,7 @@ public class IKASLLearner {
             String gID = "";
             for (Map.Entry<String, GNode> n : prevGNodes.entrySet()) {
                 double distance = Utils.calcDist(iWeights.get(i), n.getValue().getWeights(), 
-                        AlgoParameters.DIMENSIONS, AlgoParameters.ATTR_WEIGHTS, AlgoParameters.dType);
+                        algoParam.getDIMENSIONS(),algoParam.getATTR_WEIGHTS(),algoParam.getDistType());
                 if (distance < minDist) {
                     minDist = distance;
                     gID = n.getKey();

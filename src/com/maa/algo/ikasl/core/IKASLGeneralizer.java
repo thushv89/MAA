@@ -25,6 +25,10 @@ import java.util.Map;
  */
 public class IKASLGeneralizer {
 
+    private AlgoParameters algoParam;
+    public IKASLGeneralizer(AlgoParameters algoParam){
+        this.algoParam = algoParam;
+    }
     
     public GenLayer generalize(int currLC, LearnLayer lLayer, ArrayList<String> bestHits, GenType gType) {
 
@@ -64,7 +68,7 @@ public class IKASLGeneralizer {
             }
 
             if (genType != null) {
-                double[] gWeight = genType.generalize(hitnode, neigh1Nodes, neigh2Nodes);
+                double[] gWeight = genType.generalize(hitnode, neigh1Nodes, neigh2Nodes,algoParam);
 
                 if (currLC == 0) {
                     GNode node = new GNode(currLC, gID, gWeight, Constants.INIT_PARENT);
@@ -79,13 +83,13 @@ public class IKASLGeneralizer {
                     for (Map.Entry<String, GNode> e1 : gLayer.getMap().entrySet()) {
                         
                         if (!parentID.equals(e1.getValue().getParentID()) &&
-                                Utils.calcDist(gWeight, e1.getValue().getWeights(), AlgoParameters.DIMENSIONS, AlgoParameters.ATTR_WEIGHTS,AlgoParameters.dType) < AlgoParameters.getMergeThreshold()) {
+                                Utils.calcDist(gWeight, e1.getValue().getWeights(), algoParam.getDIMENSIONS(),algoParam.getATTR_WEIGHTS(),algoParam.getDistType()) < algoParam.getMergeThreshold()) {
                             
                             //Find whether any of the dimension difference between gweight and current GNode in map
                             //is greater than some threshold
                             //REMEMBER: Multiply one_dim_threshold by corresponding attribute weight
-                            for (int i = 0; i < AlgoParameters.DIMENSIONS; i++) {
-                                if (Math.abs(gWeight[i] - e1.getValue().getWeights()[i]) > AlgoParameters.MERGE_ONE_DIM_THRESHOLD*AlgoParameters.ATTR_WEIGHTS[i]) {
+                            for (int i = 0; i < algoParam.getDIMENSIONS(); i++) {
+                                if (Math.abs(gWeight[i] - e1.getValue().getWeights()[i]) > algoParam.getMERGE_ONE_DIM_THRESHOLD()*algoParam.getATTR_WEIGHTS()[i]) {
                                     haveLargeDim = true;
                                     break;
                                 }
@@ -128,8 +132,8 @@ public class IKASLGeneralizer {
     }
 
     private double[] mergeWeights(double[] in1, double[] in2, double[] weights) {
-        double[] newWeight = new double[AlgoParameters.DIMENSIONS];
-        for (int i = 0; i < AlgoParameters.DIMENSIONS; i++) {
+        double[] newWeight = new double[algoParam.getDIMENSIONS()];
+        for (int i = 0; i < algoParam.getDIMENSIONS(); i++) {
             newWeight[i] = ((weights[0] * in1[i]) + (weights[1] * in2[i])) / (weights[0] + weights[1]);
         }
         return newWeight;

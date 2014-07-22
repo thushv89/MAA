@@ -24,12 +24,13 @@ import javax.swing.JOptionPane;
  *
  * @author Thush
  */
-public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListener, DefaultValueListener{
+public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListener, DefaultValueListener {
 
     private BasicParamModel bPModel;
     private DataParamModel dPModel;
     private ArrayList<AlgoParamModel> aPModels;
     private ArrayList<IKASLFacade> ikaslList;
+
     /**
      * Creates new form ResultsUI
      */
@@ -37,12 +38,12 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
         initComponents();
         setLocationRelativeTo(null);
         setVisible(true);
-        
+
         ikaslList = new ArrayList<>();
-        
-        
+
+
         FileUtils.setUpConfigDir();
-        
+
         if (!FileUtils.allConfigFilesExist()) {
             this.setFocusableWindowState(false);
             FileUtils.cleanConfigDir();
@@ -50,26 +51,24 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
             introUI.setVisible(true);
             introUI.setAlwaysOnTop(true);
             introUI.setListener(this);
-        } else{
+        } else {
             this.setFocusableWindowState(true);
             bPModel = (BasicParamModel) new BasicXMLParser().parseXML();
             dPModel = (DataParamModel) new DataXMLParser().parseXML();
             aPModels = new AlgoXMLParser().parseMultiXML();
-            
+
             ImportantFileNames.DATA_DIRNAME = dPModel.getHomeDir();
             FileUtils.setUpDataDir(bPModel.getStreamIDs());
-            
-            for(AlgoParamModel aPModel : aPModels){
-                ikaslList.add(new IKASLFacade(aPModel.getStreamID(),aPModel,this));
+
+            for (AlgoParamModel aPModel : aPModels) {
+                ikaslList.add(new IKASLFacade(aPModel.getStreamID(), aPModel, this));
             }
-            
+
             FileUtils.createDirs(bPModel.getStreamIDs(), ImportantFileNames.DATA_DIRNAME);
         }
-        
-        
-    }
 
-    
+
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -289,29 +288,24 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
     private void jCheckBox2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox2ActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_jCheckBox2ActionPerformed
-
     int currLC = 0;
     private void runBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_runBtnActionPerformed
-        
-        InputParser iParser = new InputParser();
-        iParser.parseInput("Data\\input1.txt");
-        ArrayList<double[]> iWeights = iParser.getIWeights();
-        ArrayList<String> iNames = iParser.getINames();
-        
-        if(!ikaslList.isEmpty()){
-            for(IKASLFacade ikasl : ikaslList){
-                ikasl.runSingleStep(currLC, iWeights, iNames);
+
+
+        if (!ikaslList.isEmpty()) {
+            for (IKASLFacade ikasl : ikaslList) {
+                
+                ikasl.runSingleStep();
             }
-            currLC++;
         }
     }//GEN-LAST:event_runBtnActionPerformed
 
     private void summaryBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_summaryBtnActionPerformed
         JOptionPane.showMessageDialog(null, createSettingsSummary(), "Settings Overview", JOptionPane.PLAIN_MESSAGE);
-        
+
     }//GEN-LAST:event_summaryBtnActionPerformed
 
-    private String createSettingsSummary(){
+    private String createSettingsSummary() {
         String result = "<html><b>Basic Parameters</b><br/> "
                 + "Frequency: " + bPModel.getFreq().name() + "<br/>"
                 + "Number of Streams: " + bPModel.getNumStreams() + "<br/>"
@@ -323,23 +317,24 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
                 + "<b> Algo Parameters </b> <br/>"
                 + getAlgoParametersString()
                 + "</html>";
-        
+
         return result;
     }
-    
-    private String getStreamIDString(){
+
+    private String getStreamIDString() {
         String result = bPModel.getStreamIDs().get(0);
-        for(String s : bPModel.getStreamIDs()){
-            if(!s.equals(bPModel.getStreamIDs().get(0))){
-                result += ", "+s;
+        for (String s : bPModel.getStreamIDs()) {
+            if (!s.equals(bPModel.getStreamIDs().get(0))) {
+                result += ", " + s;
             }
         }
         return result;
     }
-    private String getAlgoParametersString(){
+
+    private String getAlgoParametersString() {
         String result = "";
-        for(AlgoParamModel aPModel : aPModels){
-            result += "Stream ID: " + aPModel.getStreamID() +"<br/>"
+        for (AlgoParamModel aPModel : aPModels) {
+            result += "Stream ID: " + aPModel.getStreamID() + "<br/>"
                     + "Spread Factor: " + aPModel.getSpreadFactor() + "<br/>"
                     + "Learning Rate: " + aPModel.getLearningRate() + "<br/>"
                     + "Neighborhood Radius: " + aPModel.getNeighRad() + "<br/>"
@@ -348,10 +343,10 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
                     + "Aggregation: " + aPModel.getAggrType().name() + "<br/>"
                     + "<br/>";
         }
-        
+
         return result;
     }
-    
+
     /**
      * @param args the command line arguments
      */
@@ -405,19 +400,17 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
     private javax.swing.JButton runBtn;
     private javax.swing.JButton summaryBtn;
     // End of variables declaration//GEN-END:variables
-
     private IntroUI introUI;
     private BasicParameterUI bUI;
     private DataParameterUI dataUI;
     private AlgoParameterUI algoUI;
-    
-    
+
     @Override
     public void allConfigCompleted() {
         this.setFocusableWindowState(true);
         aPModels = algoUI.getAlgoParamModels();
         algoUI.dispose();
-        
+
         ImportantFileNames.DATA_DIRNAME = dPModel.getHomeDir();
         FileUtils.setUpDataDir(bPModel.getStreamIDs());
     }
@@ -425,7 +418,7 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
     @Override
     public void basicConfigCompleted() {
         dataUI = new DataParameterUI();
-        dataUI.setVisible(true);        
+        dataUI.setVisible(true);
         dataUI.setListener(this);
         bPModel = bUI.getBasicParamModel();
         bUI.dispose();
@@ -450,12 +443,11 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
 
     @Override
     public void useDefaultBounds(String stream) {
-        JOptionPane.showMessageDialog(null, "Stream: "+stream+" Using Default Values for Min Max Bounds", "Warning", JOptionPane.WARNING_MESSAGE);
+        JOptionPane.showMessageDialog(null, "Stream: " + stream + " Using Default Values for Min Max Bounds", "Warning", JOptionPane.WARNING_MESSAGE);
     }
 
     @Override
     public void useDefaultWeights(String stream) {
-        JOptionPane.showMessageDialog(null, "Stream: "+stream+" Using Default Values for Weights", "Warning", JOptionPane.WARNING_MESSAGE);
+        JOptionPane.showMessageDialog(null, "Stream: " + stream + " Using Default Values for Weights", "Warning", JOptionPane.WARNING_MESSAGE);
     }
-
 }

@@ -11,9 +11,10 @@ public class NodeGrowthHandler {
     //It'll check the free spaces around the winning neuron and grow new nodes accordingly
     //Also, it'll assign optimal weights for the new neurons
 	Map<String,LNode> map;
-	
-	public void growNodes(Map<String,LNode> map, LNode winner){
-		this.map = map;
+	AlgoParameters algoParams;
+	public void growNodes(Map<String,LNode> map, LNode winner, AlgoParameters algoParams){
+            this.algoParams = algoParams;
+            this.map = map;
 		
 		int X = winner.getX();
 		int Y = winner.getY();
@@ -42,7 +43,7 @@ public class NodeGrowthHandler {
 	//calc and get weights for the new node
 	private double[] getNewNodeWeights(LNode winner, int X, int Y){
 		
-		double[] newWeights= new double[AlgoParameters.DIMENSIONS];
+		double[] newWeights= new double[algoParams.getDIMENSIONS()];
 		
 		if(winner.getY()==Y){
 			//two consecutive nodes 
@@ -183,7 +184,7 @@ public class NodeGrowthHandler {
 			}
 		}
 		
-		for(int i=0;i<AlgoParameters.DIMENSIONS;i++){
+		for(int i=0;i<algoParams.getDIMENSIONS();i++){
 			if(newWeights[i]<0){
 				newWeights[i]=0;
 			}
@@ -198,7 +199,7 @@ public class NodeGrowthHandler {
 	private double[] newWeightsForNewNodeInMiddle(LNode winner, String otherNodeIdx){
 		double[] newWeights;
 		LNode otherNode = map.get(otherNodeIdx);
-		newWeights = ArrayHelper.add(winner.getWeights(), otherNode.getWeights(),AlgoParameters.DIMENSIONS);
+		newWeights = ArrayHelper.add(winner.getWeights(), otherNode.getWeights(),algoParams.getDIMENSIONS());
 		newWeights = ArrayHelper.multiplyArrayByConst(newWeights,0.5);
 		return newWeights;
 	}
@@ -209,16 +210,16 @@ public class NodeGrowthHandler {
 		LNode otherNode = map.get(otherNodeIdx);
 		newWeights = ArrayHelper.multiplyArrayByConst(winner.getWeights(), 2);
                 //System.out.println(newWeights.length+" "+winner.getWeights().length+" "+otherNode.getWeights().length);
-		newWeights = ArrayHelper.substract(newWeights, otherNode.getWeights(), AlgoParameters.DIMENSIONS);
+		newWeights = ArrayHelper.substract(newWeights, otherNode.getWeights(), algoParams.getDIMENSIONS());
 		return newWeights;
 	}
 	
         //winner,new node
 	private double[] newWeightsForNewNodeOneOlderNeighbor(LNode winner){
-		double[] newWeights = new double[AlgoParameters.DIMENSIONS];
+		double[] newWeights = new double[algoParams.getDIMENSIONS()];
 		double min = ArrayHelper.getMin(winner.getWeights());
 		double max = ArrayHelper.getMax(winner.getWeights());
-		for(int i=0;i<AlgoParameters.DIMENSIONS;i++){
+		for(int i=0;i<algoParams.getDIMENSIONS();i++){
 			newWeights[i]=(min+max)/2;
 		}
 		return newWeights;

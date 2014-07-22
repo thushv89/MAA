@@ -31,28 +31,27 @@ public class Utils {
         }
     }
 
-    public static double getLearningRate(int iter, int nodeCount) {
+    public static double getLearningRate(int iter, int nodeCount, int maxIter, double lr, double nr) {
         double minPhi = 0.95;
         //if 3.8 used for a node count < 4 learning rate becomes negative
         if (nodeCount < 4) {
-            return AlgoParameters.START_LEARNING_RATE * Math.exp(-(double) iter / AlgoParameters.MAX_ITERATIONS) * (1 - minPhi);
+            return lr * Math.exp(-(double) iter / maxIter) * (1 - minPhi);
         } else {
-            return AlgoParameters.START_LEARNING_RATE * Math.exp(-(double) iter / AlgoParameters.MAX_ITERATIONS) * (1 - (3.8 / nodeCount));
+            return lr * Math.exp(-(double) iter / maxIter) * (1 - (3.8 / nodeCount));
         }
     }
 
-    public static double getTimeConst() {
-        return (double) AlgoParameters.MAX_ITERATIONS / Math.log(AlgoParameters.MAX_NEIGHBORHOOD_RADIUS);
+    public static double getTimeConst(int maxIter, double nr) {
+        return (double) maxIter / Math.log(nr);
     }
 
     //get the node with the minimal ED to the input (winner)
-    public static LNode selectLWinner(Map<String, LNode> nodeMap, double[] input) {
+    public static LNode selectLWinner(Map<String, LNode> nodeMap, double[] input, int dim, double[] weights, DistanceType dType) {
         LNode winner = null;
         double currDist = Double.MAX_VALUE;
         double minDist = Double.MAX_VALUE;
         for (Map.Entry<String, LNode> entry : nodeMap.entrySet()) {
-            currDist = Utils.calcDist(input, entry.getValue().getWeights(), 
-                    AlgoParameters.DIMENSIONS, AlgoParameters.ATTR_WEIGHTS, AlgoParameters.dType);
+            currDist = Utils.calcDist(input, entry.getValue().getWeights(), dim, weights, dType);
             if (currDist < minDist) {
                 winner = entry.getValue();
                 minDist = currDist;
@@ -86,13 +85,12 @@ public class Utils {
         return unifVec;
     }
 
-    public static GNode selectGWinner(Map<String, GNode> nodeMap, double[] input) {
+    public static GNode selectGWinner(Map<String, GNode> nodeMap, double[] input, int dim, double[] weights, DistanceType dType) {
         GNode winner = null;
         double currDist = Double.MAX_VALUE;
         double minDist = Double.MAX_VALUE;
         for (Map.Entry<String, GNode> entry : nodeMap.entrySet()) {
-            currDist = Utils.calcDist(input, entry.getValue().getWeights(), 
-                    AlgoParameters.DIMENSIONS, AlgoParameters.ATTR_WEIGHTS,AlgoParameters.dType);
+            currDist = Utils.calcDist(input, entry.getValue().getWeights(), dim, weights, dType);
             if (currDist < minDist) {
                 winner = entry.getValue();
                 minDist = currDist;
@@ -102,20 +100,20 @@ public class Utils {
         return winner;
     }
 
-    public static LNode adjustNeighbourWeight(LNode node, LNode winner, double[] input, double radius, double learningRate) {
+    public static LNode adjustNeighbourWeight(LNode node, LNode winner, double[] input, double radius, double learningRate, int dim) {
         double nodeDistSqr = Math.pow(winner.getX() - node.getX(), 2) + Math.pow(winner.getY() - node.getY(), 2);
         double radiusSqr = radius * radius;
 
         //if node is within the radius
         if (nodeDistSqr < radiusSqr) {
             double influence = Math.exp(-(double) nodeDistSqr / (2 * radiusSqr));
-            node.adjustWeights(input, influence, learningRate);
+            node.adjustWeights(input, influence, learningRate,dim);
         }
         return node;
     }
 
-    public static double getRadius(int iter, double timeConst) {
-        return AlgoParameters.DIMENSIONS * Math.exp(-(double) iter / timeConst);
+    public static double getRadius(int iter, double timeConst, int dim) {
+        return dim * Math.exp(-(double) iter / timeConst);
     }
 
     public static double calcDist(double[] in1, double[] in2, int dimensions, double[] weights, DistanceType dType) {

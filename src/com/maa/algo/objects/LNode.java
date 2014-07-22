@@ -4,6 +4,7 @@
  */
 package com.maa.algo.objects;
 
+import com.maa.algo.enums.DistanceType;
 import com.maa.algo.utils.AlgoParameters;
 import com.maa.algo.utils.Utils;
 
@@ -11,12 +12,12 @@ import com.maa.algo.utils.Utils;
  *
  * @author Thushan Ganegedara
  */
-public class LNode extends Node{
+public class LNode extends Node {
 
     private int x;
     private int y;
-    
-    public LNode(int x, int y, double[] weights){
+
+    public LNode(int x, int y, double[] weights) {
         super(weights);
         this.x = x;
         this.y = y;
@@ -49,10 +50,8 @@ public class LNode extends Node{
     public void setY(int y) {
         this.y = y;
     }
-    
-    	public void calcAndUpdateErr(double[] iWeight){
-		this.errorValue += Utils.calcDist(this.weights, iWeight,
-                        AlgoParameters.DIMENSIONS, AlgoParameters.ATTR_WEIGHTS,AlgoParameters.dType);
-	}
 
+    public void calcAndUpdateErr(double[] iWeight, int dim, double[] weights, DistanceType dType) {
+        this.errorValue += Utils.calcDist(this.weights, iWeight, dim, weights, dType);
+    }
 }
