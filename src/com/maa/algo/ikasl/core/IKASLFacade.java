@@ -197,26 +197,26 @@ public class IKASLFacade {
         return null;
     }
 
-    private void mapInputsToGNodes(int currLC, GenLayer gLayer, ArrayList<double[]> prevIWeights, ArrayList<String> prevINames) {
+    private void mapInputsToGNodes(int currLC, GenLayer gLayer, ArrayList<double[]> iWeights, ArrayList<String> iNames) {
 
         Map<String, String> testResultMap = new HashMap<String, String>();
         Map<String, GNode> nodeMap = gLayer.getMap();
 
-        for (int i = 0; i < prevIWeights.size(); i++) {
+        for (int i = 0; i < iWeights.size(); i++) {
 
-            GNode winner = Utils.selectGWinner(nodeMap, prevIWeights.get(i),algoParams.getDIMENSIONS(),algoParams.getATTR_WEIGHTS(),algoParams.getDistType());
+            GNode winner = Utils.selectGWinner(nodeMap, iWeights.get(i),algoParams.getDIMENSIONS(),algoParams.getATTR_WEIGHTS(),algoParams.getDistType());
 
             String winnerStr = Utils.generateIndexString(winner.getLc(), winner.getId());
-            String testResultKey = winnerStr;
+            String testResultKey = winnerStr+Constants.NODE_TOKENIZER+winner.getParentID();
             GNode winnerNode = nodeMap.get(winnerStr);
             winnerNode.increasePrevHitVal();
 
             if (!testResultMap.containsKey(testResultKey)) {
-                testResultMap.put(testResultKey, prevINames.get(i));
+                testResultMap.put(testResultKey, iNames.get(i));
             } else {
                 String currStr = testResultMap.get(testResultKey);
-                String newStr = currStr + "," + prevINames.get(i);
-                testResultMap.remove(winnerStr);
+                String newStr = currStr + "," + iNames.get(i);
+                testResultMap.remove(testResultKey);
                 testResultMap.put(testResultKey, newStr);
             }
         }

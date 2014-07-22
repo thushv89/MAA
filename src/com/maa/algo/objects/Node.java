@@ -3,7 +3,7 @@ package com.maa.algo.objects;
 import com.maa.algo.utils.AlgoParameters;
 import java.io.Serializable;
 
-public abstract class Node{
+public abstract class Node implements Serializable{
 
 
     protected double[] weights;

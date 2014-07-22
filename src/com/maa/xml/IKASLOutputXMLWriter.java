@@ -4,6 +4,7 @@
  */
 package com.maa.xml;
 
+import com.maa.algo.utils.Constants;
 import com.maa.models.AlgoParamModel;
 import com.maa.utils.ImportantFileNames;
 import com.maa.utils.PreferenceNames;
@@ -39,8 +40,11 @@ public class IKASLOutputXMLWriter {
             doc.appendChild(algoParamElement);
 
             for(Map.Entry<String,String> e : results.entrySet()){
+                String id = e.getKey().split(Constants.NODE_TOKENIZER)[0];
+                String pID = e.getKey().split(Constants.NODE_TOKENIZER)[1];
                 Element nodeElement = doc.createElement("Node");
-                nodeElement.setAttribute("ID", e.getKey());
+                nodeElement.setAttribute("ID", id);
+                nodeElement.setAttribute("ParentID", pID);
                 nodeElement.appendChild(doc.createTextNode(e.getValue()));
                 algoParamElement.appendChild(nodeElement);
             }
