@@ -27,7 +27,7 @@ import org.w3c.dom.Element;
  */
 public class IKASLOutputXMLWriter {
 
-    public void writeXML(String loc,Map<String,String> results) {
+    public void writeXML(String loc,Map<String,String> results, String timeFrame) {
         try {
             DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
@@ -35,6 +35,7 @@ public class IKASLOutputXMLWriter {
             Document doc = docBuilder.newDocument();
             // Create top-level Data element
             Element algoParamElement = doc.createElement("IKASLOutput");
+            algoParamElement.setAttribute(PreferenceNames.TIME_FRAME_TAG, timeFrame);
             doc.appendChild(algoParamElement);
 
             for(Map.Entry<String,String> e : results.entrySet()){

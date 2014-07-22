@@ -33,5 +33,6 @@ public class PreferenceNames {
     public static final String ITERATIONS = "Iterations";
     public static final String HIT_THRESHOLD = "HitThreshold";
     public static final String AGGREGATION_TYPE = "AggregationType";
-    
+ 
+    public static final String TIME_FRAME_TAG = "TimeFrame";
 }

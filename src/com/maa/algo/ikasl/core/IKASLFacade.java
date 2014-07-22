@@ -59,7 +59,8 @@ public class IKASLFacade {
     private String streamID;
     private DefaultValueListener defListener;
     private AlgoParameters algoParams;
-
+    private String currTimeFrame;
+    
     public IKASLFacade(String streamID, AlgoParamModel aPModel, DefaultValueListener defListener) {
         linkGen = new InterLinkGenerator();
         this.aPModel = aPModel;
@@ -91,6 +92,7 @@ public class IKASLFacade {
         System.out.println("Processing " + inputFileName + " file");
         ArrayList<double[]> iWeights = iParser.getIWeights();
         ArrayList<String> iNames = iParser.getINames();
+        currTimeFrame = iParser.getTimeFrame();
         iWeights = Normalizer.normalizeWithBounds(iWeights, algoParams.getMIN_BOUNDS(), algoParams.getMAX_BOUNDS(),algoParams.getDIMENSIONS());
 
         if (currLC == 0) {
@@ -219,7 +221,7 @@ public class IKASLFacade {
             }
         }
         String loc = ImportantFileNames.DATA_DIRNAME + File.separator + getStreamID() + File.separator + "LC" + currLC + ".xml";
-        ikaslXMLWriter.writeXML(loc, testResultMap);
+        ikaslXMLWriter.writeXML(loc, testResultMap,currTimeFrame);
 
     }
 

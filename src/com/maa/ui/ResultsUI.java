@@ -39,7 +39,7 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
         setLocationRelativeTo(null);
         setVisible(true);
 
-        ikaslList = new ArrayList<>();
+
 
 
         FileUtils.setUpConfigDir();
@@ -59,15 +59,19 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
 
             ImportantFileNames.DATA_DIRNAME = dPModel.getHomeDir();
             FileUtils.setUpDataDir(bPModel.getStreamIDs());
-
-            for (AlgoParamModel aPModel : aPModels) {
-                ikaslList.add(new IKASLFacade(aPModel.getStreamID(), aPModel, this));
-            }
-
             FileUtils.createDirs(bPModel.getStreamIDs(), ImportantFileNames.DATA_DIRNAME);
+            
+            initializeIKASLComponents();
         }
 
 
+    }
+
+    private void initializeIKASLComponents() {
+        ikaslList = new ArrayList<>();
+        for (AlgoParamModel aPModel : aPModels) {
+            ikaslList.add(new IKASLFacade(aPModel.getStreamID(), aPModel, this));
+        }
     }
 
     /**
@@ -96,6 +100,9 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
         resourceInfoBtn = new javax.swing.JButton();
         runBtn = new javax.swing.JButton();
         summaryBtn = new javax.swing.JButton();
+        statusProgressBar = new javax.swing.JProgressBar();
+        jLabel4 = new javax.swing.JLabel();
+        statusLbl = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -243,6 +250,10 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
             }
         });
 
+        jLabel4.setText("Status:");
+
+        statusLbl.setText("Display Current Status");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -258,9 +269,16 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(runBtn)
+                        .addComponent(jLabel4)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(statusLbl)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(summaryBtn)))
+                        .addComponent(runBtn)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(summaryBtn))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(statusProgressBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -276,10 +294,16 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addGap(18, 18, 18)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(runBtn)
-                    .addComponent(summaryBtn))
-                .addContainerGap(25, Short.MAX_VALUE))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(runBtn)
+                        .addComponent(summaryBtn))
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(jLabel4)
+                        .addComponent(statusLbl)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(statusProgressBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
         );
 
         pack();
@@ -294,7 +318,7 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
 
         if (!ikaslList.isEmpty()) {
             for (IKASLFacade ikasl : ikaslList) {
-                
+
                 ikasl.runSingleStep();
             }
         }
@@ -392,12 +416,15 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JButton resourceInfoBtn;
     private javax.swing.JButton runBtn;
+    private javax.swing.JLabel statusLbl;
+    private javax.swing.JProgressBar statusProgressBar;
     private javax.swing.JButton summaryBtn;
     // End of variables declaration//GEN-END:variables
     private IntroUI introUI;
@@ -413,6 +440,8 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
 
         ImportantFileNames.DATA_DIRNAME = dPModel.getHomeDir();
         FileUtils.setUpDataDir(bPModel.getStreamIDs());
+        
+        initializeIKASLComponents();
     }
 
     @Override
