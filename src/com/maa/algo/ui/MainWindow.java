@@ -13,7 +13,7 @@ import com.maa.algo.ikasl.core.IKASLRun;
 import com.maa.algo.listeners.TaskListener;
 import com.maa.algo.objects.GNode;
 import com.maa.algo.objects.GenLayer;
-import com.maa.algo.objects.VisGNode;
+import com.maa.vis.objects.VisGNode;
 import com.maa.algo.utils.AlgoParameters;
 import com.maa.algo.utils.Constants;
 import com.maa.algo.utils.FileReader;

@@ -4,9 +4,10 @@
  * and open the template in the editor.
  */
 
-package com.maa.algo.objects;
+package com.maa.vis.objects;
 
 import com.maa.algo.enums.VisGNodeType;
+import com.maa.algo.objects.GNode;
 import java.util.ArrayList;
 
 /**
@@ -14,15 +15,16 @@ import java.util.ArrayList;
  * @author thushang
  */
 public class VisGNode {
-    private GNode gNode;
+    private int[] id;
     private int[] coordinates;
     private VisGNode pVgn;
     private ArrayList<int[]> otherParentCoords;
     private int childCount;
     private VisGNodeType vgnType;
+    private ArrayList<String> inputs;
     
-    public VisGNode(GNode gNode, int x, int y, VisGNode pVgn, VisGNodeType vgnType){
-        this.gNode = gNode;
+    public VisGNode(int[] id, int x, int y, VisGNode pVgn, VisGNodeType vgnType){
+        this.id = id;
         this.coordinates = new int[]{x,y};
         this.pVgn = pVgn;
         this.vgnType=vgnType;
@@ -44,8 +46,8 @@ public class VisGNode {
         return this.pVgn;
     }
     
-    public GNode getGNode(){
-        return gNode;
+    public int[] getID(){
+        return id;
     }
 
     /**
@@ -106,4 +108,12 @@ public class VisGNode {
     public void setOtherParentCoords(ArrayList<int[]> otherParentCoords) {
         this.otherParentCoords = otherParentCoords;
     }
+
+    /**
+     * @return the inputs
+     */
+    public ArrayList<String> getInputs() {
+        return inputs;
+    }
+    
 }

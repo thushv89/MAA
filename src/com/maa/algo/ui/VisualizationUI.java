@@ -4,7 +4,7 @@
  */
 package com.maa.algo.ui;
 
-import com.maa.algo.objects.VisGNode;
+import com.maa.vis.objects.VisGNode;
 import java.awt.EventQueue;
 import java.util.ArrayList;
 import javax.swing.JFrame;

@@ -22,6 +22,7 @@ import com.maa.algo.utils.LogMessages;
 import com.maa.algo.utils.Utils;
 import com.maa.enums.AggregationType;
 import com.maa.listeners.DefaultValueListener;
+import com.maa.listeners.IKASLStepListener;
 import com.maa.models.AlgoParamModel;
 import com.maa.utils.DefaultValues;
 import com.maa.utils.ImportantFileNames;
@@ -57,11 +58,14 @@ public class IKASLFacade {
     private String dir;
     private IKASLOutputXMLWriter ikaslXMLWriter;
     private String streamID;
-    private DefaultValueListener defListener;
-    private AlgoParameters algoParams;
     private String currTimeFrame;
     
-    public IKASLFacade(String streamID, AlgoParamModel aPModel, DefaultValueListener defListener) {
+    private AlgoParameters algoParams;
+    
+    private DefaultValueListener defListener;
+    private IKASLStepListener ikaslListener;
+    
+    public IKASLFacade(String streamID, AlgoParamModel aPModel, DefaultValueListener defListener, IKASLStepListener ikaslListener) {
         linkGen = new InterLinkGenerator();
         this.aPModel = aPModel;
         ikaslXMLWriter = new IKASLOutputXMLWriter();
@@ -73,6 +77,7 @@ public class IKASLFacade {
         learner = new IKASLLearner(algoParams);
         generalizer = new IKASLGeneralizer(algoParams);
         
+        this.ikaslListener = ikaslListener;
     }
 
     public void runSingleStep() {
@@ -118,6 +123,8 @@ public class IKASLFacade {
             saveLastGLayer(new LastGenLayer(initGLayer, currLC));
 
             mapInputsToGNodes(currLC, initGLayer, iWeights, iNames);
+            
+            ikaslListener.IKASLStepCompleted(streamID);
 
         } else {
             //get currLC-1 genLayer
@@ -161,6 +168,7 @@ public class IKASLFacade {
             //add Genlayer(currLC) to allGLayers
             saveLastGLayer(new LastGenLayer(currGLayer, currLC));
 
+            ikaslListener.IKASLStepCompleted(streamID);
             //getClusterPurityVector(currGLayer, prevGLayer, currLC);
 
             //ArrayList<String> links = linkGen.getAllIntsectLinks(currGLayer, allGNodeInputs.get(currLC), prevGLayer, allGNodeInputs.get(currLC - 1), 50);
@@ -284,5 +292,9 @@ public class IKASLFacade {
      */
     public String getStreamID() {
         return streamID;
+    }
+    
+    public int getCurrLC(){
+        return retrieveLastGLayer().getLC();
     }
 }

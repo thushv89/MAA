@@ -8,14 +8,17 @@ import com.maa.algo.ikasl.core.IKASLFacade;
 import com.maa.io.FileUtils;
 import com.maa.listeners.ConfigCompleteListener;
 import com.maa.listeners.DefaultValueListener;
+import com.maa.listeners.IKASLStepListener;
 import com.maa.models.AlgoParamModel;
 import com.maa.models.BasicParamModel;
 import com.maa.models.DataParamModel;
 import com.maa.utils.ImportantFileNames;
 import com.maa.utils.InputParser;
+import com.maa.vis.objects.ReducedNode;
 import com.maa.xml.AlgoXMLParser;
 import com.maa.xml.BasicXMLParser;
 import com.maa.xml.DataXMLParser;
+import com.maa.xml.IKASLOutputXMLParser;
 import java.io.File;
 import java.util.ArrayList;
 import javax.swing.JOptionPane;
@@ -24,7 +27,7 @@ import javax.swing.JOptionPane;
  *
  * @author Thush
  */
-public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListener, DefaultValueListener {
+public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListener, DefaultValueListener, IKASLStepListener {
 
     private BasicParamModel bPModel;
     private DataParamModel dPModel;
@@ -33,6 +36,8 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
 
     private int lastLC;
     private ArrayList<String> lastTimeFrames;
+    
+    private int selectedStreamIdx;
     
     /**
      * Creates new form ResultsUI
@@ -64,13 +69,13 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
             initializeIKASLComponents();
         }
 
-
+        selectedStreamIdx = streamCmb.getSelectedIndex();
     }
 
     private void initializeIKASLComponents() {
         ikaslList = new ArrayList<>();
         for (AlgoParamModel aPModel : aPModels) {
-            ikaslList.add(new IKASLFacade(aPModel.getStreamID(), aPModel, this));
+            ikaslList.add(new IKASLFacade(aPModel.getStreamID(), aPModel, this, this));
         }
     }
 
@@ -105,6 +110,10 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
         statusLbl = new javax.swing.JLabel();
         jLabel5 = new javax.swing.JLabel();
         jLabel6 = new javax.swing.JLabel();
+        jLabel7 = new javax.swing.JLabel();
+        streamCmb = new javax.swing.JComboBox();
+        updateBtn = new javax.swing.JButton();
+        jSeparator1 = new javax.swing.JSeparator();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -118,7 +127,7 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 0, Short.MAX_VALUE)
+            .addGap(0, 561, Short.MAX_VALUE)
         );
 
         jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder("Anomalies"));
@@ -260,65 +269,87 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
 
         jLabel6.setText("Last Cycle ID: ");
 
+        jLabel7.setText("Show Results For:");
+
+        updateBtn.setText("Update");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                            .addComponent(jPanel3, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jPanel4, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addGroup(layout.createSequentialGroup()
+                        .addContainerGap()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
-                                .addComponent(jLabel4)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                                    .addComponent(jPanel3, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addComponent(jPanel4, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(statusLbl))
-                            .addComponent(statusProgressBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(35, 35, 35)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                             .addGroup(layout.createSequentialGroup()
+                                .addComponent(statusProgressBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(38, 38, 38)
                                 .addComponent(jLabel6)
-                                .addGap(0, 0, Short.MAX_VALUE))
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(jLabel5)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .addComponent(runBtn)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(summaryBtn)))))
+                                .addComponent(summaryBtn))))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addContainerGap()
+                                .addComponent(jLabel4)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(statusLbl)
+                                .addGap(35, 35, 35)
+                                .addComponent(jLabel5))
+                            .addGroup(layout.createSequentialGroup()
+                                .addGap(304, 304, 304)
+                                .addComponent(jLabel7)
+                                .addGap(18, 18, 18)
+                                .addComponent(streamCmb, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(updateBtn)))
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
+            .addComponent(jSeparator1)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(streamCmb, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel7)
+                    .addComponent(updateBtn))
+                .addGap(7, 7, 7)
+                .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(9, 9, 9)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(layout.createSequentialGroup()
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addGap(18, 18, 18)
+                        .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jPanel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel4)
+                            .addComponent(statusLbl)
+                            .addComponent(jLabel5))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(statusProgressBar, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel6, javax.swing.GroupLayout.Alignment.TRAILING)))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(runBtn)
-                        .addComponent(summaryBtn))
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(jLabel4)
-                        .addComponent(statusLbl)
-                        .addComponent(jLabel5)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(statusProgressBar, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel6, javax.swing.GroupLayout.Alignment.TRAILING))
+                        .addComponent(summaryBtn)))
                 .addContainerGap())
         );
 
@@ -435,15 +466,19 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
+    private javax.swing.JLabel jLabel7;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
+    private javax.swing.JSeparator jSeparator1;
     private javax.swing.JButton resourceInfoBtn;
     private javax.swing.JButton runBtn;
     private javax.swing.JLabel statusLbl;
     private javax.swing.JProgressBar statusProgressBar;
+    private javax.swing.JComboBox streamCmb;
     private javax.swing.JButton summaryBtn;
+    private javax.swing.JButton updateBtn;
     // End of variables declaration//GEN-END:variables
     private IntroUI introUI;
     private BasicParameterUI bUI;
@@ -456,6 +491,8 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
         aPModels = algoUI.getAlgoParamModels();
         algoUI.dispose();
 
+        selectedStreamIdx = streamCmb.getSelectedIndex();
+        
         ImportantFileNames.DATA_DIRNAME = dPModel.getHomeDir();
         FileUtils.setUpDataDir(bPModel.getStreamIDs());
         
@@ -496,5 +533,42 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
     @Override
     public void useDefaultWeights(String stream) {
         JOptionPane.showMessageDialog(null, "Stream: " + stream + " Using Default Values for Weights", "Warning", JOptionPane.WARNING_MESSAGE);
+    }
+
+    private int getProgressPortionsForIKASLStep(){
+        return 100/bPModel.getNumStreams();
+    }
+    
+    int ikaslStepCount = 0;
+    @Override
+    public void IKASLStepCompleted(String stream) {
+        int currVal = statusProgressBar.getValue()+getProgressPortionsForIKASLStep();
+        statusProgressBar.setValue(currVal);
+        statusProgressBar.repaint();
+        ikaslStepCount++;
+        
+        statusLbl.setText("Execution Complete for Stream: "+stream);
+        if(ikaslStepCount==bPModel.getNumStreams()){
+            statusLbl.setText("Execution Complete");
+        }
+    }
+    
+    private void loadLastSetOfLC(int count){
+        IKASLOutputXMLParser ikaslXMLParser = new IKASLOutputXMLParser();
+        ArrayList<ReducedNode> allNodes = new ArrayList<>();
+        int currLC = ikaslList.get(selectedStreamIdx).getCurrLC();
+        if(currLC<count-1){
+            for(int i=0;i<=currLC;i++){
+                String loc = ImportantFileNames.DATA_DIRNAME+File.separator+
+                        bPModel.getStreamIDs().get(selectedStreamIdx)+File.separator+"LC"+i+".xml";
+                 allNodes.addAll(ikaslXMLParser.parseXML(loc));
+            }
+        } else {
+            for(int i=currLC-count+1;i<=currLC;i++){
+                String loc = ImportantFileNames.DATA_DIRNAME+File.separator+
+                        bPModel.getStreamIDs().get(selectedStreamIdx)+File.separator+"LC"+i+".xml";
+                 allNodes.addAll(ikaslXMLParser.parseXML(loc));
+            }
+        }
     }
 }

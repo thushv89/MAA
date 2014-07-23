@@ -35,4 +35,10 @@ public class PreferenceNames {
     public static final String AGGREGATION_TYPE = "AggregationType";
  
     public static final String TIME_FRAME_TAG = "TimeFrame";
+    
+    public static final String IKASL_OUTPUT_TAG = "IKASLOutput";
+    public static final String NODE_TAG = "Node";
+    public static final String NODE_ID_TAG = "ID";
+    public static final String NODE_PARENT_ID_TAG = "ParentID";
+    
 }

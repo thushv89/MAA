@@ -45,7 +45,8 @@ public class InputParser {
                     String text = line;
                     if (text != null && text.length() > 0) {
                         text = text.toLowerCase().trim();
-                        if (!text.contains(PreferenceNames.TIME_FRAME_TAG.trim().toLowerCase())) {
+                        String textWithNoSpaces = text.replaceAll("\\s+","");
+                        if (!textWithNoSpaces.contains(PreferenceNames.TIME_FRAME_TAG.trim().toLowerCase())) {
                             String[] tokens = text.split(tokenizer);
 
                             strForWeights.add(tokens[0]);
