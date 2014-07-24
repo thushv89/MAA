@@ -28,7 +28,7 @@ import org.w3c.dom.Element;
  */
 public class IKASLOutputXMLWriter {
 
-    public void writeXML(String loc,Map<String,String> results, String timeFrame) {
+    public void writeXML(String loc,Map<String,String> results, Map<String,String> gNodeWeights, String timeFrame) {
         try {
             DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
@@ -43,8 +43,9 @@ public class IKASLOutputXMLWriter {
                 String id = e.getKey().split(Constants.NODE_TOKENIZER)[0];
                 String pID = e.getKey().split(Constants.NODE_TOKENIZER)[1];
                 Element nodeElement = doc.createElement("Node");
-                nodeElement.setAttribute("ID", id);
-                nodeElement.setAttribute("ParentID", pID);
+                nodeElement.setAttribute(PreferenceNames.ID_TAG, id);
+                nodeElement.setAttribute(PreferenceNames.PARENT_ID_TAG, pID);
+                nodeElement.setAttribute(PreferenceNames.WEIGHTS_TAG, gNodeWeights.get(id));
                 nodeElement.appendChild(doc.createTextNode(e.getValue()));
                 algoParamElement.appendChild(nodeElement);
             }

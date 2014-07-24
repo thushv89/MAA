@@ -33,10 +33,12 @@ import org.xml.sax.SAXException;
 public class IKASLOutputXMLParser {
 
     HashMap<String, String> nodeInputsMap;
-
+    String tf;
+    
     public ArrayList<ReducedNode> parseXML(String loc) {
 
         ArrayList<ReducedNode> allNodes = new ArrayList<>();
+        
         nodeInputsMap = new HashMap<>();
     
         File fXmlFile = new File(loc);
@@ -55,6 +57,14 @@ public class IKASLOutputXMLParser {
         }
 
         doc.getDocumentElement().normalize();
+        
+        NodeList nList2 = doc.getElementsByTagName(PreferenceNames.IKASL_OUTPUT_TAG);
+        Node n = nList2.item(0);
+        if (n.getNodeType() == Node.ELEMENT_NODE) {
+                Element ele = (Element) n;
+                tf = ele.getAttribute(PreferenceNames.TIME_FRAME_TAG);
+        }
+        
         NodeList nList = doc.getElementsByTagName(PreferenceNames.NODE_TAG);
 
         for (int temp = 0; temp < nList.getLength(); temp++) {
@@ -82,5 +92,9 @@ public class IKASLOutputXMLParser {
     
     public HashMap<String,String> getNodeInputsMap(){
         return nodeInputsMap;
+    }
+    
+    public String getTimeFram(){
+        return tf;
     }
 }

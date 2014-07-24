@@ -10,7 +10,9 @@ package com.maa.utils;
  */
 public class PreferenceNames {
     
-    public static final String ID_NAME = "ID";
+    public static final String ID_TAG = "ID";
+    public static final String PARENT_ID_TAG = "ParentID";
+    public static final String WEIGHTS_TAG = "Weights";
     
     //Basic parameters names
     public static final String BASIC_ELEMENT_NAME = "BasicParameters";

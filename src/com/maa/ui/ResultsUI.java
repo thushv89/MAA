@@ -22,6 +22,8 @@ import com.maa.xml.AlgoXMLParser;
 import com.maa.xml.BasicXMLParser;
 import com.maa.xml.DataXMLParser;
 import com.maa.xml.IKASLOutputXMLParser;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.io.File;
 import java.util.ArrayList;
 import javax.swing.JFrame;
@@ -42,9 +44,12 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
     private DataParamModel dPModel;
     private ArrayList<AlgoParamModel> aPModels;
     private ArrayList<IKASLFacade> ikaslList;
+    
     private int lastLC;
-    private ArrayList<String> lastTimeFrames;
+    private ArrayList<String> allTimeFrames;
+    private ArrayList<ArrayList<ReducedNode>> allNodes;
     private int selectedStreamIdx;
+    
 
     /**
      * Creates new form ResultsUI
@@ -78,6 +83,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
         }
 
         selectedStreamIdx = streamCmb.getSelectedIndex();
+        
     }
 
     private void initializeStreamsCombo() {
@@ -106,14 +112,14 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
         jPanel2 = new javax.swing.JPanel();
         anomaliesInfoBtn = new javax.swing.JButton();
         anomalousChk = new javax.swing.JCheckBox();
-        jComboBox1 = new javax.swing.JComboBox();
+        anoTFCmb = new javax.swing.JComboBox();
         jLabel1 = new javax.swing.JLabel();
         jPanel3 = new javax.swing.JPanel();
         freqInfoBtn = new javax.swing.JButton();
         jCheckBox2 = new javax.swing.JCheckBox();
         jLabel2 = new javax.swing.JLabel();
-        jComboBox2 = new javax.swing.JComboBox();
-        jComboBox3 = new javax.swing.JComboBox();
+        fromPatTFCmb = new javax.swing.JComboBox();
+        toPatTFCmb = new javax.swing.JComboBox();
         jLabel3 = new javax.swing.JLabel();
         jPanel4 = new javax.swing.JPanel();
         resourceInfoBtn = new javax.swing.JButton();
@@ -130,6 +136,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
         jSeparator1 = new javax.swing.JSeparator();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setResizable(false);
 
         visContainerPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Result Visuailzation"));
 
@@ -137,7 +144,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
         visContainerPanel.setLayout(visContainerPanelLayout);
         visContainerPanelLayout.setHorizontalGroup(
             visContainerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 655, Short.MAX_VALUE)
+            .addGap(0, 716, Short.MAX_VALUE)
         );
         visContainerPanelLayout.setVerticalGroup(
             visContainerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -150,8 +157,6 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
 
         anomalousChk.setText("Show Anomalous Clusters");
 
-        jComboBox1.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-
         jLabel1.setText("Show anomalies for:");
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
@@ -163,19 +168,20 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addComponent(anomalousChk)
-                        .addGap(46, 46, 46)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(anomaliesInfoBtn))
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addComponent(anoTFCmb, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addContainerGap())
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(anoTFCmb, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel1))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 104, Short.MAX_VALUE)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -197,32 +203,28 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
 
         jLabel2.setText("Show patterns for time frame:");
 
-        jComboBox2.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-
-        jComboBox3.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-
         jLabel3.setText("to");
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(jPanel3Layout.createSequentialGroup()
+            .addGroup(jPanel3Layout.createSequentialGroup()
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
                         .addComponent(jCheckBox2)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(freqInfoBtn))
-                    .addGroup(jPanel3Layout.createSequentialGroup()
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
                         .addContainerGap()
                         .addComponent(jLabel2)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jComboBox2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(fromPatTFCmb, javax.swing.GroupLayout.PREFERRED_SIZE, 77, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jLabel3)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jComboBox3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addGap(12, 12, 12))
+                        .addComponent(toPatTFCmb, javax.swing.GroupLayout.PREFERRED_SIZE, 77, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap())
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -230,8 +232,8 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
                 .addContainerGap()
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel2)
-                    .addComponent(jComboBox2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jComboBox3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(fromPatTFCmb, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(toPatTFCmb, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel3))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 99, Short.MAX_VALUE)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -395,39 +397,20 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
     }//GEN-LAST:event_summaryBtnActionPerformed
 
     private void updateBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_updateBtnActionPerformed
-        ArrayList<ArrayList<ReducedNode>> allNodes = loadLastSetOfLC(DefaultValues.IN_MEMORY_LAYER_COUNT);
-        VisualizeUIUtils visUtils = new VisualizeUIUtils();
-        GNodeVisualizer visualizer = new GNodeVisualizer();
-        ArrayList<VisGNode> allVisNodes = visualizer.assignVisCoordinatesToGNodes(allNodes);
-        JPanel visPanel = visUtils.getVisJPanel(allVisNodes);
-
-        JScrollPane scrollPane = new JScrollPane();
-        scrollPane.getViewport().addChangeListener(this);
-        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.setBorder(new EtchedBorder());
-        
-        int horizontalStartingGap = 8;
-        int verticalStartngGap = 15;
-        int scrollPaneWidth = visContainerPanel.getPreferredSize().width - (2*horizontalStartingGap);
-        int scrollPaneHeight = visContainerPanel.getPreferredSize().height - (2*verticalStartngGap);
-        
-        if(visPanel.getPreferredSize().width < visContainerPanel.getPreferredSize().width){
-            scrollPaneWidth = visPanel.getPreferredSize().width;
-        } 
-        if(visPanel.getPreferredSize().height < visContainerPanel.getPreferredSize().height){
-            //20 is there because otherwise when this conditions occur, vertical bar appears
-            scrollPaneHeight = visPanel.getPreferredSize().height + 22;
-        } 
-        
-        scrollPane.setBounds(horizontalStartingGap, verticalStartngGap, scrollPaneWidth, scrollPaneHeight);
-        scrollPane.setViewportView(visPanel);
-        visContainerPanel.add(scrollPane);
-
-        this.revalidate();
-        this.repaint();
+        initiateAndVisualizeResult();
+        fillCombos();
     }//GEN-LAST:event_updateBtnActionPerformed
 
+    private void fillCombos(){
+        for(String s : allTimeFrames){
+           anoTFCmb.addItem(s);
+           fromPatTFCmb.addItem(s);
+           toPatTFCmb.addItem(s);
+        }
+        
+        toPatTFCmb.setSelectedIndex(toPatTFCmb.getItemCount()-1);
+    }
+    
     private String createSettingsSummary() {
         String result = "<html><b>Basic Parameters</b><br/> "
                 + "Frequency: " + bPModel.getFreq().name() + "<br/>"
@@ -505,13 +488,12 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
         });
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JComboBox anoTFCmb;
     private javax.swing.JButton anomaliesInfoBtn;
     private javax.swing.JCheckBox anomalousChk;
     private javax.swing.JButton freqInfoBtn;
+    private javax.swing.JComboBox fromPatTFCmb;
     private javax.swing.JCheckBox jCheckBox2;
-    private javax.swing.JComboBox jComboBox1;
-    private javax.swing.JComboBox jComboBox2;
-    private javax.swing.JComboBox jComboBox3;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
@@ -529,6 +511,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
     private javax.swing.JProgressBar statusProgressBar;
     private javax.swing.JComboBox streamCmb;
     private javax.swing.JButton summaryBtn;
+    private javax.swing.JComboBox toPatTFCmb;
     private javax.swing.JButton updateBtn;
     private javax.swing.JPanel visContainerPanel;
     // End of variables declaration//GEN-END:variables
@@ -607,28 +590,65 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
     }
 
     private ArrayList<ArrayList<ReducedNode>> loadLastSetOfLC(int count) {
+        allTimeFrames = new ArrayList<>();
         IKASLOutputXMLParser ikaslXMLParser = new IKASLOutputXMLParser();
-        ArrayList<ArrayList<ReducedNode>> allNodes = new ArrayList<>();
+        ArrayList<ArrayList<ReducedNode>> nodes = new ArrayList<>();
         int currLC = ikaslList.get(selectedStreamIdx).getCurrLC();
         if (currLC < count - 1) {
             for (int i = 0; i <= currLC; i++) {
                 String loc = ImportantFileNames.DATA_DIRNAME + File.separator
                         + bPModel.getStreamIDs().get(selectedStreamIdx) + File.separator + "LC" + i + ".xml";
-                allNodes.add(ikaslXMLParser.parseXML(loc));
+                nodes.add(ikaslXMLParser.parseXML(loc));
+                allTimeFrames.add(ikaslXMLParser.getTimeFram());
             }
         } else {
             for (int i = currLC - count + 1; i <= currLC; i++) {
                 String loc = ImportantFileNames.DATA_DIRNAME + File.separator
                         + bPModel.getStreamIDs().get(selectedStreamIdx) + File.separator + "LC" + i + ".xml";
-                allNodes.add(ikaslXMLParser.parseXML(loc));
+                nodes.add(ikaslXMLParser.parseXML(loc));
+                allTimeFrames.add(ikaslXMLParser.getTimeFram());
             }
         }
 
-        return allNodes;
+        return nodes;
     }
 
     @Override
     public void stateChanged(ChangeEvent e) {
+        this.revalidate();
+        this.repaint();
+    }
+
+    private void initiateAndVisualizeResult() {
+        allNodes = loadLastSetOfLC(DefaultValues.IN_MEMORY_LAYER_COUNT);
+        VisualizeUIUtils visUtils = new VisualizeUIUtils();
+        GNodeVisualizer visualizer = new GNodeVisualizer();
+        ArrayList<VisGNode> allVisNodes = visualizer.assignVisCoordinatesToGNodes(allNodes);
+        JPanel visPanel = visUtils.getVisJPanel(allVisNodes);
+
+        JScrollPane scrollPane = new JScrollPane();
+        scrollPane.getViewport().addChangeListener(this);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setBorder(new EtchedBorder());
+        
+        int horizontalStartingGap = 8;
+        int verticalStartngGap = 15;
+        int scrollPaneWidth = visContainerPanel.getPreferredSize().width - (2*horizontalStartingGap);
+        int scrollPaneHeight = visContainerPanel.getPreferredSize().height - (2*verticalStartngGap);
+        
+        if(visPanel.getPreferredSize().width < visContainerPanel.getPreferredSize().width){
+            scrollPaneWidth = visPanel.getPreferredSize().width;
+        } 
+        if(visPanel.getPreferredSize().height < visContainerPanel.getPreferredSize().height){
+            //20 is there because otherwise when this conditions occur, vertical bar appears
+            scrollPaneHeight = visPanel.getPreferredSize().height + 22;
+        } 
+        
+        scrollPane.setBounds(horizontalStartingGap, verticalStartngGap, scrollPaneWidth, scrollPaneHeight);
+        scrollPane.setViewportView(visPanel);
+        visContainerPanel.add(scrollPane);
+
         this.revalidate();
         this.repaint();
     }

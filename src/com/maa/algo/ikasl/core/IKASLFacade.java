@@ -40,6 +40,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -120,7 +121,10 @@ public class IKASLFacade {
             //add it to allGLayers
             saveLastGLayer(new LastGenLayer(initGLayer, currLC));
 
-            mapInputsToGNodes(currLC, initGLayer, iWeights, iNames);
+            Map<String,String> testResultMap = mapInputsToGNodes(currLC, initGLayer, iWeights, iNames);
+            Map<String,String> weights = getMapGNodeWeights(initGLayer);
+            String loc = ImportantFileNames.DATA_DIRNAME + File.separator + getStreamID() + File.separator + "LC" + currLC + ".xml";
+            ikaslXMLWriter.writeXML(loc, testResultMap, weights,currTimeFrame);
 
             ikaslListener.IKASLStepCompleted(streamID);
 
@@ -153,7 +157,11 @@ public class IKASLFacade {
             //because otherwise it is possible to non-hit node to have inputs assigned
             //Intuitively it should not happen, because it appeared as a non-hit node at the first place, 
             //because there were no inputs similar to that.
-            mapInputsToGNodes(currLC, currGLayer, iWeights, iNames);
+            Map<String, String> testResultMap = mapInputsToGNodes(currLC, currGLayer, iWeights, iNames);
+            Map<String, String> weights = getMapGNodeWeights(currGLayer);
+            String loc = ImportantFileNames.DATA_DIRNAME + File.separator + getStreamID() + File.separator + "LC" + currLC + ".xml";
+            ikaslXMLWriter.writeXML(loc, testResultMap, weights,currTimeFrame);
+
 
             ArrayList<GNode> nonHitNodes = learner.getNonHitNodes(currLC);
             for (GNode gn : nonHitNodes) {
@@ -201,7 +209,19 @@ public class IKASLFacade {
         return null;
     }
 
-    private void mapInputsToGNodes(int currLC, GenLayer gLayer, ArrayList<double[]> iWeights, ArrayList<String> iNames) {
+    private Map<String, String> getMapGNodeWeights(GenLayer gLayer){
+        Map<String,String> gNodeWeights = new HashMap<>();
+        
+        for(Map.Entry<String,GNode> e : gLayer.getMap().entrySet()){
+            String s = e.getValue().getWeights()[0]+"";
+            for(int i=1;i<e.getValue().getWeights().length;i++){
+                s += ","+e.getValue().getWeights()[i];
+            }
+            gNodeWeights.put(e.getKey(), s);
+        }
+        return gNodeWeights;
+    }
+    private Map<String, String> mapInputsToGNodes(int currLC, GenLayer gLayer, ArrayList<double[]> iWeights, ArrayList<String> iNames) {
 
         Map<String, String> testResultMap = new HashMap<String, String>();
         Map<String, GNode> nodeMap = gLayer.getMap();
@@ -224,9 +244,8 @@ public class IKASLFacade {
                 testResultMap.put(testResultKey, newStr);
             }
         }
-        String loc = ImportantFileNames.DATA_DIRNAME + File.separator + getStreamID() + File.separator + "LC" + currLC + ".xml";
-        ikaslXMLWriter.writeXML(loc, testResultMap, currTimeFrame);
 
+        return testResultMap;
     }
 
     private AlgoParameters readAndSetAlgoParameters(AlgoParamModel aPModel) {

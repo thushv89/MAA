@@ -87,7 +87,7 @@ public class AlgoXMLWriter extends XMLWriter {
 
             for (int i = 0; i < ids.size(); i++) {
                 Element streamElement = doc.createElement(PreferenceNames.STREAM_ELEMENT_NAME);
-                streamElement.setAttribute(PreferenceNames.ID_NAME, ids.get(i));
+                streamElement.setAttribute(PreferenceNames.ID_TAG, ids.get(i));
                 AlgoParamModel aPModel;
                 
                 aPModel = (AlgoParamModel) pModels.get(i);

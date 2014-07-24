@@ -68,7 +68,7 @@ public class AlgoXMLParser extends XMLParser{
                     aType = AggregationType.AVERAGE;
                 }
                 
-                String id = eElement.getAttribute(PreferenceNames.ID_NAME);
+                String id = eElement.getAttribute(PreferenceNames.ID_TAG);
                 int dimensions = Integer.parseInt(eElement.getAttribute(PreferenceNames.DIMENSIONS_NAME));
                 double sf = Double.parseDouble(eElement.getAttribute(PreferenceNames.SPREAD_FACTOR));
                 double lr = Double.parseDouble(eElement.getAttribute(PreferenceNames.LEARN_RATE));
@@ -123,7 +123,7 @@ public class AlgoXMLParser extends XMLParser{
                     aType = AggregationType.AVERAGE;
                 }
                 
-                String id = eElement.getAttribute(PreferenceNames.ID_NAME);
+                String id = eElement.getAttribute(PreferenceNames.ID_TAG);
                 int dimensions = Integer.parseInt(eElement.getAttribute(PreferenceNames.DIMENSIONS_NAME));
                 double sf = Double.parseDouble(eElement.getAttribute(PreferenceNames.SPREAD_FACTOR));
                 double lr = Double.parseDouble(eElement.getAttribute(PreferenceNames.LEARN_RATE));
