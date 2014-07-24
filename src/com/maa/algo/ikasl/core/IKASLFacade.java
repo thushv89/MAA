@@ -59,12 +59,10 @@ public class IKASLFacade {
     private IKASLOutputXMLWriter ikaslXMLWriter;
     private String streamID;
     private String currTimeFrame;
-    
     private AlgoParameters algoParams;
-    
     private DefaultValueListener defListener;
     private IKASLStepListener ikaslListener;
-    
+
     public IKASLFacade(String streamID, AlgoParamModel aPModel, DefaultValueListener defListener, IKASLStepListener ikaslListener) {
         linkGen = new InterLinkGenerator();
         this.aPModel = aPModel;
@@ -73,10 +71,10 @@ public class IKASLFacade {
         this.defListener = defListener;
 
         algoParams = readAndSetAlgoParameters(aPModel);
-        
+
         learner = new IKASLLearner(algoParams);
         generalizer = new IKASLGeneralizer(algoParams);
-        
+
         this.ikaslListener = ikaslListener;
     }
 
@@ -98,7 +96,7 @@ public class IKASLFacade {
         ArrayList<double[]> iWeights = iParser.getIWeights();
         ArrayList<String> iNames = iParser.getINames();
         currTimeFrame = iParser.getTimeFrame();
-        iWeights = Normalizer.normalizeWithBounds(iWeights, algoParams.getMIN_BOUNDS(), algoParams.getMAX_BOUNDS(),algoParams.getDIMENSIONS());
+        iWeights = Normalizer.normalizeWithBounds(iWeights, algoParams.getMIN_BOUNDS(), algoParams.getMAX_BOUNDS(), algoParams.getDIMENSIONS());
 
         if (currLC == 0) {
             //run the GSOM algorithm and output LearnLayer
@@ -108,10 +106,10 @@ public class IKASLFacade {
             //ArrayList<String> bestHits = getHitNodeIDs(initLLayer, AlgoParameters.HIT_THRESHOLD, AlgoParameters.MAX_NEIGHBORHOOD_RADIUS);
             GenLayer initGLayer = null;
             if (algoParams.getMINING_TYPE() == MiningType.ANOMALY) {
-                ArrayList<String> bestHits = HitThresholdGenerator.getHitNodeIDsAnomalies(initLLayer, algoParams.getHIT_THRESHOLD(),algoParams.getMAX_NEIGHBORHOOD_RADIUS(),algoParams);
+                ArrayList<String> bestHits = HitThresholdGenerator.getHitNodeIDsAnomalies(initLLayer, algoParams.getHIT_THRESHOLD(), algoParams.getMAX_NEIGHBORHOOD_RADIUS(), algoParams);
                 initGLayer = generalizer.generalize(currLC, initLLayer, bestHits, algoParams.getGType());
             } else {
-                ArrayList<String> bestHits = HitThresholdGenerator.getHitNodeIDsGeneral(initLLayer, algoParams.getHIT_THRESHOLD(),algoParams.getMAX_NEIGHBORHOOD_RADIUS(),algoParams);
+                ArrayList<String> bestHits = HitThresholdGenerator.getHitNodeIDsGeneral(initLLayer, algoParams.getHIT_THRESHOLD(), algoParams.getMAX_NEIGHBORHOOD_RADIUS(), algoParams);
                 initGLayer = generalizer.generalize(currLC, initLLayer, bestHits, algoParams.getGType());
             }
 
@@ -123,7 +121,7 @@ public class IKASLFacade {
             saveLastGLayer(new LastGenLayer(initGLayer, currLC));
 
             mapInputsToGNodes(currLC, initGLayer, iWeights, iNames);
-            
+
             ikaslListener.IKASLStepCompleted(streamID);
 
         } else {
@@ -140,10 +138,10 @@ public class IKASLFacade {
             GenLayer currGLayer = null;
 
             if (algoParams.getMINING_TYPE() == MiningType.ANOMALY) {
-                ArrayList<String> bestHits = HitThresholdGenerator.getHitNodeIDsAnomalies(currLLayer, algoParams.getHIT_THRESHOLD(), algoParams.getMAX_NEIGHBORHOOD_RADIUS(),algoParams);
+                ArrayList<String> bestHits = HitThresholdGenerator.getHitNodeIDsAnomalies(currLLayer, algoParams.getHIT_THRESHOLD(), algoParams.getMAX_NEIGHBORHOOD_RADIUS(), algoParams);
                 currGLayer = generalizer.generalize(currLC, currLLayer, bestHits, algoParams.getGType());
             } else {
-                ArrayList<String> bestHits = HitThresholdGenerator.getHitNodeIDsGeneral(currLLayer, algoParams.getHIT_THRESHOLD(), algoParams.getMAX_NEIGHBORHOOD_RADIUS(),algoParams);
+                ArrayList<String> bestHits = HitThresholdGenerator.getHitNodeIDsGeneral(currLLayer, algoParams.getHIT_THRESHOLD(), algoParams.getMAX_NEIGHBORHOOD_RADIUS(), algoParams);
                 currGLayer = generalizer.generalize(currLC, currLLayer, bestHits, algoParams.getGType());
             }
 
@@ -197,10 +195,8 @@ public class IKASLFacade {
 
         } catch (ClassNotFoundException ex) {
             //error
-            int i = 0;
         } catch (IOException ex) {
             //error
-            int i = 0;
         }
         return null;
     }
@@ -212,10 +208,10 @@ public class IKASLFacade {
 
         for (int i = 0; i < iWeights.size(); i++) {
 
-            GNode winner = Utils.selectGWinner(nodeMap, iWeights.get(i),algoParams.getDIMENSIONS(),algoParams.getATTR_WEIGHTS(),algoParams.getDistType());
+            GNode winner = Utils.selectGWinner(nodeMap, iWeights.get(i), algoParams.getDIMENSIONS(), algoParams.getATTR_WEIGHTS(), algoParams.getDistType());
 
             String winnerStr = Utils.generateIndexString(winner.getLc(), winner.getId());
-            String testResultKey = winnerStr+Constants.NODE_TOKENIZER+winner.getParentID();
+            String testResultKey = winnerStr + Constants.NODE_TOKENIZER + winner.getParentID();
             GNode winnerNode = nodeMap.get(winnerStr);
             winnerNode.increasePrevHitVal();
 
@@ -229,7 +225,7 @@ public class IKASLFacade {
             }
         }
         String loc = ImportantFileNames.DATA_DIRNAME + File.separator + getStreamID() + File.separator + "LC" + currLC + ".xml";
-        ikaslXMLWriter.writeXML(loc, testResultMap,currTimeFrame);
+        ikaslXMLWriter.writeXML(loc, testResultMap, currTimeFrame);
 
     }
 
@@ -281,11 +277,10 @@ public class IKASLFacade {
         }
 
         AlgoParameters params = new AlgoParameters(aPModel.getDimensions(), aPModel.getSpreadFactor(), aPModel.getNeighRad(), aPModel.getLearningRate(), aPModel.getIterations(),
-                aPModel.getHitThreshold(),min, max, weights, selectedGType, MiningType.GENERAL, DistanceType.EUCLIDEAN);
-        
+                aPModel.getHitThreshold(), min, max, weights, selectedGType, MiningType.GENERAL, DistanceType.EUCLIDEAN);
+
         return params;
     }
-    
 
     /**
      * @return the streamID
@@ -293,8 +288,13 @@ public class IKASLFacade {
     public String getStreamID() {
         return streamID;
     }
-    
-    public int getCurrLC(){
-        return retrieveLastGLayer().getLC();
+
+    public int getCurrLC() {
+        LastGenLayer lastLayer = retrieveLastGLayer();
+        if (lastLayer != null) {
+            return lastLayer.getLC();
+        } else {
+            return 0;
+        }
     }
 }

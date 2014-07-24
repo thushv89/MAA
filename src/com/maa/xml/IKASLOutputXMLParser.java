@@ -32,11 +32,13 @@ import org.xml.sax.SAXException;
  */
 public class IKASLOutputXMLParser {
 
-    ArrayList<ReducedNode> allNodes = new ArrayList<>();
-    HashMap<String, String> nodeInputsMap = new HashMap<>();
+    HashMap<String, String> nodeInputsMap;
 
     public ArrayList<ReducedNode> parseXML(String loc) {
 
+        ArrayList<ReducedNode> allNodes = new ArrayList<>();
+        nodeInputsMap = new HashMap<>();
+    
         File fXmlFile = new File(loc);
         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder dBuilder;

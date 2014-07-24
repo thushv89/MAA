@@ -4,6 +4,7 @@
  */
 package com.maa.ui;
 
+import com.maa.algo.ikasl.auxi.GNodeVisualizer;
 import com.maa.algo.ikasl.core.IKASLFacade;
 import com.maa.io.FileUtils;
 import com.maa.listeners.ConfigCompleteListener;
@@ -12,6 +13,7 @@ import com.maa.listeners.IKASLStepListener;
 import com.maa.models.AlgoParamModel;
 import com.maa.models.BasicParamModel;
 import com.maa.models.DataParamModel;
+import com.maa.utils.DefaultValues;
 import com.maa.utils.ImportantFileNames;
 import com.maa.utils.InputParser;
 import com.maa.vis.objects.ReducedNode;
@@ -66,12 +68,19 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
             FileUtils.setUpDataDir(bPModel.getStreamIDs());
             FileUtils.createDirs(bPModel.getStreamIDs(), ImportantFileNames.DATA_DIRNAME);
             
+            initializeStreamsCombo();
             initializeIKASLComponents();
         }
 
         selectedStreamIdx = streamCmb.getSelectedIndex();
     }
 
+    private void initializeStreamsCombo(){
+        for (String s : bPModel.getStreamIDs()) {
+            streamCmb.addItem(s);
+        }
+    }
+    
     private void initializeIKASLComponents() {
         ikaslList = new ArrayList<>();
         for (AlgoParamModel aPModel : aPModels) {
@@ -272,6 +281,11 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
         jLabel7.setText("Show Results For:");
 
         updateBtn.setText("Update");
+        updateBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                updateBtnActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -362,7 +376,6 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
     int currLC = 0;
     private void runBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_runBtnActionPerformed
 
-
         if (!ikaslList.isEmpty()) {
             for (IKASLFacade ikasl : ikaslList) {
 
@@ -375,6 +388,12 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
         JOptionPane.showMessageDialog(null, createSettingsSummary(), "Settings Overview", JOptionPane.PLAIN_MESSAGE);
 
     }//GEN-LAST:event_summaryBtnActionPerformed
+
+    private void updateBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_updateBtnActionPerformed
+        ArrayList<ArrayList<ReducedNode>> allNodes = loadLastSetOfLC(DefaultValues.IN_MEMORY_LAYER_COUNT);
+        GNodeVisualizer visualizer = new GNodeVisualizer();
+        visualizer.assignVisCoordinatesToGNodes(allNodes);
+    }//GEN-LAST:event_updateBtnActionPerformed
 
     private String createSettingsSummary() {
         String result = "<html><b>Basic Parameters</b><br/> "
@@ -496,6 +515,7 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
         ImportantFileNames.DATA_DIRNAME = dPModel.getHomeDir();
         FileUtils.setUpDataDir(bPModel.getStreamIDs());
         
+        initializeStreamsCombo();
         initializeIKASLComponents();
     }
 
@@ -553,22 +573,24 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
         }
     }
     
-    private void loadLastSetOfLC(int count){
+    private ArrayList<ArrayList<ReducedNode>> loadLastSetOfLC(int count){
         IKASLOutputXMLParser ikaslXMLParser = new IKASLOutputXMLParser();
-        ArrayList<ReducedNode> allNodes = new ArrayList<>();
+        ArrayList<ArrayList<ReducedNode>> allNodes = new ArrayList<>();
         int currLC = ikaslList.get(selectedStreamIdx).getCurrLC();
         if(currLC<count-1){
             for(int i=0;i<=currLC;i++){
                 String loc = ImportantFileNames.DATA_DIRNAME+File.separator+
                         bPModel.getStreamIDs().get(selectedStreamIdx)+File.separator+"LC"+i+".xml";
-                 allNodes.addAll(ikaslXMLParser.parseXML(loc));
+                 allNodes.add(ikaslXMLParser.parseXML(loc));
             }
         } else {
             for(int i=currLC-count+1;i<=currLC;i++){
                 String loc = ImportantFileNames.DATA_DIRNAME+File.separator+
                         bPModel.getStreamIDs().get(selectedStreamIdx)+File.separator+"LC"+i+".xml";
-                 allNodes.addAll(ikaslXMLParser.parseXML(loc));
+                 allNodes.add(ikaslXMLParser.parseXML(loc));
             }
         }
+        
+        return allNodes;
     }
 }
