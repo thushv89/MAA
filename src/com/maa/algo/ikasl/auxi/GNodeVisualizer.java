@@ -21,6 +21,8 @@ public class GNodeVisualizer {
 
     public ArrayList<VisGNode> assignVisCoordinatesToGNodes(ArrayList<ArrayList<ReducedNode>> layers) {
 
+        //create an arraylist of arraylist sorted by learning cycle
+        //there will be one arraylist for each learn cycle
         ArrayList<ArrayList<ReducedNode>> gNodesByLC = new ArrayList<ArrayList<ReducedNode>>();
         for (int i = 0; i < layers.size(); i++) {
             ArrayList<ReducedNode> lyr = layers.get(i);
@@ -38,8 +40,6 @@ public class GNodeVisualizer {
 
         ArrayList<VisGNode> allVisNodes = new ArrayList<VisGNode>();
         for (int i = 0; i < gNodesByLC.size(); i++) {
-            
-
             //for each layer (!= 0) get the parent layer and increase child count
             //child count is important to adjust node positions
             if (i > 0) {
@@ -56,8 +56,7 @@ public class GNodeVisualizer {
                             parentVisNode.incrementChildCount();
                         }
 
-                    } 
-                    //if node is a multi-parent node
+                    } //if node is a multi-parent node
                     else {
                         String[] allParents = key.split(Constants.PARENT_TOKENIZER);
                         //increase the childcount variable of all the parents
@@ -75,7 +74,7 @@ public class GNodeVisualizer {
                 //for all VisNodes in the layer immediately below the current (i)
                 //if child count is greater than 1, adjust the positions of all the nodes to the right and below
                 for (VisGNode gn : allVisNodes) {
-                    if (gn.getCoordinates()[1] == i - 1 && gn.getChildCount() > 1) {
+                    if (gn.getCoordinates()[1] < i && gn.getChildCount() > 1) {
                         int offset = gn.getChildCount() - 1;
                         //change the coordinates of all the nodes below the considered layer (i)
                         for (int j = i - 1; j >= 0; j--) {
@@ -85,10 +84,10 @@ public class GNodeVisualizer {
                                 VisGNode vgn = allVisNodes.get(idx);
                                 int currX = vgn.getCoordinates()[0];
                                 vgn.setCoordinates(currX + offset, j);
-                                
+
                                 //if node's parent has coordinates (currX,j) update node's parent coordinate value to the new coordinates
                                 //TODO: This needs to be done for all the 'otherParentNodes' too because merged nodes have otherParentNodes
-                                
+
                             }
                         }
                     }
@@ -98,7 +97,7 @@ public class GNodeVisualizer {
             int count = 0;
             //creating and inserting VisGNodes
             for (ReducedNode rn : gNodesByLC.get(i)) {
-                
+
                 //if its layer 0, insert nodes by increasing count variable
                 if (i == 0) {
                     allVisNodes.add(new VisGNode(rn.getId(), count, i, null, VisGNodeType.HIT));
@@ -139,29 +138,19 @@ public class GNodeVisualizer {
                             while (allVisNodes.contains(new VisGNode(null, newX, i, null, VisGNodeType.HIT))) {
                                 newX++;
                             }
-                            
+
                             VisGNode newVisNode = new VisGNode(rn.getId(), newX, i, pVgn, VisGNodeType.HIT);
                             ArrayList<int[]> allParentCoords = new ArrayList<int[]>();
-                            for(VisGNode n : allParents){
+                            for (VisGNode n : allParents) {
                                 allParentCoords.add(n.getCoordinates());
                             }
                             newVisNode.setOtherParentCoords(allParentCoords);
-                            
+
                             allVisNodes.add(newVisNode);
                         }
                     }
                 }
             }
-
-            /*
-            //adding non-hit nodes
-            for (GNode gn : layers.get(i).getCopyMap().values()) {
-                if (gn.getLc() != i) {
-                    VisGNode sameNode = getVisGNodeWithID(allVisNodes, gn.getLc(), gn.getId());
-                    allVisNodes.add(new VisGNode(gn, sameNode.getCoordinates()[0], i,
-                            sameNode.getCoordinates()[0], sameNode.getCoordinates()[1], VisGNodeType.NON_HIT));
-                }
-            }*/
         }
 
         return allVisNodes;

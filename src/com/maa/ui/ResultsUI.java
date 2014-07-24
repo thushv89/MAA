@@ -17,30 +17,35 @@ import com.maa.utils.DefaultValues;
 import com.maa.utils.ImportantFileNames;
 import com.maa.utils.InputParser;
 import com.maa.vis.objects.ReducedNode;
+import com.maa.vis.objects.VisGNode;
 import com.maa.xml.AlgoXMLParser;
 import com.maa.xml.BasicXMLParser;
 import com.maa.xml.DataXMLParser;
 import com.maa.xml.IKASLOutputXMLParser;
 import java.io.File;
 import java.util.ArrayList;
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.border.EtchedBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 /**
  *
  * @author Thush
  */
-public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListener, DefaultValueListener, IKASLStepListener {
+public class ResultsUI extends javax.swing.JFrame implements ChangeListener,ConfigCompleteListener, DefaultValueListener, IKASLStepListener {
 
     private BasicParamModel bPModel;
     private DataParamModel dPModel;
     private ArrayList<AlgoParamModel> aPModels;
     private ArrayList<IKASLFacade> ikaslList;
-
     private int lastLC;
     private ArrayList<String> lastTimeFrames;
-    
     private int selectedStreamIdx;
-    
+
     /**
      * Creates new form ResultsUI
      */
@@ -67,7 +72,7 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
             ImportantFileNames.DATA_DIRNAME = dPModel.getHomeDir();
             FileUtils.setUpDataDir(bPModel.getStreamIDs());
             FileUtils.createDirs(bPModel.getStreamIDs(), ImportantFileNames.DATA_DIRNAME);
-            
+
             initializeStreamsCombo();
             initializeIKASLComponents();
         }
@@ -75,12 +80,12 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
         selectedStreamIdx = streamCmb.getSelectedIndex();
     }
 
-    private void initializeStreamsCombo(){
+    private void initializeStreamsCombo() {
         for (String s : bPModel.getStreamIDs()) {
             streamCmb.addItem(s);
         }
     }
-    
+
     private void initializeIKASLComponents() {
         ikaslList = new ArrayList<>();
         for (AlgoParamModel aPModel : aPModels) {
@@ -97,7 +102,7 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jPanel1 = new javax.swing.JPanel();
+        visContainerPanel = new javax.swing.JPanel();
         jPanel2 = new javax.swing.JPanel();
         anomaliesInfoBtn = new javax.swing.JButton();
         anomalousChk = new javax.swing.JCheckBox();
@@ -126,16 +131,16 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Result Visuailzation"));
+        visContainerPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Result Visuailzation"));
 
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        javax.swing.GroupLayout visContainerPanelLayout = new javax.swing.GroupLayout(visContainerPanel);
+        visContainerPanel.setLayout(visContainerPanelLayout);
+        visContainerPanelLayout.setHorizontalGroup(
+            visContainerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGap(0, 655, Short.MAX_VALUE)
         );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        visContainerPanelLayout.setVerticalGroup(
+            visContainerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGap(0, 561, Short.MAX_VALUE)
         );
 
@@ -302,7 +307,7 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
                                     .addComponent(jPanel4, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                     .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addComponent(visContainerPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(statusProgressBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addGap(38, 38, 38)
@@ -349,7 +354,7 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
                         .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(jPanel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(visContainerPanel, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
@@ -391,8 +396,36 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
 
     private void updateBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_updateBtnActionPerformed
         ArrayList<ArrayList<ReducedNode>> allNodes = loadLastSetOfLC(DefaultValues.IN_MEMORY_LAYER_COUNT);
+        VisualizeUIUtils visUtils = new VisualizeUIUtils();
         GNodeVisualizer visualizer = new GNodeVisualizer();
-        visualizer.assignVisCoordinatesToGNodes(allNodes);
+        ArrayList<VisGNode> allVisNodes = visualizer.assignVisCoordinatesToGNodes(allNodes);
+        JPanel visPanel = visUtils.getVisJPanel(allVisNodes);
+
+        JScrollPane scrollPane = new JScrollPane();
+        scrollPane.getViewport().addChangeListener(this);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setBorder(new EtchedBorder());
+        
+        int horizontalStartingGap = 8;
+        int verticalStartngGap = 15;
+        int scrollPaneWidth = visContainerPanel.getPreferredSize().width - (2*horizontalStartingGap);
+        int scrollPaneHeight = visContainerPanel.getPreferredSize().height - (2*verticalStartngGap);
+        
+        if(visPanel.getPreferredSize().width < visContainerPanel.getPreferredSize().width){
+            scrollPaneWidth = visPanel.getPreferredSize().width;
+        } 
+        if(visPanel.getPreferredSize().height < visContainerPanel.getPreferredSize().height){
+            //20 is there because otherwise when this conditions occur, vertical bar appears
+            scrollPaneHeight = visPanel.getPreferredSize().height + 22;
+        } 
+        
+        scrollPane.setBounds(horizontalStartingGap, verticalStartngGap, scrollPaneWidth, scrollPaneHeight);
+        scrollPane.setViewportView(visPanel);
+        visContainerPanel.add(scrollPane);
+
+        this.revalidate();
+        this.repaint();
     }//GEN-LAST:event_updateBtnActionPerformed
 
     private String createSettingsSummary() {
@@ -486,7 +519,6 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
-    private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
@@ -498,6 +530,7 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
     private javax.swing.JComboBox streamCmb;
     private javax.swing.JButton summaryBtn;
     private javax.swing.JButton updateBtn;
+    private javax.swing.JPanel visContainerPanel;
     // End of variables declaration//GEN-END:variables
     private IntroUI introUI;
     private BasicParameterUI bUI;
@@ -511,10 +544,10 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
         algoUI.dispose();
 
         selectedStreamIdx = streamCmb.getSelectedIndex();
-        
+
         ImportantFileNames.DATA_DIRNAME = dPModel.getHomeDir();
         FileUtils.setUpDataDir(bPModel.getStreamIDs());
-        
+
         initializeStreamsCombo();
         initializeIKASLComponents();
     }
@@ -555,42 +588,48 @@ public class ResultsUI extends javax.swing.JFrame implements ConfigCompleteListe
         JOptionPane.showMessageDialog(null, "Stream: " + stream + " Using Default Values for Weights", "Warning", JOptionPane.WARNING_MESSAGE);
     }
 
-    private int getProgressPortionsForIKASLStep(){
-        return 100/bPModel.getNumStreams();
+    private int getProgressPortionsForIKASLStep() {
+        return 100 / bPModel.getNumStreams();
     }
-    
     int ikaslStepCount = 0;
+
     @Override
     public void IKASLStepCompleted(String stream) {
-        int currVal = statusProgressBar.getValue()+getProgressPortionsForIKASLStep();
+        int currVal = statusProgressBar.getValue() + getProgressPortionsForIKASLStep();
         statusProgressBar.setValue(currVal);
         statusProgressBar.repaint();
         ikaslStepCount++;
-        
-        statusLbl.setText("Execution Complete for Stream: "+stream);
-        if(ikaslStepCount==bPModel.getNumStreams()){
+
+        statusLbl.setText("Execution Complete for Stream: " + stream);
+        if (ikaslStepCount == bPModel.getNumStreams()) {
             statusLbl.setText("Execution Complete");
         }
     }
-    
-    private ArrayList<ArrayList<ReducedNode>> loadLastSetOfLC(int count){
+
+    private ArrayList<ArrayList<ReducedNode>> loadLastSetOfLC(int count) {
         IKASLOutputXMLParser ikaslXMLParser = new IKASLOutputXMLParser();
         ArrayList<ArrayList<ReducedNode>> allNodes = new ArrayList<>();
         int currLC = ikaslList.get(selectedStreamIdx).getCurrLC();
-        if(currLC<count-1){
-            for(int i=0;i<=currLC;i++){
-                String loc = ImportantFileNames.DATA_DIRNAME+File.separator+
-                        bPModel.getStreamIDs().get(selectedStreamIdx)+File.separator+"LC"+i+".xml";
-                 allNodes.add(ikaslXMLParser.parseXML(loc));
+        if (currLC < count - 1) {
+            for (int i = 0; i <= currLC; i++) {
+                String loc = ImportantFileNames.DATA_DIRNAME + File.separator
+                        + bPModel.getStreamIDs().get(selectedStreamIdx) + File.separator + "LC" + i + ".xml";
+                allNodes.add(ikaslXMLParser.parseXML(loc));
             }
         } else {
-            for(int i=currLC-count+1;i<=currLC;i++){
-                String loc = ImportantFileNames.DATA_DIRNAME+File.separator+
-                        bPModel.getStreamIDs().get(selectedStreamIdx)+File.separator+"LC"+i+".xml";
-                 allNodes.add(ikaslXMLParser.parseXML(loc));
+            for (int i = currLC - count + 1; i <= currLC; i++) {
+                String loc = ImportantFileNames.DATA_DIRNAME + File.separator
+                        + bPModel.getStreamIDs().get(selectedStreamIdx) + File.separator + "LC" + i + ".xml";
+                allNodes.add(ikaslXMLParser.parseXML(loc));
             }
         }
-        
+
         return allNodes;
+    }
+
+    @Override
+    public void stateChanged(ChangeEvent e) {
+        this.revalidate();
+        this.repaint();
     }
 }
