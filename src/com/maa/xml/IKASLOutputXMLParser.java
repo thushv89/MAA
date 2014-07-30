@@ -4,7 +4,7 @@
  */
 package com.maa.xml;
 
-import com.maa.algo.enums.VisGNodeType;
+import com.maa.algo.enums.NodeHitType;
 import com.maa.enums.ExecFrequency;
 import com.maa.models.DataParamModel;
 import com.maa.models.ParamModel;

@@ -327,10 +327,10 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         getContentPane().add(statusLbl, new org.netbeans.lib.awtextra.AbsoluteConstraints(51, 647, -1, -1));
 
         jLabel5.setText("Time for Last Execution Cycle:");
-        getContentPane().add(jLabel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(194, 647, -1, -1));
+        getContentPane().add(jLabel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(250, 644, -1, 20));
 
         jLabel6.setText("Last Cycle ID: ");
-        getContentPane().add(jLabel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(194, 672, -1, -1));
+        getContentPane().add(jLabel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(250, 670, -1, -1));
 
         jLabel7.setText("Show Results For:");
         getContentPane().add(jLabel7, new org.netbeans.lib.awtextra.AbsoluteConstraints(304, 15, -1, -1));
@@ -419,10 +419,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
     }
 
     private void fillCombos() {
-        //anoTFCmb.removeAllItems();
-        //fromPatTFCmb.removeAllItems();
-        //toPatTFCmb.removeAllItems();
-
+        
         Vector anoVec = new Vector();
         Vector toPatVec = new Vector();
         Vector fromPatVec = new Vector();

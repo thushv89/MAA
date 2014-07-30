@@ -5,9 +5,7 @@
  */
 package com.maa.algo.ikasl.auxi;
 
-import com.maa.algo.enums.VisGNodeType;
-import com.maa.algo.objects.GNode;
-import com.maa.algo.objects.GenLayer;
+import com.maa.algo.enums.NodeHitType;
 import com.maa.vis.objects.VisGNode;
 import com.maa.algo.utils.Constants;
 import com.maa.vis.objects.ReducedNode;
@@ -23,13 +21,13 @@ public class GNodeVisualizer {
 
         //create an arraylist of arraylist sorted by learning cycle
         //there will be one arraylist for each learn cycle
-        ArrayList<ArrayList<ReducedNode>> gNodesByLC = new ArrayList<ArrayList<ReducedNode>>();
+        ArrayList<ArrayList<ReducedNode>> gNodesByLC = new ArrayList<>();
         for (int i = 0; i < layers.size(); i++) {
             ArrayList<ReducedNode> lyr = layers.get(i);
-            ArrayList<ReducedNode> singleLC = new ArrayList<ReducedNode>();
+            ArrayList<ReducedNode> singleLC = new ArrayList<>();
             for (ReducedNode rn : lyr) {
                 if (rn.getId()[0] == i) {
-                    singleLC.add(rn);
+                        singleLC.add(rn);
                 } else {
                     ArrayList<ReducedNode> layerForLC = gNodesByLC.get(rn.getId()[0]);
                     layerForLC.add(rn);
@@ -38,7 +36,7 @@ public class GNodeVisualizer {
             gNodesByLC.add(singleLC);
         }
 
-        ArrayList<VisGNode> allVisNodes = new ArrayList<VisGNode>();
+        ArrayList<VisGNode> allVisNodes = new ArrayList<>();
         for (int i = 0; i < gNodesByLC.size(); i++) {
             //for each layer (!= 0) get the parent layer and increase child count
             //child count is important to adjust node positions
@@ -100,7 +98,7 @@ public class GNodeVisualizer {
 
                 //if its layer 0, insert nodes by increasing count variable
                 if (i == 0) {
-                    allVisNodes.add(new VisGNode(rn.getId(), count, i, null, VisGNodeType.HIT));
+                    allVisNodes.add(new VisGNode(rn.getId(), count, i, null, NodeHitType.HIT));
                     count++;
                 } else {
                     String parentID = rn.getpID();
@@ -114,14 +112,14 @@ public class GNodeVisualizer {
                         //this causes sometimes pVgn to be null
                         if (pVgn != null) {
                             int newX = pVgn.getCoordinates()[0];
-                            while (allVisNodes.contains(new VisGNode(null, newX, i, null, VisGNodeType.HIT))) {
+                            while (allVisNodes.contains(new VisGNode(null, newX, i, null, NodeHitType.HIT))) {
                                 newX++;
                             }
-                            allVisNodes.add(new VisGNode(rn.getId(), newX, i, pVgn, VisGNodeType.HIT));
+                            allVisNodes.add(new VisGNode(rn.getId(), newX, i, pVgn, NodeHitType.HIT));
                         }
                     } else {
                         String[] allParentIDs = parentID.split(Constants.PARENT_TOKENIZER);
-                        ArrayList<VisGNode> allParents = new ArrayList<VisGNode>();
+                        ArrayList<VisGNode> allParents = new ArrayList<>();
 
                         for (String p : allParentIDs) {
                             int lc = Integer.parseInt(p.split(Constants.I_J_TOKENIZER)[0]);
@@ -135,12 +133,12 @@ public class GNodeVisualizer {
                         //this causes sometimes pVgn to be null
                         if (pVgn != null) {
                             int newX = pVgn.getCoordinates()[0];
-                            while (allVisNodes.contains(new VisGNode(null, newX, i, null, VisGNodeType.HIT))) {
+                            while (allVisNodes.contains(new VisGNode(null, newX, i, null, NodeHitType.HIT))) {
                                 newX++;
                             }
 
-                            VisGNode newVisNode = new VisGNode(rn.getId(), newX, i, pVgn, VisGNodeType.HIT);
-                            ArrayList<int[]> allParentCoords = new ArrayList<int[]>();
+                            VisGNode newVisNode = new VisGNode(rn.getId(), newX, i, pVgn, NodeHitType.HIT);
+                            ArrayList<int[]> allParentCoords = new ArrayList<>();
                             for (VisGNode n : allParents) {
                                 allParentCoords.add(n.getCoordinates());
                             }
@@ -166,7 +164,7 @@ public class GNodeVisualizer {
     }
 
     private ArrayList<Integer> getNodeIdxToRightWithLC(ArrayList<VisGNode> list, int lc, VisGNode node) {
-        ArrayList<Integer> rightNodes = new ArrayList<Integer>();
+        ArrayList<Integer> rightNodes = new ArrayList<>();
         int[] coords = node.getCoordinates();
         for (VisGNode n : list) {
             int x = n.getCoordinates()[0];

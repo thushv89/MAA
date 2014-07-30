@@ -4,6 +4,7 @@
  */
 package com.maa.vis.objects;
 
+import com.maa.algo.enums.NodeHitType;
 import java.util.ArrayList;
 
 /**
@@ -11,17 +12,27 @@ import java.util.ArrayList;
  * @author Thush
  */
 public class ReducedNode {
-    
+
     private int[] id;
     private String pID;
     private double[] weights;
     private ArrayList<String> inputs;
-    
-    public ReducedNode(int[] id, String pID, double[] weights, ArrayList<String> inputs){
-        this.id=id;
-        this.pID=pID;
+    private NodeHitType hType;
+
+    public ReducedNode(int[] id, String pID, double[] weights, ArrayList<String> inputs) {
+        this.id = id;
+        this.pID = pID;
         this.weights = weights;
         this.inputs = inputs;
+        setNodeHitType();
+    }
+
+    private void setNodeHitType() {
+        if (inputs != null && !inputs.isEmpty()) {
+            this.hType = NodeHitType.HIT;
+        } else {
+            this.hType = NodeHitType.NON_HIT;
+        }
     }
 
     /**
@@ -72,6 +83,11 @@ public class ReducedNode {
     public ArrayList<String> getInputs() {
         return inputs;
     }
-    
-    
+
+    /**
+     * @return the hType
+     */
+    public NodeHitType gethType() {
+        return hType;
+    }
 }

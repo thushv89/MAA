@@ -6,7 +6,7 @@
 
 package com.maa.vis.objects;
 
-import com.maa.algo.enums.VisGNodeType;
+import com.maa.algo.enums.NodeHitType;
 import com.maa.algo.objects.GNode;
 import java.util.ArrayList;
 
@@ -20,10 +20,9 @@ public class VisGNode {
     private VisGNode pVgn;
     private ArrayList<int[]> otherParentCoords;
     private int childCount;
-    private VisGNodeType vgnType;
-    private ArrayList<String> inputs;
+    private NodeHitType vgnType;
     
-    public VisGNode(int[] id, int x, int y, VisGNode pVgn, VisGNodeType vgnType){
+    public VisGNode(int[] id, int x, int y, VisGNode pVgn, NodeHitType vgnType){
         this.id = id;
         this.coordinates = new int[]{x,y};
         this.pVgn = pVgn;
@@ -84,14 +83,14 @@ public class VisGNode {
     /**
      * @return the vgnType
      */
-    public VisGNodeType getVgnType() {
+    public NodeHitType getVgnType() {
         return vgnType;
     }
 
     /**
      * @param vgnType the vgnType to set
      */
-    public void setVgnType(VisGNodeType vgnType) {
+    public void setVgnType(NodeHitType vgnType) {
         this.vgnType = vgnType;
     }
 
@@ -107,13 +106,6 @@ public class VisGNode {
      */
     public void setOtherParentCoords(ArrayList<int[]> otherParentCoords) {
         this.otherParentCoords = otherParentCoords;
-    }
-
-    /**
-     * @return the inputs
-     */
-    public ArrayList<String> getInputs() {
-        return inputs;
     }
     
 }

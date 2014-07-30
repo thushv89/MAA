@@ -8,6 +8,6 @@ package com.maa.algo.enums;
  *
  * @author Thush
  */
-public enum VisGNodeType {
+public enum NodeHitType {
     HIT,NON_HIT
 }

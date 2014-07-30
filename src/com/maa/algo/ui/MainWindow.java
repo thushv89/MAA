@@ -7,7 +7,7 @@ package com.maa.algo.ui;
 import com.maa.algo.enums.DistanceType;
 import com.maa.algo.enums.GenType;
 import com.maa.algo.enums.MiningType;
-import com.maa.algo.enums.VisGNodeType;
+import com.maa.algo.enums.NodeHitType;
 import com.maa.algo.ikasl.auxi.GNodeVisualizer;
 import com.maa.algo.ikasl.core.IKASLRun;
 import com.maa.algo.listeners.TaskListener;
@@ -629,10 +629,10 @@ public class MainWindow extends javax.swing.JFrame implements TaskListener {
         for (int y = 0; y <= maxXY[1]; y++) {
             for (int x = 0; x <= maxXY[0]; x++) {
 
-                if (allVisNodes.contains(new VisGNode(null, x, y, null, VisGNodeType.HIT))) {
+                if (allVisNodes.contains(new VisGNode(null, x, y, null, NodeHitType.HIT))) {
 
                     JButton btn = new JButton();
-                    int gnIdx = allVisNodes.indexOf(new VisGNode(null, x, y, null, VisGNodeType.HIT));
+                    int gnIdx = allVisNodes.indexOf(new VisGNode(null, x, y, null, NodeHitType.HIT));
                     VisGNode vgn = allVisNodes.get(gnIdx);
                     GNode gn = allVisNodes.get(gnIdx).getGNode();
                     if(vgn.getParent()!=null){

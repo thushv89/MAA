@@ -4,7 +4,7 @@
  */
 package com.maa.ui;
 
-import com.maa.algo.enums.VisGNodeType;
+import com.maa.algo.enums.NodeHitType;
 import com.maa.algo.ikasl.auxi.GNodeVisualizer;
 import com.maa.algo.objects.GNode;
 import com.maa.vis.objects.VisGNode;
@@ -12,6 +12,8 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.GridLayout;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -22,6 +24,8 @@ import javax.swing.JPanel;
  * @author Thush
  */
 public class VisualizeUIUtils {
+    
+
     
     public JPanel getVisJPanel(final ArrayList<VisGNode> allVisNodes){
     GNodeVisualizer viser = new GNodeVisualizer();
@@ -59,10 +63,10 @@ public class VisualizeUIUtils {
         for (int y = 0; y <= maxXY[1]; y++) {
             for (int x = 0; x <= maxXY[0]; x++) {
 
-                if (allVisNodes.contains(new VisGNode(null, x, y, null, VisGNodeType.HIT))) {
+                if (allVisNodes.contains(new VisGNode(null, x, y, null, NodeHitType.HIT))) {
 
                     JButton btn = new JButton();
-                    int gnIdx = allVisNodes.indexOf(new VisGNode(null, x, y, null, VisGNodeType.HIT));
+                    int gnIdx = allVisNodes.indexOf(new VisGNode(null, x, y, null, NodeHitType.HIT));
                     VisGNode vgn = allVisNodes.get(gnIdx);
                     int[] coords = allVisNodes.get(gnIdx).getID();
                     
@@ -72,6 +76,8 @@ public class VisualizeUIUtils {
                     }
                     btn.setSize(new Dimension(btnWidth, btnHeight));
                     btnPanel.add(btn);
+
+                    
                 } else {
                     JLabel lbl = new JLabel();
                     lbl.setSize(btnWidth, btnHeight);
