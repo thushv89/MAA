@@ -16,6 +16,7 @@ import com.maa.vis.objects.VisGNode;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -32,14 +33,11 @@ import org.xml.sax.SAXException;
  */
 public class IKASLOutputXMLParser {
 
-    HashMap<String, String> nodeInputsMap;
     String tf;
     
     public ArrayList<ReducedNode> parseXML(String loc) {
 
         ArrayList<ReducedNode> allNodes = new ArrayList<>();
-        
-        nodeInputsMap = new HashMap<>();
     
         File fXmlFile = new File(loc);
         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
@@ -78,21 +76,23 @@ public class IKASLOutputXMLParser {
                 int[] id = new int[]{Integer.parseInt(idTokens[0]), Integer.parseInt(idTokens[1])};
 
                 String pIDStr = eElement.getAttribute(PreferenceNames.NODE_PARENT_ID_TAG);
+                
+                String[] weightStr = eElement.getAttribute(PreferenceNames.WEIGHTS_TAG).split(Tokenizers.INPUT_TOKENIZER);
+                double[] weights = new double[weightStr.length];
+                for(int i=0;i<weightStr.length && !weightStr[i].isEmpty();i++){
+                    weights[i] = Double.parseDouble(weightStr[i]);
+                }
 
-                String inputs = eElement.getNodeValue();
-
-                ReducedNode rn = new ReducedNode(id, pIDStr);
+                String inputStr = eElement.getFirstChild().getNodeValue();
+                ArrayList<String> inputs = new ArrayList<>(Arrays.asList(inputStr.split(Tokenizers.INPUT_TOKENIZER)));
+                ReducedNode rn = new ReducedNode(id, pIDStr,weights,inputs);
                 allNodes.add(rn);
                 
-                nodeInputsMap.put(idStr, inputs);
             }
         }
         return allNodes;
     }
     
-    public HashMap<String,String> getNodeInputsMap(){
-        return nodeInputsMap;
-    }
     
     public String getTimeFram(){
         return tf;

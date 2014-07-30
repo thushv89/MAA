@@ -6,7 +6,9 @@ package com.maa.io;
 
 import com.maa.models.DataParamModel;
 import com.maa.utils.ImportantFileNames;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 
 /**
@@ -21,6 +23,7 @@ public class FileUtils {
             f.delete();
         }
     }
+    
 
     public static boolean allConfigFilesExist() {
         String configHomeDir = ImportantFileNames.CONFIG_DIRNAME;
@@ -63,5 +66,36 @@ public class FileUtils {
                 f.mkdir();
             }
         }
+    }
+    
+    public static ArrayList<String> readLines(String fileName) {
+
+        ArrayList<String> lines = new ArrayList<String>();
+        
+        try {
+            //use buffering, reading one line at a time
+            //FileReader always assumes default encoding is OK!
+            File iFile = new File(fileName);
+            BufferedReader input = new BufferedReader(new java.io.FileReader(iFile));
+            try {
+                String line = null; //not declared within while loop
+
+                while ((line = input.readLine()) != null) {
+                    String text = line;
+                    if (text != null && text.length() > 0) {
+                        lines.add(text);
+                    }
+                }
+            } catch (IOException ex) {
+
+            }
+
+            input.close();
+
+        } catch (IOException ex) {
+            
+        }
+        
+        return lines;
     }
 }

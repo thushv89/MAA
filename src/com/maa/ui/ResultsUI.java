@@ -16,6 +16,7 @@ import com.maa.models.DataParamModel;
 import com.maa.utils.DefaultValues;
 import com.maa.utils.ImportantFileNames;
 import com.maa.utils.InputParser;
+import com.maa.utils.Tokenizers;
 import com.maa.vis.objects.ReducedNode;
 import com.maa.vis.objects.VisGNode;
 import com.maa.xml.AlgoXMLParser;
@@ -26,6 +27,13 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Vector;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -48,6 +56,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
     private int lastLC;
     private ArrayList<String> allTimeFrames;
     private ArrayList<ArrayList<ReducedNode>> allNodes;
+    private Map<String,ArrayList<String>> dimensions;
     private int selectedStreamIdx;
     
 
@@ -79,6 +88,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
             FileUtils.createDirs(bPModel.getStreamIDs(), ImportantFileNames.DATA_DIRNAME);
 
             initializeStreamsCombo();
+            dimensions = getDimensionsOfStreams();
             initializeIKASLComponents();
         }
 
@@ -99,6 +109,17 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
         }
     }
 
+    private Map<String,ArrayList<String>> getDimensionsOfStreams(){
+        Map<String,ArrayList<String>> dimNames = new HashMap<>();
+        
+        for(String s : bPModel.getStreamIDs()){
+            String loc = ImportantFileNames.DATA_DIRNAME+File.separator+s+File.separator+ImportantFileNames.ATTR_NAME_FILENAME;
+            String text = FileUtils.readLines(loc).get(0);
+            dimNames.put(s, new ArrayList<String>(Arrays.asList(text.split(Tokenizers.INPUT_TOKENIZER))));
+        }
+        return dimNames;
+    }
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -114,6 +135,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
         anomalousChk = new javax.swing.JCheckBox();
         anoTFCmb = new javax.swing.JComboBox();
         jLabel1 = new javax.swing.JLabel();
+        anoSummaryLbl = new javax.swing.JLabel();
         jPanel3 = new javax.swing.JPanel();
         freqInfoBtn = new javax.swing.JButton();
         jCheckBox2 = new javax.swing.JCheckBox();
@@ -157,7 +179,15 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
 
         anomalousChk.setText("Show Anomalous Clusters");
 
+        anoTFCmb.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                anoTFCmbItemStateChanged(evt);
+            }
+        });
+
         jLabel1.setText("Show anomalies for:");
+
+        anoSummaryLbl.setText("Anomaly information will appear here");
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -166,6 +196,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(anoSummaryLbl, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addComponent(anomalousChk)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -183,7 +214,9 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(anoTFCmb, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel1))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 104, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(anoSummaryLbl)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 79, Short.MAX_VALUE)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(anomaliesInfoBtn)
                     .addComponent(anomalousChk))
@@ -286,6 +319,12 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
         jLabel6.setText("Last Cycle ID: ");
 
         jLabel7.setText("Show Results For:");
+
+        streamCmb.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                streamCmbItemStateChanged(evt);
+            }
+        });
 
         updateBtn.setText("Update");
         updateBtn.addActionListener(new java.awt.event.ActionListener() {
@@ -397,16 +436,70 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
     }//GEN-LAST:event_summaryBtnActionPerformed
 
     private void updateBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_updateBtnActionPerformed
+        selectedStreamIdx = streamCmb.getSelectedIndex();
+        allNodes = loadLastSetOfLC(DefaultValues.IN_MEMORY_LAYER_COUNT);
         initiateAndVisualizeResult();
         fillCombos();
+        updateAnomalySummary();
+    
     }//GEN-LAST:event_updateBtnActionPerformed
 
-    private void fillCombos(){
-        for(String s : allTimeFrames){
-           anoTFCmb.addItem(s);
-           fromPatTFCmb.addItem(s);
-           toPatTFCmb.addItem(s);
+    private void anoTFCmbItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_anoTFCmbItemStateChanged
+        updateAnomalySummary();
+    }//GEN-LAST:event_anoTFCmbItemStateChanged
+
+    private void streamCmbItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_streamCmbItemStateChanged
+        selectedStreamIdx = streamCmb.getSelectedIndex();
+    }//GEN-LAST:event_streamCmbItemStateChanged
+
+    private void updateAnomalySummary(){
+        Map<String,Integer> anomaliesHigh = new HashMap<>(getHighestAnomaliesWithPercent((String)streamCmb.getSelectedItem(), anoTFCmb.getSelectedIndex()));
+        Map<String,Integer> maxAnomalies = new HashMap<>();
+        int count = Math.min(5, anomaliesHigh.size());
+        for(int i=0;i<count;i++){
+            int maxVal = 0;
+            String maxKey = null;
+            for(String key : anomaliesHigh.keySet()){
+                if(anomaliesHigh.get(key)>maxVal){
+                    maxVal = anomaliesHigh.get(key);
+                    maxKey = key;
+                }
+            }
+            anomaliesHigh.remove(maxKey);
+            maxAnomalies.put(maxKey, maxVal);
         }
+        
+        String result = "<html>";
+        for(String s : maxAnomalies.keySet()){
+            result += s + ": " + "<b>" + maxAnomalies.get(s)+"%"+"</b><br/>";
+        }
+        result += "<html/>";
+        anoSummaryLbl.setText(result);
+    
+    }
+    
+    private void fillCombos(){
+        //anoTFCmb.removeAllItems();
+        //fromPatTFCmb.removeAllItems();
+        //toPatTFCmb.removeAllItems();
+        
+        Vector anoVec = new Vector();
+        Vector toPatVec = new Vector();
+        Vector fromPatVec = new Vector();
+        
+        for(String s : allTimeFrames){
+           anoVec.add(s);
+           fromPatVec.add(s);
+           toPatVec.add(s);
+        }
+        
+        DefaultComboBoxModel defAnoCmbModel = new DefaultComboBoxModel(anoVec);
+        DefaultComboBoxModel defFromPatCmbModel = new DefaultComboBoxModel(fromPatVec);
+        DefaultComboBoxModel defToPatCmbModel = new DefaultComboBoxModel(toPatVec);
+        
+        anoTFCmb.setModel(defAnoCmbModel);
+        fromPatTFCmb.setModel(defFromPatCmbModel);
+        toPatTFCmb.setModel(defToPatCmbModel);
         
         toPatTFCmb.setSelectedIndex(toPatTFCmb.getItemCount()-1);
     }
@@ -488,6 +581,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
         });
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JLabel anoSummaryLbl;
     private javax.swing.JComboBox anoTFCmb;
     private javax.swing.JButton anomaliesInfoBtn;
     private javax.swing.JCheckBox anomalousChk;
@@ -620,7 +714,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
     }
 
     private void initiateAndVisualizeResult() {
-        allNodes = loadLastSetOfLC(DefaultValues.IN_MEMORY_LAYER_COUNT);
+        visContainerPanel.removeAll();
         VisualizeUIUtils visUtils = new VisualizeUIUtils();
         GNodeVisualizer visualizer = new GNodeVisualizer();
         ArrayList<VisGNode> allVisNodes = visualizer.assignVisCoordinatesToGNodes(allNodes);
@@ -651,5 +745,54 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
 
         this.revalidate();
         this.repaint();
+    }
+    
+    private Map<String,Integer> getHighestAnomaliesWithPercent(String stream, int idx){
+        Map<String,Integer> anomaliesWithPercent = new HashMap<>();
+        ArrayList<ReducedNode> nodes = allNodes.get(idx);
+        int total = 0;
+        
+        for(ReducedNode rn : nodes){
+            for(int i=0;i<rn.getWeights().length;i++){
+                if(rn.getWeights()[i]>DefaultValues.ANOMALY_HIGH_THRESHOLD_DEFAULT){
+                    String key = dimensions.get(stream).get(i);
+                    if(!anomaliesWithPercent.containsKey(key)){
+                    anomaliesWithPercent.put(key, rn.getInputs().size());
+                    } else {
+                        int val = anomaliesWithPercent.get(key);
+                        val += rn.getInputs().size();
+                        anomaliesWithPercent.put(key, val);
+                    }
+                }
+            }
+            total += rn.getInputs().size();
+        }
+        
+        for(Map.Entry<String,Integer> e : anomaliesWithPercent.entrySet()){
+            e.setValue(e.getValue()*100/total);
+        }
+        
+        return anomaliesWithPercent;
+    }
+    
+    private VisGNode getVisGNodeWithID(ArrayList<VisGNode> list, int lc, int id) {
+        for (VisGNode vgn : list) {
+            if (vgn.getID()[0] == lc && vgn.getID()[1] == id) {
+                return vgn;
+            }
+        }
+        return null;
+    }
+
+    class ReducedNodeInputComparator implements Comparator<ReducedNode>{
+
+        @Override
+        public int compare(ReducedNode o1, ReducedNode o2) {
+            if(o1.getInputs().size()>=o2.getInputs().size()){
+                return 1;
+            }else {
+                return -1;
+            }
+        }   
     }
 }

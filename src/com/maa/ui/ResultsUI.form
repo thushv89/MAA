@@ -157,15 +157,16 @@
       <Layout>
         <DimensionLayout dim="0">
           <Group type="103" groupAlignment="0" attributes="0">
-              <Group type="102" attributes="0">
+              <Group type="102" alignment="0" attributes="0">
                   <EmptySpace max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="0" attributes="0">
+                      <Component id="anoSummaryLbl" max="32767" attributes="0"/>
                       <Group type="102" alignment="0" attributes="0">
                           <Component id="anomalousChk" min="-2" max="-2" attributes="0"/>
                           <EmptySpace max="32767" attributes="0"/>
                           <Component id="anomaliesInfoBtn" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <Group type="102" alignment="0" attributes="0">
+                      <Group type="102" attributes="0">
                           <Component id="jLabel1" min="-2" max="-2" attributes="0"/>
                           <EmptySpace type="unrelated" max="-2" attributes="0"/>
                           <Component id="anoTFCmb" min="-2" max="-2" attributes="0"/>
@@ -183,7 +184,9 @@
                       <Component id="anoTFCmb" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="jLabel1" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
-                  <EmptySpace pref="104" max="32767" attributes="0"/>
+                  <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                  <Component id="anoSummaryLbl" min="-2" max="-2" attributes="0"/>
+                  <EmptySpace pref="79" max="32767" attributes="0"/>
                   <Group type="103" groupAlignment="3" attributes="0">
                       <Component id="anomaliesInfoBtn" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="anomalousChk" alignment="3" min="-2" max="-2" attributes="0"/>
@@ -210,10 +213,18 @@
               <StringArray count="0"/>
             </Property>
           </Properties>
+          <Events>
+            <EventHandler event="itemStateChanged" listener="java.awt.event.ItemListener" parameters="java.awt.event.ItemEvent" handler="anoTFCmbItemStateChanged"/>
+          </Events>
         </Component>
         <Component class="javax.swing.JLabel" name="jLabel1">
           <Properties>
             <Property name="text" type="java.lang.String" value="Show anomalies for:"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="anoSummaryLbl">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Anomaly information will appear here"/>
           </Properties>
         </Component>
       </SubComponents>
@@ -398,6 +409,9 @@
           <StringArray count="0"/>
         </Property>
       </Properties>
+      <Events>
+        <EventHandler event="itemStateChanged" listener="java.awt.event.ItemListener" parameters="java.awt.event.ItemEvent" handler="streamCmbItemStateChanged"/>
+      </Events>
     </Component>
     <Component class="javax.swing.JButton" name="updateBtn">
       <Properties>

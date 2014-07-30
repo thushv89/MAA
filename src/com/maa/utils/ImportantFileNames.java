@@ -15,6 +15,7 @@ public class ImportantFileNames {
     public static final String DATA_CONFIG_FILENAME = "data_config.xml";
     public static final String ALGO_CONFIG_FILENAME = "algo_config.xml";
     public static String DATA_DIRNAME;
+    public static final String ATTR_NAME_FILENAME = "dimensions.txt";
     
     
 }
