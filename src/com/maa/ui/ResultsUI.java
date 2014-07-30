@@ -46,19 +46,17 @@ import javax.swing.event.ChangeListener;
  *
  * @author Thush
  */
-public class ResultsUI extends javax.swing.JFrame implements ChangeListener,ConfigCompleteListener, DefaultValueListener, IKASLStepListener {
+public class ResultsUI extends javax.swing.JFrame implements ChangeListener, ConfigCompleteListener, DefaultValueListener, IKASLStepListener {
 
     private BasicParamModel bPModel;
     private DataParamModel dPModel;
     private ArrayList<AlgoParamModel> aPModels;
     private ArrayList<IKASLFacade> ikaslList;
-    
     private int lastLC;
     private ArrayList<String> allTimeFrames;
     private ArrayList<ArrayList<ReducedNode>> allNodes;
-    private Map<String,ArrayList<String>> dimensions;
+    private Map<String, ArrayList<String>> dimensions;
     private int selectedStreamIdx;
-    
 
     /**
      * Creates new form ResultsUI
@@ -93,7 +91,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
         }
 
         selectedStreamIdx = streamCmb.getSelectedIndex();
-        
+
     }
 
     private void initializeStreamsCombo() {
@@ -109,17 +107,17 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
         }
     }
 
-    private Map<String,ArrayList<String>> getDimensionsOfStreams(){
-        Map<String,ArrayList<String>> dimNames = new HashMap<>();
-        
-        for(String s : bPModel.getStreamIDs()){
-            String loc = ImportantFileNames.DATA_DIRNAME+File.separator+s+File.separator+ImportantFileNames.ATTR_NAME_FILENAME;
+    private Map<String, ArrayList<String>> getDimensionsOfStreams() {
+        Map<String, ArrayList<String>> dimNames = new HashMap<>();
+
+        for (String s : bPModel.getStreamIDs()) {
+            String loc = ImportantFileNames.DATA_DIRNAME + File.separator + s + File.separator + ImportantFileNames.ATTR_NAME_FILENAME;
             String text = FileUtils.readLines(loc).get(0);
             dimNames.put(s, new ArrayList<String>(Arrays.asList(text.split(Tokenizers.INPUT_TOKENIZER))));
         }
         return dimNames;
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -159,6 +157,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setResizable(false);
+        getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         visContainerPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Result Visuailzation"));
 
@@ -172,6 +171,8 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
             visContainerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGap(0, 561, Short.MAX_VALUE)
         );
+
+        getContentPane().add(visContainerPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(381, 52, -1, -1));
 
         jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder("Anomalies"));
 
@@ -199,7 +200,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
                     .addComponent(anoSummaryLbl, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addComponent(anomalousChk)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 93, Short.MAX_VALUE)
                         .addComponent(anomaliesInfoBtn))
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addComponent(jLabel1)
@@ -222,6 +223,8 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
                     .addComponent(anomalousChk))
                 .addContainerGap())
         );
+
+        getContentPane().add(jPanel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 52, 365, -1));
 
         jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder("Frequent Behavioral Patterns"));
 
@@ -275,6 +278,8 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
                 .addContainerGap())
         );
 
+        getContentPane().add(jPanel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 239, -1, -1));
+
         jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder("Resource Utilization Prediction"));
 
         resourceInfoBtn.setText("More Info >");
@@ -284,7 +289,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
         jPanel4Layout.setHorizontalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap(252, Short.MAX_VALUE)
                 .addComponent(resourceInfoBtn)
                 .addContainerGap())
         );
@@ -296,12 +301,15 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
                 .addContainerGap())
         );
 
+        getContentPane().add(jPanel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 432, 365, -1));
+
         runBtn.setText("Run Algo");
         runBtn.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 runBtnActionPerformed(evt);
             }
         });
+        getContentPane().add(runBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(923, 663, -1, -1));
 
         summaryBtn.setText("Show Summary");
         summaryBtn.addActionListener(new java.awt.event.ActionListener() {
@@ -309,22 +317,30 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
                 summaryBtnActionPerformed(evt);
             }
         });
+        getContentPane().add(summaryBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(1004, 663, -1, -1));
+        getContentPane().add(statusProgressBar, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 672, -1, -1));
 
         jLabel4.setText("Status:");
+        getContentPane().add(jLabel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 647, -1, -1));
 
         statusLbl.setText("Display Current Status");
+        getContentPane().add(statusLbl, new org.netbeans.lib.awtextra.AbsoluteConstraints(51, 647, -1, -1));
 
         jLabel5.setText("Time for Last Execution Cycle:");
+        getContentPane().add(jLabel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(194, 647, -1, -1));
 
         jLabel6.setText("Last Cycle ID: ");
+        getContentPane().add(jLabel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(194, 672, -1, -1));
 
         jLabel7.setText("Show Results For:");
+        getContentPane().add(jLabel7, new org.netbeans.lib.awtextra.AbsoluteConstraints(304, 15, -1, -1));
 
         streamCmb.addItemListener(new java.awt.event.ItemListener() {
             public void itemStateChanged(java.awt.event.ItemEvent evt) {
                 streamCmbItemStateChanged(evt);
             }
         });
+        getContentPane().add(streamCmb, new org.netbeans.lib.awtextra.AbsoluteConstraints(409, 12, -1, -1));
 
         updateBtn.setText("Update");
         updateBtn.addActionListener(new java.awt.event.ActionListener() {
@@ -332,86 +348,8 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
                 updateBtnActionPerformed(evt);
             }
         });
-
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                                    .addComponent(jPanel3, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                    .addComponent(jPanel4, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                    .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(visContainerPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(statusProgressBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(38, 38, 38)
-                                .addComponent(jLabel6)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(runBtn)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(summaryBtn))))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addContainerGap()
-                                .addComponent(jLabel4)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(statusLbl)
-                                .addGap(35, 35, 35)
-                                .addComponent(jLabel5))
-                            .addGroup(layout.createSequentialGroup()
-                                .addGap(304, 304, 304)
-                                .addComponent(jLabel7)
-                                .addGap(18, 18, 18)
-                                .addComponent(streamCmb, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(updateBtn)))
-                        .addGap(0, 0, Short.MAX_VALUE)))
-                .addContainerGap())
-            .addComponent(jSeparator1)
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(streamCmb, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel7)
-                    .addComponent(updateBtn))
-                .addGap(7, 7, 7)
-                .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(9, 9, 9)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(visContainerPanel, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel4)
-                            .addComponent(statusLbl)
-                            .addComponent(jLabel5))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(statusProgressBar, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel6, javax.swing.GroupLayout.Alignment.TRAILING)))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(runBtn)
-                        .addComponent(summaryBtn)))
-                .addContainerGap())
-        );
+        getContentPane().add(updateBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(447, 11, -1, -1));
+        getContentPane().add(jSeparator1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 41, 1119, -1));
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -441,7 +379,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
         initiateAndVisualizeResult();
         fillCombos();
         updateAnomalySummary();
-    
+
     }//GEN-LAST:event_updateBtnActionPerformed
 
     private void anoTFCmbItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_anoTFCmbItemStateChanged
@@ -452,58 +390,60 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
         selectedStreamIdx = streamCmb.getSelectedIndex();
     }//GEN-LAST:event_streamCmbItemStateChanged
 
-    private void updateAnomalySummary(){
-        Map<String,Integer> anomaliesHigh = new HashMap<>(getHighestAnomaliesWithPercent((String)streamCmb.getSelectedItem(), anoTFCmb.getSelectedIndex()));
-        Map<String,Integer> maxAnomalies = new HashMap<>();
+    private void updateAnomalySummary() {
+        Map<String, Integer> anomaliesHigh = new HashMap<>(getHighestAnomaliesWithPercent((String) streamCmb.getSelectedItem(), anoTFCmb.getSelectedIndex()));
+        Map<String, Integer> maxAnomalies = new HashMap<>();
         int count = Math.min(5, anomaliesHigh.size());
-        for(int i=0;i<count;i++){
+        for (int i = 0; i < count; i++) {
             int maxVal = 0;
             String maxKey = null;
-            for(String key : anomaliesHigh.keySet()){
-                if(anomaliesHigh.get(key)>maxVal){
+            for (String key : anomaliesHigh.keySet()) {
+                if (anomaliesHigh.get(key) > maxVal) {
                     maxVal = anomaliesHigh.get(key);
                     maxKey = key;
                 }
             }
-            anomaliesHigh.remove(maxKey);
-            maxAnomalies.put(maxKey, maxVal);
+            if (maxKey != null) {
+                anomaliesHigh.remove(maxKey);
+                maxAnomalies.put(maxKey, maxVal);
+            }
         }
-        
+
         String result = "<html>";
-        for(String s : maxAnomalies.keySet()){
-            result += s + ": " + "<b>" + maxAnomalies.get(s)+"%"+"</b><br/>";
+        for (String s : maxAnomalies.keySet()) {
+            result += s + ": " + "<b>" + maxAnomalies.get(s) + "%" + "</b><br/>";
         }
         result += "<html/>";
         anoSummaryLbl.setText(result);
-    
+
     }
-    
-    private void fillCombos(){
+
+    private void fillCombos() {
         //anoTFCmb.removeAllItems();
         //fromPatTFCmb.removeAllItems();
         //toPatTFCmb.removeAllItems();
-        
+
         Vector anoVec = new Vector();
         Vector toPatVec = new Vector();
         Vector fromPatVec = new Vector();
-        
-        for(String s : allTimeFrames){
-           anoVec.add(s);
-           fromPatVec.add(s);
-           toPatVec.add(s);
+
+        for (String s : allTimeFrames) {
+            anoVec.add(s);
+            fromPatVec.add(s);
+            toPatVec.add(s);
         }
-        
+
         DefaultComboBoxModel defAnoCmbModel = new DefaultComboBoxModel(anoVec);
         DefaultComboBoxModel defFromPatCmbModel = new DefaultComboBoxModel(fromPatVec);
         DefaultComboBoxModel defToPatCmbModel = new DefaultComboBoxModel(toPatVec);
-        
+
         anoTFCmb.setModel(defAnoCmbModel);
         fromPatTFCmb.setModel(defFromPatCmbModel);
         toPatTFCmb.setModel(defToPatCmbModel);
-        
-        toPatTFCmb.setSelectedIndex(toPatTFCmb.getItemCount()-1);
+
+        toPatTFCmb.setSelectedIndex(toPatTFCmb.getItemCount() - 1);
     }
-    
+
     private String createSettingsSummary() {
         String result = "<html><b>Basic Parameters</b><br/> "
                 + "Frequency: " + bPModel.getFreq().name() + "<br/>"
@@ -725,20 +665,20 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setBorder(new EtchedBorder());
-        
+
         int horizontalStartingGap = 8;
         int verticalStartngGap = 15;
-        int scrollPaneWidth = visContainerPanel.getPreferredSize().width - (2*horizontalStartingGap);
-        int scrollPaneHeight = visContainerPanel.getPreferredSize().height - (2*verticalStartngGap);
-        
-        if(visPanel.getPreferredSize().width < visContainerPanel.getPreferredSize().width){
+        int scrollPaneWidth = visContainerPanel.getPreferredSize().width - (2 * horizontalStartingGap);
+        int scrollPaneHeight = visContainerPanel.getPreferredSize().height - (2 * verticalStartngGap);
+
+        if (visPanel.getPreferredSize().width < visContainerPanel.getPreferredSize().width) {
             scrollPaneWidth = visPanel.getPreferredSize().width;
-        } 
-        if(visPanel.getPreferredSize().height < visContainerPanel.getPreferredSize().height){
+        }
+        if (visPanel.getPreferredSize().height < visContainerPanel.getPreferredSize().height) {
             //20 is there because otherwise when this conditions occur, vertical bar appears
             scrollPaneHeight = visPanel.getPreferredSize().height + 22;
-        } 
-        
+        }
+
         scrollPane.setBounds(horizontalStartingGap, verticalStartngGap, scrollPaneWidth, scrollPaneHeight);
         scrollPane.setViewportView(visPanel);
         visContainerPanel.add(scrollPane);
@@ -746,18 +686,18 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
         this.revalidate();
         this.repaint();
     }
-    
-    private Map<String,Integer> getHighestAnomaliesWithPercent(String stream, int idx){
-        Map<String,Integer> anomaliesWithPercent = new HashMap<>();
+
+    private Map<String, Integer> getHighestAnomaliesWithPercent(String stream, int idx) {
+        Map<String, Integer> anomaliesWithPercent = new HashMap<>();
         ArrayList<ReducedNode> nodes = allNodes.get(idx);
         int total = 0;
-        
-        for(ReducedNode rn : nodes){
-            for(int i=0;i<rn.getWeights().length;i++){
-                if(rn.getWeights()[i]>DefaultValues.ANOMALY_HIGH_THRESHOLD_DEFAULT){
+
+        for (ReducedNode rn : nodes) {
+            for (int i = 0; i < rn.getWeights().length; i++) {
+                if (rn.getWeights()[i] > DefaultValues.ANOMALY_HIGH_THRESHOLD_DEFAULT) {
                     String key = dimensions.get(stream).get(i);
-                    if(!anomaliesWithPercent.containsKey(key)){
-                    anomaliesWithPercent.put(key, rn.getInputs().size());
+                    if (!anomaliesWithPercent.containsKey(key)) {
+                        anomaliesWithPercent.put(key, rn.getInputs().size());
                     } else {
                         int val = anomaliesWithPercent.get(key);
                         val += rn.getInputs().size();
@@ -767,14 +707,14 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
             }
             total += rn.getInputs().size();
         }
-        
-        for(Map.Entry<String,Integer> e : anomaliesWithPercent.entrySet()){
-            e.setValue(e.getValue()*100/total);
+
+        for (Map.Entry<String, Integer> e : anomaliesWithPercent.entrySet()) {
+            e.setValue(e.getValue() * 100 / total);
         }
-        
+
         return anomaliesWithPercent;
     }
-    
+
     private VisGNode getVisGNodeWithID(ArrayList<VisGNode> list, int lc, int id) {
         for (VisGNode vgn : list) {
             if (vgn.getID()[0] == lc && vgn.getID()[1] == id) {
@@ -784,15 +724,15 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener,Conf
         return null;
     }
 
-    class ReducedNodeInputComparator implements Comparator<ReducedNode>{
+    class ReducedNodeInputComparator implements Comparator<ReducedNode> {
 
         @Override
         public int compare(ReducedNode o1, ReducedNode o2) {
-            if(o1.getInputs().size()>=o2.getInputs().size()){
+            if (o1.getInputs().size() >= o2.getInputs().size()) {
                 return 1;
-            }else {
+            } else {
                 return -1;
             }
-        }   
+        }
     }
 }
