@@ -7,10 +7,15 @@ package com.maa.ui;
 import com.maa.algo.enums.NodeHitType;
 import com.maa.algo.ikasl.auxi.GNodeVisualizer;
 import com.maa.algo.objects.GNode;
+import com.maa.vis.objects.ReducedNode;
 import com.maa.vis.objects.VisGNode;
+import java.awt.BasicStroke;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.GridLayout;
+import java.awt.Stroke;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,11 +29,14 @@ import javax.swing.JPanel;
  * @author Thush
  */
 public class VisualizeUIUtils {
-    
 
-    
-    public JPanel getVisJPanel(final ArrayList<VisGNode> allVisNodes){
-    GNodeVisualizer viser = new GNodeVisualizer();
+    Map<String, JButton> jButtons;
+
+    public VisualizeUIUtils() {
+        jButtons = new HashMap<>();
+    }
+
+    public JPanel getVisJPanel(final ArrayList<VisGNode> allVisNodes) {
 
         int widthFreeSpace = 50;
         int heightFreeSpace = 50;
@@ -44,13 +52,20 @@ public class VisualizeUIUtils {
 
         JPanel btnPanel = new JPanel() {
             public void paintComponent(Graphics g) {
+                Graphics2D g2d = (Graphics2D) g.create();
                 for (VisGNode gn : allVisNodes) {
                     int[] xy = getVisCoordinates(gn.getCoordinates()[0], gn.getCoordinates()[1],
                             btnWidth, btnHeight, hGap, vGap);
                     if (gn.getParent() != null) {
                         int[] pXY = getVisCoordinates(gn.getParent().getCoordinates()[0], gn.getParent().getCoordinates()[1],
                                 btnWidth, btnHeight, hGap, vGap);
-                        g.drawLine(xy[0], xy[1], pXY[0], pXY[1]);
+                        if (gn.getVgnType() == NodeHitType.HIT) {
+                            g.drawLine(xy[0], xy[1], pXY[0], pXY[1]);
+                        } else {
+                            Stroke dashed = new BasicStroke(3, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{9}, 0);
+                            g2d.setStroke(dashed);
+                            g2d.drawLine(xy[0], xy[1], pXY[0], pXY[1]);
+                        }
 
                     }
                 }
@@ -69,15 +84,17 @@ public class VisualizeUIUtils {
                     int gnIdx = allVisNodes.indexOf(new VisGNode(null, x, y, null, NodeHitType.HIT));
                     VisGNode vgn = allVisNodes.get(gnIdx);
                     int[] coords = allVisNodes.get(gnIdx).getID();
-                    
-                    if(vgn.getParent()!=null){
-                    btn.setToolTipText(x + "," + y + ";" + vgn.getParent().getCoordinates()[0] + "," + vgn.getParent().getCoordinates()[1]
-                            + "-" + vgn.getID()[0] + "," + vgn.getID()[1] + ";" + vgn.getParent().getID()[0] + "," + vgn.getParent().getID()[1]);
+
+                    if (vgn.getParent() != null) {
+                        btn.setToolTipText(x + "," + y + ";" + vgn.getParent().getCoordinates()[0] + "," + vgn.getParent().getCoordinates()[1]
+                                + "-" + vgn.getID()[0] + "," + vgn.getID()[1] + ";" + vgn.getParent().getID()[0] + "," + vgn.getParent().getID()[1]);
+                    } else {
+                        btn.setToolTipText(x + "," + y + "-" + vgn.getID()[0] + "," + vgn.getID()[1]);
                     }
                     btn.setSize(new Dimension(btnWidth, btnHeight));
                     btnPanel.add(btn);
+                    jButtons.put(x + "," + y, btn);
 
-                    
                 } else {
                     JLabel lbl = new JLabel();
                     lbl.setSize(btnWidth, btnHeight);
@@ -86,10 +103,29 @@ public class VisualizeUIUtils {
             }
         }
 
-        //btnPanel.setBounds(0, 0, frameWidth,frameHeight);
         return btnPanel;
     }
-    
+
+    public void showAnomalousClusters(ArrayList<VisGNode> anoNodes) {
+        for (VisGNode vgn : anoNodes) {
+            String coords = vgn.getCoordinates()[0] + "," + vgn.getCoordinates()[1];
+            JButton btn = jButtons.get(coords);
+            if (btn != null) {
+                btn.setBackground(Color.red);
+            }
+        }
+    }
+
+    public void hideAnomalousClusters(ArrayList<VisGNode> anoNodes) {
+        for (VisGNode vgn : anoNodes) {
+            String coords = vgn.getCoordinates()[0] + "," + vgn.getCoordinates()[1];
+            JButton btn = jButtons.get(coords);
+            if (btn != null) {
+                btn.setBackground(null);
+            }
+        }
+    }
+
     private int[] getVisCoordinates(int x, int y, int btnWidth, int btnHeight, int hGap, int vGap) {
         double visX = ((double) btnWidth) / 2 + ((hGap + btnWidth) * x);
         double visY = ((double) btnHeight) / 2 + ((vGap + btnHeight) * y);

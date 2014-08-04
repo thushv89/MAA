@@ -15,7 +15,6 @@ import com.maa.models.BasicParamModel;
 import com.maa.models.DataParamModel;
 import com.maa.utils.DefaultValues;
 import com.maa.utils.ImportantFileNames;
-import com.maa.utils.InputParser;
 import com.maa.utils.Tokenizers;
 import com.maa.vis.objects.ReducedNode;
 import com.maa.vis.objects.VisGNode;
@@ -23,18 +22,15 @@ import com.maa.xml.AlgoXMLParser;
 import com.maa.xml.BasicXMLParser;
 import com.maa.xml.DataXMLParser;
 import com.maa.xml.IKASLOutputXMLParser;
-import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Vector;
 import javax.swing.DefaultComboBoxModel;
-import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -55,9 +51,12 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
     private int lastLC;
     private ArrayList<String> allTimeFrames;
     private ArrayList<ArrayList<ReducedNode>> allNodes;
+    ArrayList<VisGNode> allVisNodes;
     private Map<String, ArrayList<String>> dimensions;
     private int selectedStreamIdx;
 
+    VisualizeUIUtils visUtils;
+            
     /**
      * Creates new form ResultsUI
      */
@@ -113,7 +112,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         for (String s : bPModel.getStreamIDs()) {
             String loc = ImportantFileNames.DATA_DIRNAME + File.separator + s + File.separator + ImportantFileNames.ATTR_NAME_FILENAME;
             String text = FileUtils.readLines(loc).get(0);
-            dimNames.put(s, new ArrayList<String>(Arrays.asList(text.split(Tokenizers.INPUT_TOKENIZER))));
+            dimNames.put(s, new ArrayList<>(Arrays.asList(text.split(Tokenizers.INPUT_TOKENIZER))));
         }
         return dimNames;
     }
@@ -179,6 +178,11 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         anomaliesInfoBtn.setText("More Info >");
 
         anomalousChk.setText("Show Anomalous Clusters");
+        anomalousChk.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                anomalousChkItemStateChanged(evt);
+            }
+        });
 
         anoTFCmb.addItemListener(new java.awt.event.ItemListener() {
             public void itemStateChanged(java.awt.event.ItemEvent evt) {
@@ -357,7 +361,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
     private void jCheckBox2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox2ActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_jCheckBox2ActionPerformed
-    int currLC = 0;
+
     private void runBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_runBtnActionPerformed
 
         if (!ikaslList.isEmpty()) {
@@ -376,7 +380,12 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
     private void updateBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_updateBtnActionPerformed
         selectedStreamIdx = streamCmb.getSelectedIndex();
         allNodes = loadLastSetOfLC(DefaultValues.IN_MEMORY_LAYER_COUNT);
-        initiateAndVisualizeResult();
+        int startLC = 0;
+        int currLC = ikaslList.get(selectedStreamIdx).getCurrLC();
+        if (currLC >= DefaultValues.IN_MEMORY_LAYER_COUNT) {
+            startLC = currLC - DefaultValues.IN_MEMORY_LAYER_COUNT + 1;
+        }
+        initiateAndVisualizeResult(startLC);
         fillCombos();
         updateAnomalySummary();
 
@@ -389,6 +398,36 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
     private void streamCmbItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_streamCmbItemStateChanged
         selectedStreamIdx = streamCmb.getSelectedIndex();
     }//GEN-LAST:event_streamCmbItemStateChanged
+
+    private void anomalousChkItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_anomalousChkItemStateChanged
+        ArrayList<String> anomIDs = getAnomalousClusters(1, 5);
+        ArrayList<VisGNode> anoVNodes = getVisGNodesByID(anomIDs);
+        if(anomalousChk.isSelected()){
+            visUtils.showAnomalousClusters(anoVNodes);
+        } else {
+            visUtils.hideAnomalousClusters(anoVNodes);
+        }
+    }//GEN-LAST:event_anomalousChkItemStateChanged
+
+    private ArrayList<VisGNode> getVisGNodesByID(ArrayList<String> idStrings) {
+        ArrayList<VisGNode> vNodes = new ArrayList<>();
+        Iterator<String> it = idStrings.iterator();
+        while (it.hasNext()) {
+            String s = it.next();
+            String[] tokens = s.split(Tokenizers.I_J_TOKENIZER);
+            for (VisGNode vgn : allVisNodes) {
+                if (idStrings.isEmpty()) {
+                    return vNodes;
+                }
+                if (vgn.getID()[0] == Integer.parseInt(tokens[0])
+                        && vgn.getID()[1] == Integer.parseInt(tokens[1])) {
+                    vNodes.add(vgn);
+                    it.remove();
+                }
+            }
+        }
+        return vNodes;
+    }
 
     private void updateAnomalySummary() {
         Map<String, Integer> anomaliesHigh = new HashMap<>(getHighestAnomaliesWithPercent((String) streamCmb.getSelectedItem(), anoTFCmb.getSelectedIndex()));
@@ -419,7 +458,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
     }
 
     private void fillCombos() {
-        
+
         Vector anoVec = new Vector();
         Vector toPatVec = new Vector();
         Vector fromPatVec = new Vector();
@@ -499,13 +538,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
                     break;
                 }
             }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(ResultsUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(ResultsUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(ResultsUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
             java.util.logging.Logger.getLogger(ResultsUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
@@ -625,7 +658,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         IKASLOutputXMLParser ikaslXMLParser = new IKASLOutputXMLParser();
         ArrayList<ArrayList<ReducedNode>> nodes = new ArrayList<>();
         int currLC = ikaslList.get(selectedStreamIdx).getCurrLC();
-        if (currLC < count - 1) {
+        if (currLC < count) {
             for (int i = 0; i <= currLC; i++) {
                 String loc = ImportantFileNames.DATA_DIRNAME + File.separator
                         + bPModel.getStreamIDs().get(selectedStreamIdx) + File.separator + "LC" + i + ".xml";
@@ -650,11 +683,11 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         this.repaint();
     }
 
-    private void initiateAndVisualizeResult() {
+    private void initiateAndVisualizeResult(int startLC) {
         visContainerPanel.removeAll();
-        VisualizeUIUtils visUtils = new VisualizeUIUtils();
+        visUtils = new VisualizeUIUtils();
         GNodeVisualizer visualizer = new GNodeVisualizer();
-        ArrayList<VisGNode> allVisNodes = visualizer.assignVisCoordinatesToGNodes(allNodes);
+        allVisNodes = visualizer.assignVisCoordinatesToGNodes(allNodes, startLC);
         JPanel visPanel = visUtils.getVisJPanel(allVisNodes);
 
         JScrollPane scrollPane = new JScrollPane();
@@ -710,6 +743,25 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         }
 
         return anomaliesWithPercent;
+    }
+
+    private ArrayList<String> getAnomalousClusters(int startLC, int endLC) {
+        ArrayList<String> anomClusters = new ArrayList<>();
+        for (int i = 0; i <= endLC - startLC; i++) {
+            ArrayList<ReducedNode> nodes = allNodes.get(i);
+            for (ReducedNode rn : nodes) {
+                for (int j = 0; j < rn.getWeights().length; j++) {
+                    if (rn.getWeights()[j] > DefaultValues.ANOMALY_HIGH_THRESHOLD_DEFAULT) {
+                        String id = rn.getId()[0] + Tokenizers.I_J_TOKENIZER + rn.getId()[1];
+                        if (!anomClusters.contains(id)) {
+                            anomClusters.add(id);
+                        }
+                    }
+                }
+            }
+        }
+
+        return anomClusters;
     }
 
     private VisGNode getVisGNodeWithID(ArrayList<VisGNode> list, int lc, int id) {
