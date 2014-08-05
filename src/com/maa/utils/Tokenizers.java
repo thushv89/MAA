@@ -12,4 +12,5 @@ public class Tokenizers {
     
     public static final String I_J_TOKENIZER = ",";
     public static final String INPUT_TOKENIZER = ",";
+    public static final String NODE_TOKENIZER = ";";
 }

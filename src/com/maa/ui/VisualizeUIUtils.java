@@ -7,6 +7,7 @@ package com.maa.ui;
 import com.maa.algo.enums.NodeHitType;
 import com.maa.algo.ikasl.auxi.GNodeVisualizer;
 import com.maa.algo.objects.GNode;
+import com.maa.utils.Tokenizers;
 import com.maa.vis.objects.ReducedNode;
 import com.maa.vis.objects.VisGNode;
 import java.awt.BasicStroke;
@@ -30,7 +31,11 @@ import javax.swing.JPanel;
  */
 public class VisualizeUIUtils {
 
-    Map<String, JButton> jButtons;
+    private JPanel btnPanel;
+    private Map<String, JButton> jButtons;
+    private boolean drawAnomalies = false;
+    private boolean drawFrequentPatterns = false;
+    private ArrayList<String> interLinks;
 
     public VisualizeUIUtils() {
         jButtons = new HashMap<>();
@@ -50,7 +55,7 @@ public class VisualizeUIUtils {
         int frameWidth = ((maxXY[0] + 1) * btnWidth) + (maxXY[0] * hGap);
         int frameHeight = ((maxXY[1] + 1) * btnHeight) + (maxXY[1] * vGap);
 
-        JPanel btnPanel = new JPanel() {
+        btnPanel = new JPanel() {
             public void paintComponent(Graphics g) {
                 Graphics2D g2d = (Graphics2D) g.create();
                 for (VisGNode gn : allVisNodes) {
@@ -69,6 +74,27 @@ public class VisualizeUIUtils {
 
                     }
                 }
+
+                if (drawFrequentPatterns) {
+                    for (String link : interLinks) {
+                        String[] tokens = link.split(Tokenizers.NODE_TOKENIZER);
+                        for (int i=1;i<tokens.length;i++) {
+                            String[] idStr = tokens[i].split(Tokenizers.I_J_TOKENIZER);
+                            VisGNode cVgn = getVisGNodeWithID(allVisNodes, Integer.parseInt(idStr[0]), Integer.parseInt(idStr[1]));
+                            int[] xy = getVisCoordinates(cVgn.getCoordinates()[0],cVgn.getCoordinates()[1],
+                                    btnWidth, btnHeight, hGap, vGap);
+                            
+                            String[] prevIDStr = tokens[i-1].split(Tokenizers.I_J_TOKENIZER);
+                            VisGNode pVgn = getVisGNodeWithID(allVisNodes, Integer.parseInt(prevIDStr[0]), Integer.parseInt(prevIDStr[1]));
+                                int[] prevXY = getVisCoordinates(pVgn.getCoordinates()[0], pVgn.getCoordinates()[1],
+                                        btnWidth, btnHeight, hGap, vGap);
+                                g.setColor(Color.red);
+                                g.drawLine(xy[0], xy[1], prevXY[0], prevXY[1]);
+                            
+                        }
+                    }
+                }
+
 
             }
         };
@@ -106,6 +132,52 @@ public class VisualizeUIUtils {
         return btnPanel;
     }
 
+        public static VisGNode getVisGNodeWithID(ArrayList<VisGNode> list, int lc, int id) {
+        for (int i = list.size() - 1; i >= 0; i--) {
+            VisGNode vgn = list.get(i);
+            if (vgn.getID()[0] == lc && vgn.getID()[1] == id) {
+                return vgn;
+            }
+        }
+        return null;
+    }
+
+    public static ArrayList<Integer> getNodeIdxToRightWithLC(ArrayList<VisGNode> list, int lc, VisGNode node) {
+        ArrayList<Integer> rightNodes = new ArrayList<>();
+        int[] coords = node.getCoordinates();
+        for (VisGNode n : list) {
+            int x = n.getCoordinates()[0];
+            int y = n.getCoordinates()[1];
+            if (y == lc && x > coords[0]) {
+                rightNodes.add(list.indexOf(n));
+            }
+        }
+
+        return rightNodes;
+    }
+
+    public static int getRightMostIndexWithLC(ArrayList<VisGNode> list, int lc) {
+        int maxIdx = 0;
+        for (VisGNode n : list) {
+            if (n.getID()[0] == lc) {
+                if (maxIdx < n.getCoordinates()[0]) {
+                    maxIdx = n.getCoordinates()[0];
+                }
+            }
+        }
+        return maxIdx;
+    }
+
+    public static int getRightMostIndex(ArrayList<VisGNode> list) {
+        int maxIdx = 0;
+        for (VisGNode n : list) {
+            if (maxIdx < n.getCoordinates()[0]) {
+                maxIdx = n.getCoordinates()[0];
+            }
+        }
+        return maxIdx;
+    }
+    
     public void showAnomalousClusters(ArrayList<VisGNode> anoNodes) {
         for (VisGNode vgn : anoNodes) {
             String coords = vgn.getCoordinates()[0] + "," + vgn.getCoordinates()[1];
@@ -145,5 +217,10 @@ public class VisualizeUIUtils {
             }
         }
         return new int[]{maxX, maxY};
+    }
+
+    public void drawIntersectionLinks(ArrayList<String> links) {
+        this.interLinks = links;
+        this.drawFrequentPatterns = true;        
     }
 }

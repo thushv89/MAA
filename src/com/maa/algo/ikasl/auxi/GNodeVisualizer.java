@@ -8,6 +8,7 @@ package com.maa.algo.ikasl.auxi;
 import com.maa.algo.enums.NodeHitType;
 import com.maa.vis.objects.VisGNode;
 import com.maa.algo.utils.Constants;
+import com.maa.ui.VisualizeUIUtils;
 import com.maa.utils.Tokenizers;
 import com.maa.vis.objects.ReducedNode;
 import java.util.ArrayList;
@@ -47,7 +48,7 @@ public class GNodeVisualizer {
                     if (!key.contains(Constants.PARENT_TOKENIZER)) {
                         int lc = Integer.parseInt(key.split(Constants.I_J_TOKENIZER)[0]);
                         int id = Integer.parseInt(key.split(Constants.I_J_TOKENIZER)[1]);
-                        VisGNode parentVisNode = getVisGNodeWithID(allVisNodes, lc, id);
+                        VisGNode parentVisNode = VisualizeUIUtils.getVisGNodeWithID(allVisNodes, lc, id);
                         if (parentVisNode != null) {
                             parentVisNode.incrementChildCount();
                         }
@@ -63,7 +64,7 @@ public class GNodeVisualizer {
                         int offset = gn.getChildCount() - 1;
                         //change the coordinates of all the nodes below the considered layer (i)
                         for (int j = i - 1; j >= 0; j--) {
-                            ArrayList<Integer> idxToRight = getNodeIdxToRightWithLC(allVisNodes, j, gn);    //nodes to the right of the considered node at level j
+                            ArrayList<Integer> idxToRight = VisualizeUIUtils.getNodeIdxToRightWithLC(allVisNodes, j, gn);    //nodes to the right of the considered node at level j
                             //for each node to the right of considered node, update the cordinates to accomodate the new node
                             for (int idx : idxToRight) {
                                 VisGNode vgn = allVisNodes.get(idx);
@@ -93,7 +94,7 @@ public class GNodeVisualizer {
                     if (!parentID.contains(Constants.PARENT_TOKENIZER)) {
                         int lc = Integer.parseInt(parentID.split(Constants.I_J_TOKENIZER)[0]);
                         int id = Integer.parseInt(parentID.split(Constants.I_J_TOKENIZER)[1]);
-                        VisGNode pVgn = getVisGNodeWithID(allVisNodes, lc, id);
+                        VisGNode pVgn = VisualizeUIUtils.getVisGNodeWithID(allVisNodes, lc, id);
 
                         //non hit nodes from previous levels can come to upper levels
                         //this causes sometimes pVgn to be null
@@ -104,7 +105,7 @@ public class GNodeVisualizer {
                             }
                             allVisNodes.add(new VisGNode(rn.getId(), newX, i, pVgn, rn.gethType()));
                         } else {
-                            int idx = getRightMostIndexWithLC(allVisNodes,i) + 1;
+                            int idx = VisualizeUIUtils.getRightMostIndexWithLC(allVisNodes,i) + 1;
                             allVisNodes.add(new VisGNode(rn.getId(), idx, i, null, rn.gethType()));
                         }
                     } //if node is a multi-parent node
@@ -117,49 +118,5 @@ public class GNodeVisualizer {
         return allVisNodes;
     }
 
-    private VisGNode getVisGNodeWithID(ArrayList<VisGNode> list, int lc, int id) {
-        for (int i = list.size() - 1; i >= 0; i--) {
-            VisGNode vgn = list.get(i);
-            if (vgn.getID()[0] == lc && vgn.getID()[1] == id) {
-                return vgn;
-            }
-        }
-        return null;
-    }
 
-    private ArrayList<Integer> getNodeIdxToRightWithLC(ArrayList<VisGNode> list, int lc, VisGNode node) {
-        ArrayList<Integer> rightNodes = new ArrayList<>();
-        int[] coords = node.getCoordinates();
-        for (VisGNode n : list) {
-            int x = n.getCoordinates()[0];
-            int y = n.getCoordinates()[1];
-            if (y == lc && x > coords[0]) {
-                rightNodes.add(list.indexOf(n));
-            }
-        }
-
-        return rightNodes;
-    }
-
-    private int getRightMostIndexWithLC(ArrayList<VisGNode> list, int lc) {
-        int maxIdx = 0;
-        for (VisGNode n : list) {
-            if (n.getID()[0] == lc) {
-                if (maxIdx < n.getCoordinates()[0]) {
-                    maxIdx = n.getCoordinates()[0];
-                }
-            }
-        }
-        return maxIdx;
-    }
-
-    private int getRightMostIndex(ArrayList<VisGNode> list) {
-        int maxIdx = 0;
-        for (VisGNode n : list) {
-            if (maxIdx < n.getCoordinates()[0]) {
-                maxIdx = n.getCoordinates()[0];
-            }
-        }
-        return maxIdx;
-    }
 }

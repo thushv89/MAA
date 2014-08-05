@@ -16,4 +16,5 @@ public class DefaultValues {
     public static final int IN_MEMORY_LAYER_COUNT = 5;
     public static final double ANOMALY_HIGH_THRESHOLD_DEFAULT = 0.8;
     public static final double ANOMALY_LOW_THRESHOLD_DEFAULT = 0.2;
+    public static final int MIN_COUNT_FOR_INTRSCT_LINKS = 5;
 }

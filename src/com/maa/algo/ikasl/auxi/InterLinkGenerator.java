@@ -27,105 +27,6 @@ public class InterLinkGenerator {
     ArrayList<ArrayList<String>> gLayerNodes;
     ArrayList<Map<String,String>> allGLayerInputs;
     
-    
-    private ArrayList<String> getIntersectionLinks1(GenLayer currLayer, Map<String, String> currInputs,
-            GenLayer prevLayer, Map<String, String> prevInputs, double thresh) {
-
-        ArrayList<String> links = new ArrayList<String>();
-
-        for (GNode gn1 : currLayer.getMap().values()) {
-            String gn1ID = Utils.generateIndexString(gn1.getLc(), gn1.getId());
-            if (currInputs.get(gn1ID) != null && !currInputs.get(gn1ID).isEmpty()) {
-                String[] in1 = currInputs.get(gn1ID).split(Constants.INPUT_TOKENIZER);
-                double intersection;
-                String bestMatchID = "";
-                for (GNode gn2 : prevLayer.getMap().values()) {
-                    String gn2ID = Utils.generateIndexString(gn2.getLc(), gn2.getId());
-                    if (prevInputs.get(gn2ID) != null && !prevInputs.get(gn2ID).isEmpty()) {
-                        String[] in2 = prevInputs.get(gn2ID).split(Constants.INPUT_TOKENIZER);
-                        intersection = getIntersection(in1, in2);
-                        if (intersection > thresh) {
-                            //Make sure you get the bestMatchID exactly same as in the getIntersectionLinks1 method
-                            //because we need to ignore duplicates
-                            //SOLUTION: make sure the node ID with lower LC is in front
-                            bestMatchID = gn2ID + Constants.NODE_TOKENIZER + gn1ID;
-                            links.add(bestMatchID);
-                        }
-                    }
-                }
-
-            }
-        }
-        return links;
-    }
-
-    private ArrayList<String> getIntersectionLinks2(GenLayer currLayer, Map<String, String> currInputs,
-            GenLayer prevLayer, Map<String, String> prevInputs, double thresh) {
-
-        ArrayList<String> links = new ArrayList<String>();
-
-        for (GNode gn1 : prevLayer.getMap().values()) {
-            String gn1ID = Utils.generateIndexString(gn1.getLc(), gn1.getId());
-            if (prevInputs.get(gn1ID) != null && !prevInputs.get(gn1ID).isEmpty()) {
-                String[] in1 = prevInputs.get(gn1ID).split(Constants.INPUT_TOKENIZER);
-                double intersection;
-                String bestMatchID = "";
-                for (GNode gn2 : currLayer.getMap().values()) {
-                    String gn2ID = Utils.generateIndexString(gn2.getLc(), gn2.getId());
-                    if (currInputs.get(gn2ID) != null && !currInputs.get(gn2ID).isEmpty()) {
-                        String[] in2 = currInputs.get(gn2ID).split(Constants.INPUT_TOKENIZER);
-                        intersection = getIntersection(in1, in2);
-                        if (intersection > thresh) {
-                            //Make sure you get the bestMatchID exactly same as in the getIntersectionLinks1 method
-                            //because we need to ignore duplicates
-                            //SOLUTION: make sure the node ID with lower LC is in front
-                            bestMatchID = gn1ID + Constants.NODE_TOKENIZER + gn2ID;
-                            links.add(bestMatchID);
-                        }
-                    }
-                }
-
-            }
-        }
-        return links;
-    }
-
-    public ArrayList<String> getAllIntsectLinks(GenLayer currLayer, Map<String, String> currInputs,
-            GenLayer prevLayer, Map<String, String> prevInputs, double thresh) {
-        ArrayList<String> intsect1 = getIntersectionLinks1(currLayer, currInputs, prevLayer, prevInputs, thresh);
-        ArrayList<String> intsect2 = getIntersectionLinks2(currLayer, currInputs, prevLayer, prevInputs, thresh);
-
-        HashSet<String> linkSet = new HashSet<String>();
-        linkSet.addAll(intsect1);
-        linkSet.addAll(intsect2);
-
-        ArrayList<String> allLinks = new ArrayList<String>(linkSet);
-
-        return allLinks;
-    }
-
-    private double getIntersection(String[] in1, String[] in2) {
-        int downcount = 0;
-        for (String s1 : in1) {
-            for (String s2 : in2) {
-                if (s1.equals(s2)) {
-                    downcount++;
-                    break;
-                }
-            }
-        }
-
-        double downPercent = downcount * 100.0 / in1.length;
-        return downPercent;
-    }
-
-    private double getEffectiveThreshold(double thresh) {
-        double minThresh = 30;
-        double maxThresh = thresh;
-
-        return 0;
-    }
-
 
     public ArrayList<String> getCommon(String link){
         ArrayList<String> commonIn = new ArrayList<String>();
@@ -169,6 +70,7 @@ public class InterLinkGenerator {
     
     private ArrayList<String> testMethod(ArrayList<String> links, int nxtLvl, int startLvl, int minCount){
         
+        //if we have reached end of all GLayers, return the links we have
         if(nxtLvl > gLayerNodes.size()-1){
             return links;
         }
@@ -178,6 +80,7 @@ public class InterLinkGenerator {
         if(newNodes==null || newNodes.isEmpty()){
             return links;
         }
+        
         Iterator<String> linksIter = links.iterator();
         ArrayList<String> tempLinks = new ArrayList<String>();
         while(linksIter.hasNext()){

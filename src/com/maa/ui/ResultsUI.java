@@ -5,7 +5,12 @@
 package com.maa.ui;
 
 import com.maa.algo.ikasl.auxi.GNodeVisualizer;
+import com.maa.algo.ikasl.auxi.InterLinkGenerator;
 import com.maa.algo.ikasl.core.IKASLFacade;
+import com.maa.algo.objects.GNode;
+import com.maa.algo.objects.GenLayer;
+import com.maa.algo.utils.LogMessages;
+import com.maa.algo.utils.Utils;
 import com.maa.io.FileUtils;
 import com.maa.listeners.ConfigCompleteListener;
 import com.maa.listeners.DefaultValueListener;
@@ -54,9 +59,9 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
     ArrayList<VisGNode> allVisNodes;
     private Map<String, ArrayList<String>> dimensions;
     private int selectedStreamIdx;
+    private VisualizeUIUtils visUtils;
+    private InterLinkGenerator linkGen;
 
-    VisualizeUIUtils visUtils;
-            
     /**
      * Creates new form ResultsUI
      */
@@ -67,6 +72,8 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
 
         FileUtils.setUpConfigDir();
 
+        linkGen = new InterLinkGenerator();
+        
         if (!FileUtils.allConfigFilesExist()) {
             this.setFocusableWindowState(false);
             FileUtils.cleanConfigDir();
@@ -135,7 +142,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         anoSummaryLbl = new javax.swing.JLabel();
         jPanel3 = new javax.swing.JPanel();
         freqInfoBtn = new javax.swing.JButton();
-        jCheckBox2 = new javax.swing.JCheckBox();
+        freqPatChk = new javax.swing.JCheckBox();
         jLabel2 = new javax.swing.JLabel();
         fromPatTFCmb = new javax.swing.JComboBox();
         toPatTFCmb = new javax.swing.JComboBox();
@@ -164,14 +171,14 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         visContainerPanel.setLayout(visContainerPanelLayout);
         visContainerPanelLayout.setHorizontalGroup(
             visContainerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 716, Short.MAX_VALUE)
+            .addGap(0, 708, Short.MAX_VALUE)
         );
         visContainerPanelLayout.setVerticalGroup(
             visContainerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGap(0, 561, Short.MAX_VALUE)
         );
 
-        getContentPane().add(visContainerPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(381, 52, -1, -1));
+        getContentPane().add(visContainerPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(389, 52, 720, -1));
 
         jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder("Anomalies"));
 
@@ -193,6 +200,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         jLabel1.setText("Show anomalies for:");
 
         anoSummaryLbl.setText("Anomaly information will appear here");
+        anoSummaryLbl.setVerticalAlignment(javax.swing.SwingConstants.TOP);
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -220,8 +228,8 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
                     .addComponent(anoTFCmb, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel1))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(anoSummaryLbl)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 79, Short.MAX_VALUE)
+                .addComponent(anoSummaryLbl, javax.swing.GroupLayout.DEFAULT_SIZE, 87, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(anomaliesInfoBtn)
                     .addComponent(anomalousChk))
@@ -234,10 +242,15 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
 
         freqInfoBtn.setText("More Info >");
 
-        jCheckBox2.setText("Show Frequent Patterns");
-        jCheckBox2.addActionListener(new java.awt.event.ActionListener() {
+        freqPatChk.setText("Show Frequent Patterns");
+        freqPatChk.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                freqPatChkItemStateChanged(evt);
+            }
+        });
+        freqPatChk.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBox2ActionPerformed(evt);
+                freqPatChkActionPerformed(evt);
             }
         });
 
@@ -252,7 +265,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                        .addComponent(jCheckBox2)
+                        .addComponent(freqPatChk)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(freqInfoBtn))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
@@ -278,7 +291,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 99, Short.MAX_VALUE)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(freqInfoBtn)
-                    .addComponent(jCheckBox2))
+                    .addComponent(freqPatChk))
                 .addContainerGap())
         );
 
@@ -358,9 +371,9 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jCheckBox2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox2ActionPerformed
+    private void freqPatChkActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_freqPatChkActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_jCheckBox2ActionPerformed
+    }//GEN-LAST:event_freqPatChkActionPerformed
 
     private void runBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_runBtnActionPerformed
 
@@ -400,14 +413,58 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
     }//GEN-LAST:event_streamCmbItemStateChanged
 
     private void anomalousChkItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_anomalousChkItemStateChanged
-        ArrayList<String> anomIDs = getAnomalousClusters(1, 5);
+        int startLC = 0;
+        int currLC = ikaslList.get(selectedStreamIdx).getCurrLC();
+        if (currLC >= DefaultValues.IN_MEMORY_LAYER_COUNT) {
+            startLC = currLC - DefaultValues.IN_MEMORY_LAYER_COUNT + 1;
+        }
+
+        ArrayList<String> anomIDs = getAnomalousClusters(startLC, currLC);
         ArrayList<VisGNode> anoVNodes = getVisGNodesByID(anomIDs);
-        if(anomalousChk.isSelected()){
+        if (anomalousChk.isSelected()) {
             visUtils.showAnomalousClusters(anoVNodes);
         } else {
             visUtils.hideAnomalousClusters(anoVNodes);
         }
     }//GEN-LAST:event_anomalousChkItemStateChanged
+
+    private void freqPatChkItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_freqPatChkItemStateChanged
+        if(freqPatChk.isSelected()){
+        int length = toPatTFCmb.getSelectedIndex() - fromPatTFCmb.getSelectedIndex();
+        ArrayList<String> links = getFullIntersectionLinks(length, DefaultValues.MIN_COUNT_FOR_INTRSCT_LINKS);
+        visUtils.drawIntersectionLinks(links);
+        this.revalidate();
+        this.repaint();
+        } else {
+        
+        }
+    }
+
+    public ArrayList<String> getFullIntersectionLinks(int minLength, int minCount) {
+        ArrayList<ArrayList<String>> gNodes = new ArrayList<>();
+        ArrayList<Map<String, String>> allGNodeInputs = new ArrayList<>();
+
+        for (ArrayList<ReducedNode> layer : allNodes) {
+            ArrayList<String> currLayerGnodes = new ArrayList<>();
+            Map<String, String> currGNodeInputs = new HashMap<>();
+            
+            for (ReducedNode gn : layer) {
+                currLayerGnodes.add(gn.getId()[0] + Tokenizers.I_J_TOKENIZER + gn.getId()[1]);
+                if (gn.getInputs()!=null && !gn.getInputs().isEmpty()) {
+                    String inputs = gn.getInputs().get(0);
+                    for (String s : gn.getInputs()) {
+                        inputs += Tokenizers.INPUT_TOKENIZER + s;
+                    }
+                    currGNodeInputs.put(gn.getId()[0] + Tokenizers.I_J_TOKENIZER + gn.getId()[1], inputs);
+                }
+            }
+            gNodes.add(currLayerGnodes);
+            allGNodeInputs.add(currGNodeInputs);
+        }
+        ArrayList<String> links = linkGen.getFullLinks3(gNodes, minLength, minCount, allGNodeInputs);
+        
+        return links;
+    }//GEN-LAST:event_freqPatChkItemStateChanged
 
     private ArrayList<VisGNode> getVisGNodesByID(ArrayList<String> idStrings) {
         ArrayList<VisGNode> vNodes = new ArrayList<>();
@@ -536,10 +593,13 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
                 if ("Windows".equals(info.getName())) {
                     javax.swing.UIManager.setLookAndFeel(info.getClassName());
                     break;
+
+
                 }
             }
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(ResultsUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(ResultsUI.class
+                    .getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
 
@@ -556,8 +616,8 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
     private javax.swing.JButton anomaliesInfoBtn;
     private javax.swing.JCheckBox anomalousChk;
     private javax.swing.JButton freqInfoBtn;
+    private javax.swing.JCheckBox freqPatChk;
     private javax.swing.JComboBox fromPatTFCmb;
-    private javax.swing.JCheckBox jCheckBox2;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
@@ -702,7 +762,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         int scrollPaneHeight = visContainerPanel.getPreferredSize().height - (2 * verticalStartngGap);
 
         if (visPanel.getPreferredSize().width < visContainerPanel.getPreferredSize().width) {
-            scrollPaneWidth = visPanel.getPreferredSize().width;
+            scrollPaneWidth = visPanel.getPreferredSize().width + 10;
         }
         if (visPanel.getPreferredSize().height < visContainerPanel.getPreferredSize().height) {
             //20 is there because otherwise when this conditions occur, vertical bar appears
@@ -771,6 +831,8 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
             }
         }
         return null;
+
+
     }
 
     class ReducedNodeInputComparator implements Comparator<ReducedNode> {
