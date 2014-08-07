@@ -7,6 +7,7 @@ package com.maa.ui;
 import com.maa.algo.enums.NodeHitType;
 import com.maa.algo.ikasl.auxi.GNodeVisualizer;
 import com.maa.algo.objects.GNode;
+import com.maa.enums.VisOperations;
 import com.maa.utils.Tokenizers;
 import com.maa.vis.objects.ReducedNode;
 import com.maa.vis.objects.VisGNode;
@@ -24,6 +25,8 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.UIDefaults;
+import javax.swing.UIManager;
 
 /**
  *
@@ -33,16 +36,28 @@ public class VisualizeUIUtils {
 
     private JPanel btnPanel;
     private Map<String, JButton> jButtons;
-    private boolean drawAnomalies = false;
-    private boolean drawFrequentPatterns = false;
     private ArrayList<String> interLinks;
+    private ArrayList<VisGNode> allVisNodes;
+    private ArrayList<VisGNode> anoNodes;
+    private ArrayList<Line> tempLines;
+    private ArrayList<Line> intLines;
+    private VisOperations currOp;
 
     public VisualizeUIUtils() {
         jButtons = new HashMap<>();
+        currOp = VisOperations.DRAW_TEMP_LINKS;
     }
 
-    public JPanel getVisJPanel(final ArrayList<VisGNode> allVisNodes) {
+    public void setData(ArrayList<VisGNode> allVisNodes, ArrayList<VisGNode> anoNodes, ArrayList<String> intLinks){
+        this.allVisNodes = allVisNodes;
+        this.interLinks = intLinks;
+        this.anoNodes = anoNodes;
+    }
+    
+    public JPanel getVisJPanel() {
 
+        UIDefaults def = UIManager.getLookAndFeelDefaults();
+        final Color bg = def.getColor("control");
         int widthFreeSpace = 50;
         int heightFreeSpace = 50;
         final int btnWidth = 25;
@@ -58,6 +73,60 @@ public class VisualizeUIUtils {
         btnPanel = new JPanel() {
             public void paintComponent(Graphics g) {
                 Graphics2D g2d = (Graphics2D) g.create();
+                if (currOp == VisOperations.DRAW_TEMP_LINKS) {
+                    tempLines = new ArrayList<>();
+                    drawTemporalLinks(g, g2d, Color.BLACK,true);
+                }
+                if (currOp == VisOperations.DRAW_INT_LINKS) {
+                    intLines = new ArrayList<>();
+                    drawIntersectionLinks(g, Color.RED,true);
+                }
+                if (currOp == VisOperations.CLEAR_TEMP_LINKS) {
+                    drawTemporalLinks(g, g2d, bg,false);
+                    drawIntersectionLinks(g, Color.RED,false);
+                }
+                if (currOp == VisOperations.CLEAR_INT_LINKS) {
+                    drawIntersectionLinks(g, bg,false);
+                    drawTemporalLinks(g, g2d, Color.BLACK,false);
+                }
+                if (currOp == VisOperations.DRAW_BOTH_LINKS){
+                    tempLines = new ArrayList<>();
+                    intLines = new ArrayList<>();
+                    drawIntersectionLinks(g, Color.RED, true);
+                    drawTemporalLinks(g, g2d, Color.BLACK, true);
+                }
+                if (currOp == VisOperations.CLEAR_BOTH_LINKS){
+                    drawIntersectionLinks(g, bg, false);
+                    drawTemporalLinks(g, g2d, bg, false);
+                }
+
+
+            }
+
+            private void drawIntersectionLinks(Graphics g, Color c, Boolean addToArray) throws NumberFormatException {
+                
+                for (String link : interLinks) {
+                    String[] tokens = link.split(Tokenizers.NODE_TOKENIZER);
+                    for (int i = 1; i < tokens.length; i++) {
+                        String[] idStr = tokens[i].split(Tokenizers.I_J_TOKENIZER);
+                        VisGNode cVgn = getVisGNodeWithID(allVisNodes, Integer.parseInt(idStr[0]), Integer.parseInt(idStr[1]));
+                        int[] xy = getVisCoordinates(cVgn.getCoordinates()[0], cVgn.getCoordinates()[1],
+                                btnWidth, btnHeight, hGap, vGap);
+
+                        String[] prevIDStr = tokens[i - 1].split(Tokenizers.I_J_TOKENIZER);
+                        VisGNode pVgn = getVisGNodeWithID(allVisNodes, Integer.parseInt(prevIDStr[0]), Integer.parseInt(prevIDStr[1]));
+                        int[] prevXY = getVisCoordinates(pVgn.getCoordinates()[0], pVgn.getCoordinates()[1],
+                                btnWidth, btnHeight, hGap, vGap);
+                        g.setColor(c);
+                        g.drawLine(xy[0], xy[1], prevXY[0], prevXY[1]);
+                        if(addToArray){
+                            intLines.add(new Line(xy[0], xy[1], prevXY[0], prevXY[1]));
+                        }
+                    }
+                }
+            }
+
+            private void drawTemporalLinks(Graphics g, Graphics2D g2d, Color c, boolean addToArray) {
                 for (VisGNode gn : allVisNodes) {
                     int[] xy = getVisCoordinates(gn.getCoordinates()[0], gn.getCoordinates()[1],
                             btnWidth, btnHeight, hGap, vGap);
@@ -65,7 +134,11 @@ public class VisualizeUIUtils {
                         int[] pXY = getVisCoordinates(gn.getParent().getCoordinates()[0], gn.getParent().getCoordinates()[1],
                                 btnWidth, btnHeight, hGap, vGap);
                         if (gn.getVgnType() == NodeHitType.HIT) {
+                            g.setColor(c);
                             g.drawLine(xy[0], xy[1], pXY[0], pXY[1]);
+                            if (addToArray) {
+                                tempLines.add(new Line(xy[0], xy[1], pXY[0], pXY[1]));
+                            }
                         } else {
                             Stroke dashed = new BasicStroke(3, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{9}, 0);
                             g2d.setStroke(dashed);
@@ -74,28 +147,6 @@ public class VisualizeUIUtils {
 
                     }
                 }
-
-                if (drawFrequentPatterns) {
-                    for (String link : interLinks) {
-                        String[] tokens = link.split(Tokenizers.NODE_TOKENIZER);
-                        for (int i=1;i<tokens.length;i++) {
-                            String[] idStr = tokens[i].split(Tokenizers.I_J_TOKENIZER);
-                            VisGNode cVgn = getVisGNodeWithID(allVisNodes, Integer.parseInt(idStr[0]), Integer.parseInt(idStr[1]));
-                            int[] xy = getVisCoordinates(cVgn.getCoordinates()[0],cVgn.getCoordinates()[1],
-                                    btnWidth, btnHeight, hGap, vGap);
-                            
-                            String[] prevIDStr = tokens[i-1].split(Tokenizers.I_J_TOKENIZER);
-                            VisGNode pVgn = getVisGNodeWithID(allVisNodes, Integer.parseInt(prevIDStr[0]), Integer.parseInt(prevIDStr[1]));
-                                int[] prevXY = getVisCoordinates(pVgn.getCoordinates()[0], pVgn.getCoordinates()[1],
-                                        btnWidth, btnHeight, hGap, vGap);
-                                g.setColor(Color.red);
-                                g.drawLine(xy[0], xy[1], prevXY[0], prevXY[1]);
-                            
-                        }
-                    }
-                }
-
-
             }
         };
         btnPanel.setPreferredSize(new Dimension(frameWidth, frameHeight));
@@ -113,9 +164,9 @@ public class VisualizeUIUtils {
 
                     if (vgn.getParent() != null) {
                         btn.setToolTipText(x + "," + y + ";" + vgn.getParent().getCoordinates()[0] + "," + vgn.getParent().getCoordinates()[1]
-                                + "-" + vgn.getID()[0] + "," + vgn.getID()[1] + ";" + vgn.getParent().getID()[0] + "," + vgn.getParent().getID()[1]);
+                                + " - " + vgn.getID()[0] + "," + vgn.getID()[1] + ";" + vgn.getParent().getID()[0] + "," + vgn.getParent().getID()[1]);
                     } else {
-                        btn.setToolTipText(x + "," + y + "-" + vgn.getID()[0] + "," + vgn.getID()[1]);
+                        btn.setToolTipText(x + "," + y + " - " + vgn.getID()[0] + "," + vgn.getID()[1]);
                     }
                     btn.setSize(new Dimension(btnWidth, btnHeight));
                     btnPanel.add(btn);
@@ -132,7 +183,7 @@ public class VisualizeUIUtils {
         return btnPanel;
     }
 
-        public static VisGNode getVisGNodeWithID(ArrayList<VisGNode> list, int lc, int id) {
+    public static VisGNode getVisGNodeWithID(ArrayList<VisGNode> list, int lc, int id) {
         for (int i = list.size() - 1; i >= 0; i--) {
             VisGNode vgn = list.get(i);
             if (vgn.getID()[0] == lc && vgn.getID()[1] == id) {
@@ -177,8 +228,8 @@ public class VisualizeUIUtils {
         }
         return maxIdx;
     }
-    
-    public void showAnomalousClusters(ArrayList<VisGNode> anoNodes) {
+
+    public void showAnomalousClusters() {
         for (VisGNode vgn : anoNodes) {
             String coords = vgn.getCoordinates()[0] + "," + vgn.getCoordinates()[1];
             JButton btn = jButtons.get(coords);
@@ -188,7 +239,7 @@ public class VisualizeUIUtils {
         }
     }
 
-    public void hideAnomalousClusters(ArrayList<VisGNode> anoNodes) {
+    public void hideAnomalousClusters() {
         for (VisGNode vgn : anoNodes) {
             String coords = vgn.getCoordinates()[0] + "," + vgn.getCoordinates()[1];
             JButton btn = jButtons.get(coords);
@@ -219,8 +270,25 @@ public class VisualizeUIUtils {
         return new int[]{maxX, maxY};
     }
 
-    public void drawIntersectionLinks(ArrayList<String> links) {
-        this.interLinks = links;
-        this.drawFrequentPatterns = true;        
+    public void showIntersectionLinks(boolean showBoth) {
+        if(showBoth){
+            this.currOp = VisOperations.DRAW_BOTH_LINKS;
+        }else{
+            this.currOp = VisOperations.DRAW_INT_LINKS;
+        }
     }
+
+    
+    public void showTemporalLinks(boolean showBoth) {
+        if(showBoth){
+            this.currOp = VisOperations.DRAW_BOTH_LINKS;
+        }else{
+            this.currOp = VisOperations.DRAW_TEMP_LINKS;
+        }
+    }
+    
+    public void hideLinks(){
+        this.currOp = VisOperations.CLEAR_BOTH_LINKS;
+    }
+    
 }

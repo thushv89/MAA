@@ -73,7 +73,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         FileUtils.setUpConfigDir();
 
         linkGen = new InterLinkGenerator();
-        
+
         if (!FileUtils.allConfigFilesExist()) {
             this.setFocusableWindowState(false);
             FileUtils.cleanConfigDir();
@@ -160,6 +160,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         streamCmb = new javax.swing.JComboBox();
         updateBtn = new javax.swing.JButton();
         jSeparator1 = new javax.swing.JSeparator();
+        tempLinksChk = new javax.swing.JCheckBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setResizable(false);
@@ -368,6 +369,15 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         getContentPane().add(updateBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(447, 11, -1, -1));
         getContentPane().add(jSeparator1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 41, 1119, -1));
 
+        tempLinksChk.setSelected(true);
+        tempLinksChk.setText("Show Temporal Links");
+        tempLinksChk.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                tempLinksChkItemStateChanged(evt);
+            }
+        });
+        getContentPane().add(tempLinksChk, new org.netbeans.lib.awtextra.AbsoluteConstraints(980, 10, -1, -1));
+
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
@@ -398,8 +408,22 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         if (currLC >= DefaultValues.IN_MEMORY_LAYER_COUNT) {
             startLC = currLC - DefaultValues.IN_MEMORY_LAYER_COUNT + 1;
         }
-        initiateAndVisualizeResult(startLC);
+
         fillCombos();
+
+        visUtils = new VisualizeUIUtils();
+        GNodeVisualizer visualizer = new GNodeVisualizer();
+        allVisNodes = visualizer.assignVisCoordinatesToGNodes(allNodes, startLC);
+
+        ArrayList<String> anomIDs = getAnomalousClusters(startLC, currLC);
+        ArrayList<VisGNode> anoVNodes = getVisGNodesByID(allVisNodes, anomIDs);
+
+        int length = toPatTFCmb.getSelectedIndex() - fromPatTFCmb.getSelectedIndex();
+        ArrayList<String> links = getFullIntersectionLinks(length, DefaultValues.MIN_COUNT_FOR_INTRSCT_LINKS);
+
+        visUtils.setData(allVisNodes, anoVNodes, links);
+        initiateAndVisualizeResult(startLC);
+
         updateAnomalySummary();
 
     }//GEN-LAST:event_updateBtnActionPerformed
@@ -413,30 +437,36 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
     }//GEN-LAST:event_streamCmbItemStateChanged
 
     private void anomalousChkItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_anomalousChkItemStateChanged
-        int startLC = 0;
-        int currLC = ikaslList.get(selectedStreamIdx).getCurrLC();
-        if (currLC >= DefaultValues.IN_MEMORY_LAYER_COUNT) {
-            startLC = currLC - DefaultValues.IN_MEMORY_LAYER_COUNT + 1;
-        }
 
-        ArrayList<String> anomIDs = getAnomalousClusters(startLC, currLC);
-        ArrayList<VisGNode> anoVNodes = getVisGNodesByID(anomIDs);
         if (anomalousChk.isSelected()) {
-            visUtils.showAnomalousClusters(anoVNodes);
+            visUtils.showAnomalousClusters();
         } else {
-            visUtils.hideAnomalousClusters(anoVNodes);
+            visUtils.hideAnomalousClusters();
         }
     }//GEN-LAST:event_anomalousChkItemStateChanged
 
     private void freqPatChkItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_freqPatChkItemStateChanged
-        if(freqPatChk.isSelected()){
-        int length = toPatTFCmb.getSelectedIndex() - fromPatTFCmb.getSelectedIndex();
-        ArrayList<String> links = getFullIntersectionLinks(length, DefaultValues.MIN_COUNT_FOR_INTRSCT_LINKS);
-        visUtils.drawIntersectionLinks(links);
-        this.revalidate();
-        this.repaint();
+        if (freqPatChk.isSelected()) {
+            if (!tempLinksChk.isSelected()) {
+                visUtils.showIntersectionLinks(false);
+                this.revalidate();
+                this.repaint();
+            } else {
+                visUtils.showIntersectionLinks(true);
+                this.revalidate();
+                this.repaint();
+            }
         } else {
-        
+            if (!tempLinksChk.isSelected()) {
+                visUtils.hideLinks();
+                this.revalidate();
+                this.repaint();
+            } else {
+                visUtils.showTemporalLinks(false);
+                this.revalidate();
+                this.repaint();
+            }
+
         }
     }
 
@@ -447,10 +477,10 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         for (ArrayList<ReducedNode> layer : allNodes) {
             ArrayList<String> currLayerGnodes = new ArrayList<>();
             Map<String, String> currGNodeInputs = new HashMap<>();
-            
+
             for (ReducedNode gn : layer) {
                 currLayerGnodes.add(gn.getId()[0] + Tokenizers.I_J_TOKENIZER + gn.getId()[1]);
-                if (gn.getInputs()!=null && !gn.getInputs().isEmpty()) {
+                if (gn.getInputs() != null && !gn.getInputs().isEmpty()) {
                     String inputs = gn.getInputs().get(0);
                     for (String s : gn.getInputs()) {
                         inputs += Tokenizers.INPUT_TOKENIZER + s;
@@ -462,17 +492,42 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
             allGNodeInputs.add(currGNodeInputs);
         }
         ArrayList<String> links = linkGen.getFullLinks3(gNodes, minLength, minCount, allGNodeInputs);
-        
+
         return links;
     }//GEN-LAST:event_freqPatChkItemStateChanged
 
-    private ArrayList<VisGNode> getVisGNodesByID(ArrayList<String> idStrings) {
+    private void tempLinksChkItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_tempLinksChkItemStateChanged
+        if (tempLinksChk.isSelected()) {
+            if (!freqPatChk.isSelected()) {
+                visUtils.showTemporalLinks(false);
+                this.revalidate();
+                this.repaint();
+            } else {
+                visUtils.showTemporalLinks(true);
+                this.revalidate();
+                this.repaint();
+            }
+        } else {
+            if (!freqPatChk.isSelected()) {
+                visUtils.hideLinks();
+                this.revalidate();
+                this.repaint();
+            } else {
+                visUtils.showIntersectionLinks(false);
+                this.revalidate();
+                this.repaint();
+            }
+
+        }
+    }//GEN-LAST:event_tempLinksChkItemStateChanged
+
+    private ArrayList<VisGNode> getVisGNodesByID(ArrayList<VisGNode> nodes, ArrayList<String> idStrings) {
         ArrayList<VisGNode> vNodes = new ArrayList<>();
         Iterator<String> it = idStrings.iterator();
         while (it.hasNext()) {
             String s = it.next();
             String[] tokens = s.split(Tokenizers.I_J_TOKENIZER);
-            for (VisGNode vgn : allVisNodes) {
+            for (VisGNode vgn : nodes) {
                 if (idStrings.isEmpty()) {
                     return vNodes;
                 }
@@ -635,6 +690,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
     private javax.swing.JProgressBar statusProgressBar;
     private javax.swing.JComboBox streamCmb;
     private javax.swing.JButton summaryBtn;
+    private javax.swing.JCheckBox tempLinksChk;
     private javax.swing.JComboBox toPatTFCmb;
     private javax.swing.JButton updateBtn;
     private javax.swing.JPanel visContainerPanel;
@@ -745,10 +801,8 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
 
     private void initiateAndVisualizeResult(int startLC) {
         visContainerPanel.removeAll();
-        visUtils = new VisualizeUIUtils();
-        GNodeVisualizer visualizer = new GNodeVisualizer();
-        allVisNodes = visualizer.assignVisCoordinatesToGNodes(allNodes, startLC);
-        JPanel visPanel = visUtils.getVisJPanel(allVisNodes);
+
+        JPanel visPanel = visUtils.getVisJPanel();
 
         JScrollPane scrollPane = new JScrollPane();
         scrollPane.getViewport().addChangeListener(this);
