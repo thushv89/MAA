@@ -18,7 +18,7 @@ public class VisGNode {
     private int[] id;
     private int[] coordinates;
     private VisGNode pVgn;
-    private ArrayList<int[]> otherParentCoords;
+    private ArrayList<VisGNode> otherParentCoords;
     private int childCount;
     private NodeHitType vgnType;
     
@@ -97,14 +97,14 @@ public class VisGNode {
     /**
      * @return the otherParentCoords
      */
-    public ArrayList<int[]> getOtherParentCoords() {
+    public ArrayList<VisGNode> getOtherParentCoords() {
         return otherParentCoords;
     }
 
     /**
      * @param otherParentCoords the otherParentCoords to set
      */
-    public void setOtherParentCoords(ArrayList<int[]> otherParentCoords) {
+    public void setOtherParentCoords(ArrayList<VisGNode> otherParentCoords) {
         this.otherParentCoords = otherParentCoords;
     }
     

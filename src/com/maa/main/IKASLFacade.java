@@ -2,13 +2,15 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.maa.algo.ikasl.core;
+package com.maa.main;
 
 import com.maa.algo.enums.DistanceType;
 import com.maa.algo.enums.GenType;
 import com.maa.algo.enums.MiningType;
 import com.maa.algo.ikasl.auxi.HitThresholdGenerator;
 import com.maa.algo.ikasl.auxi.InterLinkGenerator;
+import com.maa.algo.ikasl.core.IKASLGeneralizer;
+import com.maa.algo.ikasl.core.IKASLLearner;
 import com.maa.algo.input.Normalizer;
 import com.maa.algo.listeners.TaskListener;
 import com.maa.algo.objects.GNode;
@@ -58,7 +60,7 @@ public class IKASLFacade {
     private InterLinkGenerator linkGen;
     private String dir;
     private IKASLOutputXMLWriter ikaslXMLWriter;
-    private String streamID;
+    private String jobID;
     private String currTimeFrame;
     private AlgoParameters algoParams;
     private DefaultValueListener defListener;
@@ -68,7 +70,7 @@ public class IKASLFacade {
         linkGen = new InterLinkGenerator();
         this.aPModel = aPModel;
         ikaslXMLWriter = new IKASLOutputXMLWriter();
-        this.streamID = streamID;
+        this.jobID = streamID;
         this.defListener = defListener;
 
         algoParams = readAndSetAlgoParameters(aPModel);
@@ -92,7 +94,7 @@ public class IKASLFacade {
 
         InputParser iParser = new InputParser();
         String inputFileName = "input" + (currLC + 1) + ".txt";
-        iParser.parseInput(ImportantFileNames.DATA_DIRNAME + File.separator + streamID + File.separator + inputFileName);
+        iParser.parseInput(ImportantFileNames.DATA_DIRNAME + File.separator + jobID + File.separator + inputFileName);
         System.out.println("Processing " + inputFileName + " file");
         ArrayList<double[]> iWeights = iParser.getIWeights();
         ArrayList<String> iNames = iParser.getINames();
@@ -123,10 +125,10 @@ public class IKASLFacade {
 
             Map<String,String> testResultMap = mapInputsToGNodes(currLC, initGLayer, iWeights, iNames);
             Map<String,String> weights = getMapGNodeWeights(initGLayer);
-            String loc = ImportantFileNames.DATA_DIRNAME + File.separator + getStreamID() + File.separator + "LC" + currLC + ".xml";
+            String loc = ImportantFileNames.DATA_DIRNAME + File.separator + getJobID() + File.separator + "LC" + currLC + ".xml";
             ikaslXMLWriter.writeXML(loc, testResultMap, weights,currTimeFrame);
 
-            ikaslListener.IKASLStepCompleted(streamID);
+            ikaslListener.IKASLStepCompleted(jobID);
 
         } else {
             //get currLC-1 genLayer
@@ -159,7 +161,7 @@ public class IKASLFacade {
             //because there were no inputs similar to that.
             Map<String, String> testResultMap = mapInputsToGNodes(currLC, currGLayer, iWeights, iNames);
             Map<String, String> weights = getMapGNodeWeights(currGLayer);
-            String loc = ImportantFileNames.DATA_DIRNAME + File.separator + getStreamID() + File.separator + "LC" + currLC + ".xml";
+            String loc = ImportantFileNames.DATA_DIRNAME + File.separator + getJobID() + File.separator + "LC" + currLC + ".xml";
             ikaslXMLWriter.writeXML(loc, testResultMap, weights,currTimeFrame);
 
 
@@ -174,7 +176,7 @@ public class IKASLFacade {
             //add Genlayer(currLC) to allGLayers
             saveLastGLayer(new LastGenLayer(currGLayer, currLC));
 
-            ikaslListener.IKASLStepCompleted(streamID);
+            ikaslListener.IKASLStepCompleted(jobID);
             //getClusterPurityVector(currGLayer, prevGLayer, currLC);
 
             //ArrayList<String> links = linkGen.getAllIntsectLinks(currGLayer, allGNodeInputs.get(currLC), prevGLayer, allGNodeInputs.get(currLC - 1), 50);
@@ -184,7 +186,7 @@ public class IKASLFacade {
     }
 
     public void saveLastGLayer(LastGenLayer gLayer) {
-        try (OutputStream file = new FileOutputStream(ImportantFileNames.DATA_DIRNAME + File.separator + getStreamID() + File.separator + Constants.LAST_LAYER_FILE_NAME);
+        try (OutputStream file = new FileOutputStream(ImportantFileNames.DATA_DIRNAME + File.separator + getJobID() + File.separator + Constants.LAST_LAYER_FILE_NAME);
                 OutputStream buffer = new BufferedOutputStream(file);
                 ObjectOutput output = new ObjectOutputStream(buffer);) {
             output.writeObject(gLayer);
@@ -195,7 +197,7 @@ public class IKASLFacade {
 
     public LastGenLayer retrieveLastGLayer() {
         try (
-                InputStream file = new FileInputStream(ImportantFileNames.DATA_DIRNAME + File.separator + getStreamID() + File.separator + Constants.LAST_LAYER_FILE_NAME);
+                InputStream file = new FileInputStream(ImportantFileNames.DATA_DIRNAME + File.separator + getJobID() + File.separator + Constants.LAST_LAYER_FILE_NAME);
                 InputStream buffer = new BufferedInputStream(file);
                 ObjectInput input = new ObjectInputStream(buffer);) {
             //deserialize the List
@@ -260,7 +262,7 @@ public class IKASLFacade {
         double[] min = new double[aPModel.getDimensions()];
         double[] max = new double[aPModel.getDimensions()];
         FileReader fr = new FileReader();
-        ArrayList<String> minMaxList = fr.readLines(ImportantFileNames.DATA_DIRNAME + File.separator + getStreamID() + File.separator + Constants.BOUNDS_FILE);
+        ArrayList<String> minMaxList = fr.readLines(ImportantFileNames.DATA_DIRNAME + File.separator + getJobID() + File.separator + Constants.BOUNDS_FILE);
 
         if (minMaxList != null && !minMaxList.isEmpty()) {
             String[] minStr = minMaxList.get(0).split(Constants.INPUT_TOKENIZER);
@@ -276,11 +278,11 @@ public class IKASLFacade {
                 min[i] = DefaultValues.MIN_DEFAULT;
                 max[i] = DefaultValues.MAX_DEFAULT;
             }
-            defListener.useDefaultBounds(getStreamID());
+            defListener.useDefaultBounds(getJobID());
         }
 
         double[] weights = new double[aPModel.getDimensions()];
-        ArrayList<String> weightsStrList = fr.readLines(ImportantFileNames.DATA_DIRNAME + File.separator + getStreamID() + File.separator + Constants.WEIGHT_FILE);
+        ArrayList<String> weightsStrList = fr.readLines(ImportantFileNames.DATA_DIRNAME + File.separator + getJobID() + File.separator + Constants.WEIGHT_FILE);
         if (weightsStrList != null && !weightsStrList.isEmpty()) {
             String weightsStr = weightsStrList.get(0);
             String[] weightTokens = weightsStr.split(Constants.INPUT_TOKENIZER);
@@ -292,7 +294,7 @@ public class IKASLFacade {
             for (int i = 0; i < weights.length; i++) {
                 weights[i] = DefaultValues.MIN_DEFAULT;
             }
-            defListener.useDefaultWeights(getStreamID());
+            defListener.useDefaultWeights(getJobID());
         }
 
         AlgoParameters params = new AlgoParameters(aPModel.getDimensions(), aPModel.getSpreadFactor(), aPModel.getNeighRad(), aPModel.getLearningRate(), aPModel.getIterations(),
@@ -304,8 +306,8 @@ public class IKASLFacade {
     /**
      * @return the streamID
      */
-    public String getStreamID() {
-        return streamID;
+    public String getJobID() {
+        return jobID;
     }
 
     public int getCurrLC() {

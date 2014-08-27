@@ -6,7 +6,7 @@ package com.maa.ui;
 
 import com.maa.algo.ikasl.auxi.GNodeVisualizer;
 import com.maa.algo.ikasl.auxi.InterLinkGenerator;
-import com.maa.algo.ikasl.core.IKASLFacade;
+import com.maa.main.IKASLFacade;
 import com.maa.algo.objects.GNode;
 import com.maa.algo.objects.GenLayer;
 import com.maa.algo.utils.LogMessages;
@@ -147,6 +147,9 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         fromPatTFCmb = new javax.swing.JComboBox();
         toPatTFCmb = new javax.swing.JComboBox();
         jLabel3 = new javax.swing.JLabel();
+        freqPatLbl = new javax.swing.JLabel();
+        minLengthTxt = new javax.swing.JTextField();
+        jLabel8 = new javax.swing.JLabel();
         jPanel4 = new javax.swing.JPanel();
         resourceInfoBtn = new javax.swing.JButton();
         runBtn = new javax.swing.JButton();
@@ -255,29 +258,47 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
             }
         });
 
-        jLabel2.setText("Show patterns for time frame:");
+        jLabel2.setText("From");
+
+        fromPatTFCmb.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                fromPatTFCmbItemStateChanged(evt);
+            }
+        });
 
         jLabel3.setText("to");
+
+        freqPatLbl.setText("Patterns will appear here");
+        freqPatLbl.setVerticalAlignment(javax.swing.SwingConstants.TOP);
+
+        minLengthTxt.setText("3");
+
+        jLabel8.setText("Min Length:");
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
+                .addContainerGap()
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
+                    .addGroup(jPanel3Layout.createSequentialGroup()
                         .addComponent(freqPatChk)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(freqInfoBtn))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                        .addContainerGap()
                         .addComponent(jLabel2)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(fromPatTFCmb, javax.swing.GroupLayout.PREFERRED_SIZE, 77, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel3)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(toPatTFCmb, javax.swing.GroupLayout.PREFERRED_SIZE, 77, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 43, Short.MAX_VALUE)
+                        .addComponent(jLabel8)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(toPatTFCmb, javax.swing.GroupLayout.PREFERRED_SIZE, 77, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(minLengthTxt, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(freqPatLbl, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         jPanel3Layout.setVerticalGroup(
@@ -288,15 +309,19 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
                     .addComponent(jLabel2)
                     .addComponent(fromPatTFCmb, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(toPatTFCmb, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel3))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 99, Short.MAX_VALUE)
+                    .addComponent(jLabel3)
+                    .addComponent(minLengthTxt, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel8))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(freqPatLbl, javax.swing.GroupLayout.DEFAULT_SIZE, 87, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(freqInfoBtn)
                     .addComponent(freqPatChk))
                 .addContainerGap())
         );
 
-        getContentPane().add(jPanel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 239, -1, -1));
+        getContentPane().add(jPanel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 239, 370, -1));
 
         jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder("Resource Utilization Prediction"));
 
@@ -421,7 +446,8 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         int length = toPatTFCmb.getSelectedIndex() - fromPatTFCmb.getSelectedIndex();
         ArrayList<String> links = getFullIntersectionLinks(length, DefaultValues.MIN_COUNT_FOR_INTRSCT_LINKS);
 
-        visUtils.setData(allVisNodes, anoVNodes, links);
+        String jobID = (String)streamCmb.getSelectedItem();
+        visUtils.setData(dimensions.get(jobID), allNodes, allVisNodes, anoVNodes, links);
         initiateAndVisualizeResult(startLC);
 
         updateAnomalySummary();
@@ -447,6 +473,11 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
 
     private void freqPatChkItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_freqPatChkItemStateChanged
         if (freqPatChk.isSelected()) {
+            int length = Integer.parseInt(minLengthTxt.getText());
+            
+            ArrayList<String> links = getFullIntersectionLinks(length, DefaultValues.MIN_COUNT_FOR_INTRSCT_LINKS);
+            visUtils.setData(null,null, null, null, links);
+
             if (!tempLinksChk.isSelected()) {
                 visUtils.showIntersectionLinks(false);
                 this.revalidate();
@@ -520,6 +551,10 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
 
         }
     }//GEN-LAST:event_tempLinksChkItemStateChanged
+
+    private void fromPatTFCmbItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_fromPatTFCmbItemStateChanged
+        // TODO add your handling code here:
+    }//GEN-LAST:event_fromPatTFCmbItemStateChanged
 
     private ArrayList<VisGNode> getVisGNodesByID(ArrayList<VisGNode> nodes, ArrayList<String> idStrings) {
         ArrayList<VisGNode> vNodes = new ArrayList<>();
@@ -672,6 +707,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
     private javax.swing.JCheckBox anomalousChk;
     private javax.swing.JButton freqInfoBtn;
     private javax.swing.JCheckBox freqPatChk;
+    private javax.swing.JLabel freqPatLbl;
     private javax.swing.JComboBox fromPatTFCmb;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
@@ -680,10 +716,12 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
+    private javax.swing.JLabel jLabel8;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JSeparator jSeparator1;
+    private javax.swing.JTextField minLengthTxt;
     private javax.swing.JButton resourceInfoBtn;
     private javax.swing.JButton runBtn;
     private javax.swing.JLabel statusLbl;

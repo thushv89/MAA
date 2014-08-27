@@ -54,6 +54,21 @@ public class GNodeVisualizer {
                         }
                     } //if node is a multi-parent node
                     else {
+                        String[] pTokens = key.split(Constants.PARENT_TOKENIZER);
+                        int mostLeftX = -1;
+                        int mostLeftY = -1;
+                        for (String p : pTokens) {
+                            int lc = Integer.parseInt(p.split(Constants.I_J_TOKENIZER)[0]);
+                            int id = Integer.parseInt(p.split(Constants.I_J_TOKENIZER)[1]);
+                            VisGNode parentVisNode = VisualizeUIUtils.getVisGNodeWithID(allVisNodes, lc, id);
+                            if (parentVisNode != null) {
+                                if (mostLeftX < parentVisNode.getCoordinates()[0]) {
+                                    mostLeftX = parentVisNode.getCoordinates()[0];
+                                    mostLeftY = parentVisNode.getCoordinates()[1];
+                                }
+                            }
+                        }
+                        VisualizeUIUtils.getVisGNodeWithXY(allVisNodes, mostLeftX, mostLeftY).incrementChildCount();
                     }
                 }
 
@@ -70,7 +85,7 @@ public class GNodeVisualizer {
                                 VisGNode vgn = allVisNodes.get(idx);
                                 int currX = vgn.getCoordinates()[0];
                                 vgn.setCoordinates(currX + offset, j);
-                                
+
                                 //if node's parent has coordinates (currX,j) update node's parent coordinate value to the new coordinates
                                 //TODO: This needs to be done for all the 'otherParentNodes' too because merged nodes have otherParentNodes
                             }
@@ -105,11 +120,50 @@ public class GNodeVisualizer {
                             }
                             allVisNodes.add(new VisGNode(rn.getId(), newX, i, pVgn, rn.gethType()));
                         } else {
-                            int idx = VisualizeUIUtils.getRightMostIndexWithLC(allVisNodes,i) + 1;
+                            int idx = VisualizeUIUtils.getRightMostIndexWithLC(allVisNodes, i) + 1;
                             allVisNodes.add(new VisGNode(rn.getId(), idx, i, null, rn.gethType()));
                         }
                     } //if node is a multi-parent node
                     else {
+                        VisGNode primaryPVgn = null;
+                        ArrayList<VisGNode> otherPVgn = new ArrayList<>();
+                        int leftMostX = -1;
+                        int leftMostY = -1;
+                        String[] pTokens = parentID.split(Constants.PARENT_TOKENIZER);
+                        for (String p : pTokens) {
+                            int lc = Integer.parseInt(p.split(Constants.I_J_TOKENIZER)[0]);
+                            int id = Integer.parseInt(p.split(Constants.I_J_TOKENIZER)[1]);
+                            VisGNode tempPVgn = VisualizeUIUtils.getVisGNodeWithID(allVisNodes, lc, id);
+                            if(tempPVgn.getCoordinates()[0]>leftMostX){
+                                leftMostX = tempPVgn.getCoordinates()[0];
+                                leftMostY = tempPVgn.getCoordinates()[1];
+                            }
+                        }
+                        
+                        for (String p : pTokens) {
+                            int lc = Integer.parseInt(p.split(Constants.I_J_TOKENIZER)[0]);
+                            int id = Integer.parseInt(p.split(Constants.I_J_TOKENIZER)[1]);
+                            VisGNode tempPVgn = VisualizeUIUtils.getVisGNodeWithID(allVisNodes, lc, id);
+                            if(tempPVgn.getCoordinates()[0]==leftMostX && tempPVgn.getCoordinates()[1]==leftMostY){
+                                primaryPVgn = tempPVgn;
+                            }else{
+                                otherPVgn.add(tempPVgn);
+                            }
+                        }
+                        //non hit nodes from previous levels can come to upper levels
+                        //this causes sometimes pVgn to be null
+                        if (primaryPVgn != null) {
+                            int newX = primaryPVgn.getCoordinates()[0];
+                            while (allVisNodes.contains(new VisGNode(null, newX, i, null, null))) {
+                                newX++;
+                            }
+                            VisGNode newVgn = new VisGNode(rn.getId(), newX, i, primaryPVgn, rn.gethType());
+                            newVgn.setOtherParentCoords(otherPVgn);
+                            allVisNodes.add(newVgn);
+                        } else {
+                            int idx = VisualizeUIUtils.getRightMostIndexWithLC(allVisNodes, i) + 1;
+                            allVisNodes.add(new VisGNode(rn.getId(), idx, i, null, rn.gethType()));
+                        }
                     }
                 }
             }
@@ -117,6 +171,4 @@ public class GNodeVisualizer {
 
         return allVisNodes;
     }
-
-
 }
