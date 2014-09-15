@@ -8,7 +8,7 @@ import com.maa.algo.enums.DistanceType;
 import com.maa.algo.enums.GenType;
 import com.maa.algo.enums.MiningType;
 import com.maa.algo.ikasl.auxi.HitThresholdGenerator;
-import com.maa.algo.ikasl.auxi.InterLinkGenerator;
+import com.maa.vis.main.InterLinkGenerator;
 import com.maa.algo.ikasl.core.IKASLGeneralizer;
 import com.maa.algo.ikasl.core.IKASLLearner;
 import com.maa.algo.input.Normalizer;

@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.maa.algo.ikasl.auxi;
+package com.maa.vis.main;
 
 import com.maa.algo.enums.NodeHitType;
 import com.maa.vis.objects.VisGNode;

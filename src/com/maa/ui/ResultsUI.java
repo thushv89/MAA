@@ -4,8 +4,8 @@
  */
 package com.maa.ui;
 
-import com.maa.algo.ikasl.auxi.GNodeVisualizer;
-import com.maa.algo.ikasl.auxi.InterLinkGenerator;
+import com.maa.vis.main.GNodeVisualizer;
+import com.maa.vis.main.InterLinkGenerator;
 import com.maa.main.IKASLFacade;
 import com.maa.algo.objects.GNode;
 import com.maa.algo.objects.GenLayer;
@@ -18,9 +18,11 @@ import com.maa.listeners.IKASLStepListener;
 import com.maa.models.AlgoParamModel;
 import com.maa.models.BasicParamModel;
 import com.maa.models.DataParamModel;
+import com.maa.utils.CurrentJobState;
 import com.maa.utils.DefaultValues;
 import com.maa.utils.ImportantFileNames;
 import com.maa.utils.Tokenizers;
+import com.maa.vis.main.InterLinkGenInputAdapter;
 import com.maa.vis.objects.ReducedNode;
 import com.maa.vis.objects.VisGNode;
 import com.maa.xml.AlgoXMLParser;
@@ -53,7 +55,6 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
     private DataParamModel dPModel;
     private ArrayList<AlgoParamModel> aPModels;
     private ArrayList<IKASLFacade> ikaslList;
-    private int lastLC;
     private ArrayList<String> allTimeFrames;
     private ArrayList<ArrayList<ReducedNode>> allNodes;
     ArrayList<VisGNode> allVisNodes;
@@ -145,11 +146,11 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         freqPatChk = new javax.swing.JCheckBox();
         jLabel2 = new javax.swing.JLabel();
         fromPatTFCmb = new javax.swing.JComboBox();
-        toPatTFCmb = new javax.swing.JComboBox();
-        jLabel3 = new javax.swing.JLabel();
         freqPatLbl = new javax.swing.JLabel();
         minLengthTxt = new javax.swing.JTextField();
         jLabel8 = new javax.swing.JLabel();
+        jLabel9 = new javax.swing.JLabel();
+        minCountTxt = new javax.swing.JTextField();
         jPanel4 = new javax.swing.JPanel();
         resourceInfoBtn = new javax.swing.JButton();
         runBtn = new javax.swing.JButton();
@@ -266,14 +267,16 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
             }
         });
 
-        jLabel3.setText("to");
-
         freqPatLbl.setText("Patterns will appear here");
         freqPatLbl.setVerticalAlignment(javax.swing.SwingConstants.TOP);
 
         minLengthTxt.setText("3");
 
         jLabel8.setText("Min Length:");
+
+        jLabel9.setText("Min Count:");
+
+        minCountTxt.setText("10");
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
@@ -284,17 +287,17 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addComponent(freqPatChk)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 104, Short.MAX_VALUE)
                         .addComponent(freqInfoBtn))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
                         .addComponent(jLabel2)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(fromPatTFCmb, javax.swing.GroupLayout.PREFERRED_SIZE, 77, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel3)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(toPatTFCmb, javax.swing.GroupLayout.PREFERRED_SIZE, 77, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 43, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jLabel9)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(minCountTxt, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jLabel8)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(minLengthTxt, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -308,10 +311,11 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel2)
                     .addComponent(fromPatTFCmb, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(toPatTFCmb, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel3)
                     .addComponent(minLengthTxt, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel8))
+                    .addComponent(jLabel8)
+                    .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(minCountTxt, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jLabel9)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(freqPatLbl, javax.swing.GroupLayout.DEFAULT_SIZE, 87, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -427,11 +431,13 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
 
     private void updateBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_updateBtnActionPerformed
         selectedStreamIdx = streamCmb.getSelectedIndex();
+        CurrentJobState.CURR_LC = ikaslList.get(selectedStreamIdx).getCurrLC();
+
         allNodes = loadLastSetOfLC(DefaultValues.IN_MEMORY_LAYER_COUNT);
         int startLC = 0;
-        int currLC = ikaslList.get(selectedStreamIdx).getCurrLC();
-        if (currLC >= DefaultValues.IN_MEMORY_LAYER_COUNT) {
-            startLC = currLC - DefaultValues.IN_MEMORY_LAYER_COUNT + 1;
+
+        if (CurrentJobState.CURR_LC >= DefaultValues.IN_MEMORY_LAYER_COUNT) {
+            startLC = CurrentJobState.CURR_LC - DefaultValues.IN_MEMORY_LAYER_COUNT + 1;
         }
 
         fillCombos();
@@ -440,14 +446,17 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         GNodeVisualizer visualizer = new GNodeVisualizer();
         allVisNodes = visualizer.assignVisCoordinatesToGNodes(allNodes, startLC);
 
-        ArrayList<String> anomIDs = getAnomalousClusters(startLC, currLC);
+        ArrayList<String> anomIDs = getAnomalousClusters(startLC, CurrentJobState.CURR_LC);
         ArrayList<VisGNode> anoVNodes = getVisGNodesByID(allVisNodes, anomIDs);
 
-        int length = toPatTFCmb.getSelectedIndex() - fromPatTFCmb.getSelectedIndex();
-        ArrayList<String> links = getFullIntersectionLinks(length, DefaultValues.MIN_COUNT_FOR_INTRSCT_LINKS);
+        int length = Integer.parseInt(minLengthTxt.getText());
+        int count = Integer.parseInt(minCountTxt.getText());
+        int startIdx = fromPatTFCmb.getSelectedIndex();
 
-        String jobID = (String)streamCmb.getSelectedItem();
-        visUtils.setData(dimensions.get(jobID), allNodes, allVisNodes, anoVNodes, links);
+        calcFullIntersectionLinksAndStrengths(length, count, startIdx);
+
+        String jobID = (String) streamCmb.getSelectedItem();
+        visUtils.setData(dimensions.get(jobID), allNodes, allVisNodes, anoVNodes, new ArrayList<>(CurrentJobState.INT_LINKS));
         initiateAndVisualizeResult(startLC);
 
         updateAnomalySummary();
@@ -474,9 +483,10 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
     private void freqPatChkItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_freqPatChkItemStateChanged
         if (freqPatChk.isSelected()) {
             int length = Integer.parseInt(minLengthTxt.getText());
-            
-            ArrayList<String> links = getFullIntersectionLinks(length, DefaultValues.MIN_COUNT_FOR_INTRSCT_LINKS);
-            visUtils.setData(null,null, null, null, links);
+            int startIdx = fromPatTFCmb.getSelectedIndex();
+            int minCount = Integer.parseInt(minCountTxt.getText());
+            calcFullIntersectionLinksAndStrengths(length, minCount, startIdx);
+            visUtils.setData(null, null, null, null, CurrentJobState.INT_LINKS);
 
             if (!tempLinksChk.isSelected()) {
                 visUtils.showIntersectionLinks(false);
@@ -501,30 +511,44 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         }
     }
 
-    public ArrayList<String> getFullIntersectionLinks(int minLength, int minCount) {
-        ArrayList<ArrayList<String>> gNodes = new ArrayList<>();
-        ArrayList<Map<String, String>> allGNodeInputs = new ArrayList<>();
+    public void calcFullIntersectionLinksAndStrengths(int minLength, int minCount, int startIdx) {
+        
+        InterLinkGenInputAdapter.adaptInputs(allNodes,startIdx);
 
-        for (ArrayList<ReducedNode> layer : allNodes) {
-            ArrayList<String> currLayerGnodes = new ArrayList<>();
-            Map<String, String> currGNodeInputs = new HashMap<>();
-
-            for (ReducedNode gn : layer) {
-                currLayerGnodes.add(gn.getId()[0] + Tokenizers.I_J_TOKENIZER + gn.getId()[1]);
-                if (gn.getInputs() != null && !gn.getInputs().isEmpty()) {
-                    String inputs = gn.getInputs().get(0);
-                    for (String s : gn.getInputs()) {
-                        inputs += Tokenizers.INPUT_TOKENIZER + s;
-                    }
-                    currGNodeInputs.put(gn.getId()[0] + Tokenizers.I_J_TOKENIZER + gn.getId()[1], inputs);
-                }
-            }
-            gNodes.add(currLayerGnodes);
-            allGNodeInputs.add(currGNodeInputs);
+        CurrentJobState.ALL_NODE_INPUTS = InterLinkGenInputAdapter.getNodeInputMap();
+        ArrayList<ArrayList<String>> gNodes = InterLinkGenInputAdapter.getNodes();
+        
+        int inMemOffset = CurrentJobState.CURR_LC - DefaultValues.IN_MEMORY_LAYER_COUNT;
+        if (inMemOffset < 0) {
+            inMemOffset = 0;
         }
-        ArrayList<String> links = linkGen.getFullLinks3(gNodes, minLength, minCount, allGNodeInputs);
+        
+        int offset = inMemOffset + fromPatTFCmb.getSelectedIndex();
 
-        return links;
+        linkGen.setData(gNodes,CurrentJobState.ALL_NODE_INPUTS, offset);
+        ArrayList<String> links = linkGen.getFullLinks(minLength, minCount);
+
+        CurrentJobState.INT_LINKS = links;
+        
+        Map<String,ArrayList<Integer>> inputPercMap = new HashMap<>();
+        for(String link : links){
+            ArrayList<Integer> perc = linkGen.getIntLinkStrength(link, CurrentJobState.ALL_NODE_INPUTS, offset);
+            inputPercMap.put(link, perc);
+        }
+        CurrentJobState.INT_LINK_STRENGTHS = inputPercMap;
+        
+        String txt = "<html>";
+
+        for (String s : CurrentJobState.INT_LINKS) {
+            int sumStrength = 0;
+            for(int val : CurrentJobState.INT_LINK_STRENGTHS.get(s)){
+                sumStrength += val;
+            }
+            int avgStrength = sumStrength/CurrentJobState.INT_LINK_STRENGTHS.get(s).size();
+            txt += s + " -> " + avgStrength +"%"+ "<br/>";
+        }
+        txt += "</html>";
+        //freqPatLbl.setText(txt);
     }//GEN-LAST:event_freqPatChkItemStateChanged
 
     private void tempLinksChkItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_tempLinksChkItemStateChanged
@@ -548,12 +572,11 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
                 this.revalidate();
                 this.repaint();
             }
-
         }
     }//GEN-LAST:event_tempLinksChkItemStateChanged
 
     private void fromPatTFCmbItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_fromPatTFCmbItemStateChanged
-        // TODO add your handling code here:
+        
     }//GEN-LAST:event_fromPatTFCmbItemStateChanged
 
     private ArrayList<VisGNode> getVisGNodesByID(ArrayList<VisGNode> nodes, ArrayList<String> idStrings) {
@@ -607,24 +630,18 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
     private void fillCombos() {
 
         Vector anoVec = new Vector();
-        Vector toPatVec = new Vector();
         Vector fromPatVec = new Vector();
 
         for (String s : allTimeFrames) {
             anoVec.add(s);
             fromPatVec.add(s);
-            toPatVec.add(s);
         }
 
         DefaultComboBoxModel defAnoCmbModel = new DefaultComboBoxModel(anoVec);
         DefaultComboBoxModel defFromPatCmbModel = new DefaultComboBoxModel(fromPatVec);
-        DefaultComboBoxModel defToPatCmbModel = new DefaultComboBoxModel(toPatVec);
 
         anoTFCmb.setModel(defAnoCmbModel);
         fromPatTFCmb.setModel(defFromPatCmbModel);
-        toPatTFCmb.setModel(defToPatCmbModel);
-
-        toPatTFCmb.setSelectedIndex(toPatTFCmb.getItemCount() - 1);
     }
 
     private String createSettingsSummary() {
@@ -711,16 +728,17 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
     private javax.swing.JComboBox fromPatTFCmb;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
+    private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JSeparator jSeparator1;
+    private javax.swing.JTextField minCountTxt;
     private javax.swing.JTextField minLengthTxt;
     private javax.swing.JButton resourceInfoBtn;
     private javax.swing.JButton runBtn;
@@ -729,7 +747,6 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
     private javax.swing.JComboBox streamCmb;
     private javax.swing.JButton summaryBtn;
     private javax.swing.JCheckBox tempLinksChk;
-    private javax.swing.JComboBox toPatTFCmb;
     private javax.swing.JButton updateBtn;
     private javax.swing.JPanel visContainerPanel;
     // End of variables declaration//GEN-END:variables
@@ -811,16 +828,16 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         allTimeFrames = new ArrayList<>();
         IKASLOutputXMLParser ikaslXMLParser = new IKASLOutputXMLParser();
         ArrayList<ArrayList<ReducedNode>> nodes = new ArrayList<>();
-        int currLC = ikaslList.get(selectedStreamIdx).getCurrLC();
-        if (currLC < count) {
-            for (int i = 0; i <= currLC; i++) {
+
+        if (CurrentJobState.CURR_LC < count) {
+            for (int i = 0; i <= CurrentJobState.CURR_LC; i++) {
                 String loc = ImportantFileNames.DATA_DIRNAME + File.separator
                         + bPModel.getStreamIDs().get(selectedStreamIdx) + File.separator + "LC" + i + ".xml";
                 nodes.add(ikaslXMLParser.parseXML(loc));
                 allTimeFrames.add(ikaslXMLParser.getTimeFram());
             }
         } else {
-            for (int i = currLC - count + 1; i <= currLC; i++) {
+            for (int i = CurrentJobState.CURR_LC - count + 1; i <= CurrentJobState.CURR_LC; i++) {
                 String loc = ImportantFileNames.DATA_DIRNAME + File.separator
                         + bPModel.getStreamIDs().get(selectedStreamIdx) + File.separator + "LC" + i + ".xml";
                 nodes.add(ikaslXMLParser.parseXML(loc));
@@ -854,7 +871,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         int scrollPaneHeight = visContainerPanel.getPreferredSize().height - (2 * verticalStartngGap);
 
         if (visPanel.getPreferredSize().width < visContainerPanel.getPreferredSize().width) {
-            scrollPaneWidth = visPanel.getPreferredSize().width + 10;
+            scrollPaneWidth = visPanel.getPreferredSize().width + 25;
         }
         if (visPanel.getPreferredSize().height < visContainerPanel.getPreferredSize().height) {
             //20 is there because otherwise when this conditions occur, vertical bar appears
@@ -926,6 +943,8 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
 
 
     }
+
+    
 
     class ReducedNodeInputComparator implements Comparator<ReducedNode> {
 

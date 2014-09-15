@@ -5,7 +5,7 @@
 package com.maa.ui;
 
 import com.maa.algo.enums.NodeHitType;
-import com.maa.algo.ikasl.auxi.GNodeVisualizer;
+import com.maa.vis.main.GNodeVisualizer;
 import com.maa.algo.objects.GNode;
 import com.maa.enums.VisOperations;
 import com.maa.utils.Tokenizers;

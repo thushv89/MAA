@@ -6,9 +6,9 @@ package com.maa.algo.ikasl.core;
 
 import com.maa.algo.enums.GenType;
 import com.maa.algo.enums.MiningType;
-import com.maa.algo.ikasl.auxi.GNodeVisualizer;
+import com.maa.vis.main.GNodeVisualizer;
 import com.maa.algo.ikasl.auxi.HitThresholdGenerator;
-import com.maa.algo.ikasl.auxi.InterLinkGenerator;
+import com.maa.vis.main.InterLinkGenerator;
 import com.maa.algo.input.NumericalDataParser;
 import com.maa.algo.listeners.TaskListener;
 import com.maa.algo.objects.GNode;
