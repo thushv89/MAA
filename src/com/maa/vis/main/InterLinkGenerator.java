@@ -67,7 +67,7 @@ public class InterLinkGenerator {
         return commonIn;
     }
 
-    private ArrayList<String> findAdjacentLCLinks(ArrayList<String> links, int nxtLvl, int minCount) {
+    private ArrayList<String> findAdjacentLCLinks(ArrayList<String> links, int nxtLvl, int minStrength) {
 
         //if we have reached end of all GLayers, return the links we have
         if (nxtLvl - LCOffset > gLayerNodes.size() - 1) {
@@ -90,7 +90,8 @@ public class InterLinkGenerator {
             String s1 = linksIter.next();
             
             //if the the number of common elements in teh link are less than minCount, remove them
-            if (getCommon(s1).size() < minCount) {
+            int s1Strength = getIntLinkMinStrength(s1);
+            if (s1Strength < minStrength) {
                 linksIter.remove();
             }
 
@@ -104,7 +105,8 @@ public class InterLinkGenerator {
                 //if the newlink has commone elments more than minCount and newNode is from above or equal to nxtLvl
                 //add new link to a temp Array
                 //if this is the case we do not need to the s1 link any longer, remove it
-                if (getCommon(newLink).size() >= minCount && newNodeLC >= nxtLvl) {
+                int newStrength = getIntLinkMinStrength(newLink);
+                if (newStrength >= minStrength && newNodeLC >= nxtLvl) {
                     if(links.contains(s1)){
                         linksIter.remove();
                     }
@@ -115,7 +117,7 @@ public class InterLinkGenerator {
         }
         links.addAll(tempLinks);
 
-        return findAdjacentLCLinks(links, nxtLvl + 1, minCount);
+        return findAdjacentLCLinks(links, nxtLvl + 1, minStrength);
     }
 
     public void setData(ArrayList<ArrayList<String>> gLayerNodes, ArrayList<Map<String, String>> allGLayerInputs, int offset) {
@@ -124,16 +126,19 @@ public class InterLinkGenerator {
         this.gLayerNodes = gLayerNodes;
     }
 
-    public ArrayList<String> getFullLinks(int minLength, int minCount) {
+    public ArrayList<String> getFullLinks(int minLength, int minStrength) {
 
-        ArrayList<String> longLinks = new ArrayList<String>();
+        ArrayList<String> longLinks = new ArrayList<>();
         for (int i = 0; i <= gLayerNodes.size() - minLength; i++) {
-            longLinks.addAll(findAdjacentLCLinks(new ArrayList<String>(gLayerNodes.get(i)), i + 1 + LCOffset, minCount));
+            longLinks.addAll(findAdjacentLCLinks(new ArrayList<>(gLayerNodes.get(i)), i + 1 + LCOffset, minStrength));
 
             Iterator<String> iterLongLinks = longLinks.iterator();
             while (iterLongLinks.hasNext()) {
                 String s = iterLongLinks.next();
                 if (s.split(Constants.NODE_TOKENIZER).length < minLength) {
+                    iterLongLinks.remove();
+                }
+                if(getIntLinkMinStrength(s) < minStrength){
                     iterLongLinks.remove();
                 }
 
@@ -144,15 +149,15 @@ public class InterLinkGenerator {
     }
 
 
-    public ArrayList<Integer> getIntLinkStrength(String link, ArrayList<Map<String, String>> allGNodeInputs, int startLCOffset) {
+    public ArrayList<Integer> getIntLinkStrength(String link) {
         String[] linkNodes = link.split(Constants.NODE_TOKENIZER);
         int maxInputs = 0;
         for (String s : linkNodes) {
             String[] sTokens = s.split(Constants.I_J_TOKENIZER);
-            int idx = Integer.parseInt(sTokens[0]) - startLCOffset;
+            int idx = Integer.parseInt(sTokens[0]) - LCOffset;
 
-            if (allGNodeInputs.get(idx).get(s).split(Constants.INPUT_TOKENIZER).length > maxInputs) {
-                maxInputs = allGNodeInputs.get(idx).get(s).split(Constants.INPUT_TOKENIZER).length;
+            if (allGLayerInputs.get(idx).get(s).split(Constants.INPUT_TOKENIZER).length > maxInputs) {
+                maxInputs = allGLayerInputs.get(idx).get(s).split(Constants.INPUT_TOKENIZER).length;
             }
         }
 
@@ -176,8 +181,8 @@ public class InterLinkGenerator {
         return percentages;
     }
     
-    public int getIntLinkAvgStrength(String link, ArrayList<Map<String, String>> allGNodeInputs, int startLCOffset) {
-        ArrayList<Integer> strengths = getIntLinkStrength(link, allGNodeInputs, startLCOffset);
+    public int getIntLinkAvgStrength(String link) {
+        ArrayList<Integer> strengths = getIntLinkStrength(link);
         int avg = 0;
         if(strengths!=null){
             for(int val : strengths){
@@ -188,6 +193,20 @@ public class InterLinkGenerator {
             }
         }
         return avg;
+    }
+    
+    public int getIntLinkMinStrength(String link) {
+        ArrayList<Integer> strengths = getIntLinkStrength(link);
+        int min = Integer.MAX_VALUE;
+        if(strengths!=null){
+            for(int val : strengths){
+                if(val < min){
+                    min = val;
+                }
+            }
+            
+        }
+        return min;
     }
     
 }
