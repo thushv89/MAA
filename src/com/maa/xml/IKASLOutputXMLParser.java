@@ -83,7 +83,11 @@ public class IKASLOutputXMLParser {
                     weights[i] = Double.parseDouble(weightStr[i]);
                 }
 
-                String inputStr = eElement.getFirstChild().getNodeValue();
+                String inputStr = "";
+                if(eElement.getFirstChild()!=null){
+                    inputStr = eElement.getFirstChild().getNodeValue();
+                }
+                
                 ArrayList<String> inputs = new ArrayList<>(Arrays.asList(inputStr.split(Tokenizers.INPUT_TOKENIZER)));
                 ReducedNode rn = new ReducedNode(id, pIDStr,weights,inputs);
                 allNodes.add(rn);

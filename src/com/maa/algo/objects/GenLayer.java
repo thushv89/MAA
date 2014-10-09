@@ -35,6 +35,10 @@ public class GenLayer extends Layer implements Serializable{
             addNode(n);
         }
     }
+    
+    public void removeNode(GNode node){
+        getMap().remove(Utils.generateIndexString(node.getLc(), node.getId()));
+    }
 
     /**
      * @return the map

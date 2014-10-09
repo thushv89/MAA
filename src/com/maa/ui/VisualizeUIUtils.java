@@ -5,27 +5,22 @@
 package com.maa.ui;
 
 import com.maa.algo.enums.NodeHitType;
-import com.maa.vis.main.GNodeVisualizer;
-import com.maa.algo.objects.GNode;
 import com.maa.enums.VisOperations;
 import com.maa.utils.Tokenizers;
 import com.maa.vis.objects.GNodeInfo;
 import com.maa.vis.objects.ReducedNode;
 import com.maa.vis.objects.VisGNode;
-import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
-import java.awt.Stroke;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import javax.swing.JButton;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.UIDefaults;
@@ -78,7 +73,7 @@ public class VisualizeUIUtils {
         final Color bg = def.getColor("control");
         int widthFreeSpace = 50;
         int heightFreeSpace = 50;
-        final int btnWidth = 50;
+        final int btnWidth = 60;
         final int btnHeight = 25;
         final int hGap = 50;
         final int vGap = 100;
@@ -93,7 +88,7 @@ public class VisualizeUIUtils {
                 Graphics2D g2d = (Graphics2D) g.create();
                 if (currOp == VisOperations.DRAW_TEMP_LINKS) {
                     tempLines = new ArrayList<>();
-                    drawTemporalLinks(g, g2d, Color.BLACK, true);
+                    drawTemporalLinks(g, g2d, Color.BLUE, true);
                 }
                 if (currOp == VisOperations.DRAW_INT_LINKS) {
                     intLines = new ArrayList<>();
@@ -105,13 +100,13 @@ public class VisualizeUIUtils {
                 }
                 if (currOp == VisOperations.CLEAR_INT_LINKS) {
                     drawIntersectionLinks(g, bg, false);
-                    drawTemporalLinks(g, g2d, Color.BLACK, false);
+                    drawTemporalLinks(g, g2d, Color.BLUE, false);
                 }
                 if (currOp == VisOperations.DRAW_BOTH_LINKS) {
                     tempLines = new ArrayList<>();
                     intLines = new ArrayList<>();
                     drawIntersectionLinks(g, Color.RED, true);
-                    drawTemporalLinks(g, g2d, Color.BLACK, true);
+                    drawTemporalLinks(g, g2d, Color.BLUE, true);
                 }
                 if (currOp == VisOperations.CLEAR_BOTH_LINKS) {
                     drawIntersectionLinks(g, bg, false);
@@ -235,6 +230,7 @@ public class VisualizeUIUtils {
             }
         }
 
+        btnPanel.setBackground(Color.LIGHT_GRAY);
         return btnPanel;
     }
 

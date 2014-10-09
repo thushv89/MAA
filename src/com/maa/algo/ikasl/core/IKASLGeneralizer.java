@@ -10,13 +10,10 @@ import com.maa.algo.objects.GenLayer;
 import com.maa.algo.objects.GNode;
 import com.maa.algo.objects.LearnLayer;
 import com.maa.algo.enums.GenType;
-import com.maa.algo.listeners.TaskListener;
 import com.maa.algo.utils.AlgoParameters;
 import com.maa.algo.utils.Constants;
-import com.maa.algo.utils.LogMessages;
 import com.maa.algo.utils.Utils;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -40,6 +37,8 @@ public class IKASLGeneralizer {
             genType = new AvgGenType();
         } else if (gType == GenType.FUZZY) {
             genType = new FuzzyGenType();
+        } else if (gType == GenType.NONE) {
+            genType = new NoneGenType();
         }
 
         for (String hit : bestHits) {
@@ -75,7 +74,7 @@ public class IKASLGeneralizer {
                     gLayer.addNode(node);
                     gID++;
                 } else {
-                    boolean isMerged = false;
+                    boolean willMerge = false;
                     GNode mergeNode = null;
                     boolean haveLargeDim = false;
 
@@ -98,15 +97,22 @@ public class IKASLGeneralizer {
                             //if atleast one dim is large, do not merge
                             if (!haveLargeDim) {
                                 mergeNode = e1.getValue();
-                                isMerged = true;
-                                break;
+                                //if parent of both nodes are the same, do not merge
+                                if(parentID.equals(mergeNode.getParentID())){
+                                    willMerge = true;
+                                    break;
+                                }else{
+                                    willMerge = false;
+                                    mergeNode = null;
+                                }
+                                
                             }
                         }
                     }
 
                     //We increase the gID only if creating a new node. Therefore, if a node is merged
                     //with an existing node, we give that node the same id as the merged node
-                    if (!isMerged) {
+                    if (!willMerge) {
                         GNode node = new GNode(currLC, gID, gWeight, parentID);
                         gLayer.addNode(node);
                         gID++;
@@ -114,12 +120,13 @@ public class IKASLGeneralizer {
                         GNode node = null;
                         double[] newWeight = mergeWeights(gWeight, mergeNode.getWeights(), new double[]{0.5, 0.5});
 
-                        //If parent is equal for both nodes, DO NOT MERGE
                         String newParentID = parentID + Constants.PARENT_TOKENIZER + mergeNode.getParentID();
                         node = new GNode(mergeNode.getLc(), mergeNode.getId(), newWeight, newParentID);
                         
                         gLayer.addNode(node);
-
+                        
+                        System.out.println("Nodes merged: "+ mergeNode.getLc()+","+mergeNode.getId() + " with hitNode");
+                        System.out.println("New parent: "+newParentID);
                     }
                 }
 

@@ -7,6 +7,7 @@ package com.maa.io;
 import com.maa.models.DataParamModel;
 import com.maa.utils.ImportantFileNames;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -97,5 +98,26 @@ public class FileUtils {
         }
         
         return lines;
+    }
+    
+    public static void writeData(ArrayList<String> strList,String filename) {
+        BufferedWriter out = null;
+        try {
+            out = new BufferedWriter(new java.io.FileWriter(filename));
+        } catch (IOException ex) {
+            System.out.println("Error while opening the file to write");
+        }
+        try {
+            for(String s : strList){
+                out.write(s+"\n");
+            }
+        } catch (IOException ex) {
+            System.out.println("Error while writing to file");
+        }
+        try {
+            out.close();
+        } catch (IOException ex) {
+            System.out.println("Error while closing");
+        }
     }
 }

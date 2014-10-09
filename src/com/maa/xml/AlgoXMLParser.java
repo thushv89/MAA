@@ -66,6 +66,8 @@ public class AlgoXMLParser extends XMLParser{
                     aType = AggregationType.FUZZY;
                 } else if(aTypeStr.equals(AggregationType.AVERAGE.name())){
                     aType = AggregationType.AVERAGE;
+                } else if(aTypeStr.equals(AggregationType.NONE.name())){
+                    aType = AggregationType.NONE;
                 }
                 
                 String id = eElement.getAttribute(PreferenceNames.ID_TAG);

@@ -126,7 +126,7 @@ public class InterLinkGenerator {
         this.gLayerNodes = gLayerNodes;
     }
 
-    public ArrayList<String> getFullLinks(int minLength, int minStrength) {
+    public ArrayList<String> getFullLinks(int minLength, int minStrength, int minDevCount) {
 
         ArrayList<String> longLinks = new ArrayList<>();
         for (int i = 0; i <= gLayerNodes.size() - minLength; i++) {
@@ -138,10 +138,12 @@ public class InterLinkGenerator {
                 if (s.split(Constants.NODE_TOKENIZER).length < minLength) {
                     iterLongLinks.remove();
                 }
-                if(getIntLinkMinStrength(s) < minStrength){
+                if(longLinks.contains(s) && getIntLinkMinStrength(s) < minStrength){
                     iterLongLinks.remove();
                 }
-
+                if(longLinks.contains(s) && getCommon(s).size() < minDevCount){
+                    iterLongLinks.remove();
+                }
             }
         }
         
@@ -156,7 +158,8 @@ public class InterLinkGenerator {
             String[] sTokens = s.split(Constants.I_J_TOKENIZER);
             int idx = Integer.parseInt(sTokens[0]) - LCOffset;
 
-            if (allGLayerInputs.get(idx).get(s).split(Constants.INPUT_TOKENIZER).length > maxInputs) {
+            if (allGLayerInputs.get(idx).get(s)!=null &&
+                    allGLayerInputs.get(idx).get(s).split(Constants.INPUT_TOKENIZER).length > maxInputs) {
                 maxInputs = allGLayerInputs.get(idx).get(s).split(Constants.INPUT_TOKENIZER).length;
             }
         }

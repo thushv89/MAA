@@ -16,7 +16,9 @@ import org.omg.CORBA.TRANSIENT;
 public class GNode extends Node implements Serializable{
     private int lc;
     private int id;
-    private int prevHitVal;
+    //prevHitVal is a value used to keep the number of hits got by feeding the previous input seq
+    //e.g. For a node in G2 we feed I2
+    private int prevHitVal; 
     
     private String parentID;
     

@@ -357,9 +357,10 @@
         <Component class="javax.swing.JComboBox" name="aggrCmb">
           <Properties>
             <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
-              <StringArray count="2">
+              <StringArray count="3">
                 <StringItem index="0" value="Fuzzy"/>
                 <StringItem index="1" value="Average"/>
+                <StringItem index="2" value="None"/>
               </StringArray>
             </Property>
           </Properties>

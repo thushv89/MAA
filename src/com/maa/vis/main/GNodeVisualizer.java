@@ -134,6 +134,7 @@ public class GNodeVisualizer {
                             int lc = Integer.parseInt(p.split(Constants.I_J_TOKENIZER)[0]);
                             int id = Integer.parseInt(p.split(Constants.I_J_TOKENIZER)[1]);
                             VisGNode tempPVgn = VisualizeUIUtils.getVisGNodeWithID(allVisNodes, lc, id);
+                            
                             if(tempPVgn.getCoordinates()[0]>leftMostX){
                                 leftMostX = tempPVgn.getCoordinates()[0];
                                 leftMostY = tempPVgn.getCoordinates()[1];

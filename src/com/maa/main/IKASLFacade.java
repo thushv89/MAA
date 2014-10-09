@@ -12,7 +12,6 @@ import com.maa.vis.main.InterLinkGenerator;
 import com.maa.algo.ikasl.core.IKASLGeneralizer;
 import com.maa.algo.ikasl.core.IKASLLearner;
 import com.maa.algo.input.Normalizer;
-import com.maa.algo.listeners.TaskListener;
 import com.maa.algo.objects.GNode;
 import com.maa.algo.objects.GenLayer;
 import com.maa.algo.objects.LastGenLayer;
@@ -20,7 +19,6 @@ import com.maa.algo.objects.LearnLayer;
 import com.maa.algo.utils.AlgoParameters;
 import com.maa.algo.utils.Constants;
 import com.maa.algo.utils.FileReader;
-import com.maa.algo.utils.LogMessages;
 import com.maa.algo.utils.Utils;
 import com.maa.enums.AggregationType;
 import com.maa.listeners.DefaultValueListener;
@@ -42,11 +40,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
 
 /**
  *
@@ -120,16 +116,21 @@ public class IKASLFacade {
                 //error initlayer null
             }
 
+            Map<String, String> testResultMap = mapInputsToGNodes(currLC, initGLayer, iWeights, iNames);
+            Map<String, String> weights = getMapGNodeWeights(initGLayer);
+            for (GNode gn : initGLayer.getMap().values()) {
+                if (gn.getPrevHitVal()==0) {
+                    testResultMap.put(Utils.generateIndexString(gn.getLc(), gn.getId()) + Constants.NODE_TOKENIZER + gn.getParentID(), "");
+                }
+            }
+            
+            String loc = ImportantFileNames.DATA_DIRNAME + File.separator + getJobID() + File.separator + "LC" + currLC + ".xml";
+            ikaslXMLWriter.writeXML(loc, testResultMap, weights, currTimeFrame);
+            
             //add it to allGLayers
             saveLastGLayer(new LastGenLayer(initGLayer, currLC));
 
-            Map<String,String> testResultMap = mapInputsToGNodes(currLC, initGLayer, iWeights, iNames);
-            Map<String,String> weights = getMapGNodeWeights(initGLayer);
-            String loc = ImportantFileNames.DATA_DIRNAME + File.separator + getJobID() + File.separator + "LC" + currLC + ".xml";
-            ikaslXMLWriter.writeXML(loc, testResultMap, weights,currTimeFrame);
-
             ikaslListener.IKASLStepCompleted(jobID);
-
         } else {
             //get currLC-1 genLayer
             GenLayer prevGLayer = lastGLayer.getgLayer();
@@ -160,27 +161,29 @@ public class IKASLFacade {
             //Intuitively it should not happen, because it appeared as a non-hit node at the first place, 
             //because there were no inputs similar to that.
             Map<String, String> testResultMap = mapInputsToGNodes(currLC, currGLayer, iWeights, iNames);
-            Map<String, String> weights = getMapGNodeWeights(currGLayer);
-            String loc = ImportantFileNames.DATA_DIRNAME + File.separator + getJobID() + File.separator + "LC" + currLC + ".xml";
-            ikaslXMLWriter.writeXML(loc, testResultMap, weights,currTimeFrame);
-
-
             ArrayList<GNode> nonHitNodes = learner.getNonHitNodes(currLC);
+            for (GNode gn : currGLayer.getMap().values()) {
+                if (gn.getPrevHitVal()==0) {
+                    testResultMap.put(Utils.generateIndexString(gn.getLc(), gn.getId()) + Constants.NODE_TOKENIZER + gn.getParentID(), "");
+                }
+            }
+
+            //add non hit nodes to the GLyaer, but if the node is present in a previous layer, remove it
             for (GNode gn : nonHitNodes) {
                 currGLayer.addNode(gn);
                 if (prevGLayer.getMap().containsValue(gn)) {
                     prevGLayer.getMap().remove(Utils.generateIndexString(gn.getLc(), gn.getId()));
                 }
             }
+            
+            Map<String, String> weights = getMapGNodeWeights(currGLayer);
+            String loc = ImportantFileNames.DATA_DIRNAME + File.separator + getJobID() + File.separator + "LC" + currLC + ".xml";
+            ikaslXMLWriter.writeXML(loc, testResultMap, weights, currTimeFrame);
 
             //add Genlayer(currLC) to allGLayers
             saveLastGLayer(new LastGenLayer(currGLayer, currLC));
 
             ikaslListener.IKASLStepCompleted(jobID);
-            //getClusterPurityVector(currGLayer, prevGLayer, currLC);
-
-            //ArrayList<String> links = linkGen.getAllIntsectLinks(currGLayer, allGNodeInputs.get(currLC), prevGLayer, allGNodeInputs.get(currLC - 1), 50);
-            //allIntSectLinks.add(links);
 
         }
     }
@@ -211,23 +214,32 @@ public class IKASLFacade {
         return null;
     }
 
-    private Map<String, String> getMapGNodeWeights(GenLayer gLayer){
-        Map<String,String> gNodeWeights = new HashMap<>();
-        
-        for(Map.Entry<String,GNode> e : gLayer.getMap().entrySet()){
-            String s = e.getValue().getWeights()[0]+"";
-            for(int i=1;i<e.getValue().getWeights().length;i++){
-                s += ","+e.getValue().getWeights()[i];
+    private Map<String, String> getMapGNodeWeights(GenLayer gLayer) {
+        Map<String, String> gNodeWeights = new HashMap<>();
+
+        for (Map.Entry<String, GNode> e : gLayer.getMap().entrySet()) {
+            String s = e.getValue().getWeights()[0] + "";
+            for (int i = 1; i < e.getValue().getWeights().length; i++) {
+                s += "," + e.getValue().getWeights()[i];
             }
             gNodeWeights.put(e.getKey(), s);
         }
         return gNodeWeights;
     }
+
     private Map<String, String> mapInputsToGNodes(int currLC, GenLayer gLayer, ArrayList<double[]> iWeights, ArrayList<String> iNames) {
 
+        //for all GNodes, restore the PrevHitValue
+        for(Map.Entry<String,GNode> e: gLayer.getMap().entrySet()){
+            if(e.getValue().getPrevHitVal()>0){
+                e.getValue().setPrevHitVal(0);
+            }
+        }
+        
         Map<String, String> testResultMap = new HashMap<String, String>();
         Map<String, GNode> nodeMap = gLayer.getMap();
 
+        
         for (int i = 0; i < iWeights.size(); i++) {
 
             GNode winner = Utils.selectGWinner(nodeMap, iWeights.get(i), algoParams.getDIMENSIONS(), algoParams.getATTR_WEIGHTS(), algoParams.getDistType());
@@ -257,6 +269,8 @@ public class IKASLFacade {
             selectedGType = GenType.AVG;
         } else if (aPModel.getAggrType() == AggregationType.FUZZY) {
             selectedGType = GenType.FUZZY;
+        } else if (aPModel.getAggrType() == AggregationType.NONE) {
+            selectedGType = GenType.NONE;
         }
 
         double[] min = new double[aPModel.getDimensions()];

@@ -173,7 +173,7 @@ public class AlgoParameterUI extends javax.swing.JFrame {
 
         jLabel11.setText("Aggregation:");
 
-        aggrCmb.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Fuzzy", "Average" }));
+        aggrCmb.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Fuzzy", "Average", "None" }));
         aggrCmb.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 aggrCmbActionPerformed(evt);
@@ -443,6 +443,8 @@ public class AlgoParameterUI extends javax.swing.JFrame {
         AggregationType aggr = AggregationType.FUZZY;
         if (aggrCmb.getSelectedIndex() == 1) {
             aggr = AggregationType.AVERAGE;
+        } else if (aggrCmb.getSelectedIndex() ==2){
+            aggr = AggregationType.NONE;
         }
         AlgoParamModel pModel = new AlgoParamModel(stream, sf, nr, lr, iter, ht, aggr,dim);
         streamParamMap.put(stream, pModel);

@@ -9,5 +9,5 @@ package com.maa.algo.enums;
  * @author Thushan Ganegedara
  */
 public enum GenType {
-    AVG,FUZZY
+    AVG,FUZZY,NONE
 }

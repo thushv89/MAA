@@ -7,10 +7,6 @@ package com.maa.ui;
 import com.maa.vis.main.GNodeVisualizer;
 import com.maa.vis.main.InterLinkGenerator;
 import com.maa.main.IKASLFacade;
-import com.maa.algo.objects.GNode;
-import com.maa.algo.objects.GenLayer;
-import com.maa.algo.utils.LogMessages;
-import com.maa.algo.utils.Utils;
 import com.maa.io.FileUtils;
 import com.maa.listeners.ConfigCompleteListener;
 import com.maa.listeners.DefaultValueListener;
@@ -29,14 +25,19 @@ import com.maa.xml.AlgoXMLParser;
 import com.maa.xml.BasicXMLParser;
 import com.maa.xml.DataXMLParser;
 import com.maa.xml.IKASLOutputXMLParser;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.Vector;
+import javax.imageio.ImageIO;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -55,13 +56,14 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
     private DataParamModel dPModel;
     private ArrayList<AlgoParamModel> aPModels;
     private ArrayList<IKASLFacade> ikaslList;
-    private ArrayList<String> allTimeFrames;
     private ArrayList<ArrayList<ReducedNode>> allNodes;
     ArrayList<VisGNode> allVisNodes;
     private Map<String, ArrayList<String>> dimensions;
     private int selectedStreamIdx;
+    private String selectedStreamName;
     private VisualizeUIUtils visUtils;
     private InterLinkGenerator linkGen;
+    private JPanel visPanel;
 
     /**
      * Creates new form ResultsUI
@@ -98,6 +100,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         }
 
         selectedStreamIdx = streamCmb.getSelectedIndex();
+        selectedStreamName = (String) streamCmb.getSelectedItem();
 
     }
 
@@ -146,11 +149,14 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         freqPatChk = new javax.swing.JCheckBox();
         jLabel2 = new javax.swing.JLabel();
         fromPatTFCmb = new javax.swing.JComboBox();
-        freqPatLbl = new javax.swing.JLabel();
         minLengthTxt = new javax.swing.JTextField();
         jLabel8 = new javax.swing.JLabel();
         jLabel9 = new javax.swing.JLabel();
-        minCountTxt = new javax.swing.JTextField();
+        minStrengthTxt = new javax.swing.JTextField();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        freqPatLbl = new javax.swing.JLabel();
+        jLabel10 = new javax.swing.JLabel();
+        minDevCountTxt = new javax.swing.JTextField();
         jPanel4 = new javax.swing.JPanel();
         resourceInfoBtn = new javax.swing.JButton();
         runBtn = new javax.swing.JButton();
@@ -165,6 +171,9 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         updateBtn = new javax.swing.JButton();
         jSeparator1 = new javax.swing.JSeparator();
         tempLinksChk = new javax.swing.JCheckBox();
+        saveImgBtn = new javax.swing.JButton();
+        saveGnodeBtn = new javax.swing.JButton();
+        saveAnomBtn = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setResizable(false);
@@ -246,6 +255,11 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder("Frequent Behavioral Patterns"));
 
         freqInfoBtn.setText("More Info >");
+        freqInfoBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                freqInfoBtnActionPerformed(evt);
+            }
+        });
 
         freqPatChk.setText("Show Frequent Patterns");
         freqPatChk.addItemListener(new java.awt.event.ItemListener() {
@@ -267,16 +281,21 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
             }
         });
 
-        freqPatLbl.setText("Patterns will appear here");
-        freqPatLbl.setVerticalAlignment(javax.swing.SwingConstants.TOP);
-
         minLengthTxt.setText("3");
 
         jLabel8.setText("Min Length:");
 
-        jLabel9.setText("Min Count:");
+        jLabel9.setText("Min Strength:");
 
-        minCountTxt.setText("60");
+        minStrengthTxt.setText("60");
+
+        freqPatLbl.setText("Patterns will appear here");
+        freqPatLbl.setVerticalAlignment(javax.swing.SwingConstants.TOP);
+        jScrollPane1.setViewportView(freqPatLbl);
+
+        jLabel10.setText("Min # Devices:");
+
+        minDevCountTxt.setText("10");
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
@@ -285,23 +304,30 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane1)
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addComponent(freqPatChk)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 104, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(freqInfoBtn))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                        .addComponent(jLabel2)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(fromPatTFCmb, javax.swing.GroupLayout.PREFERRED_SIZE, 77, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel9)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(minCountTxt, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addGroup(jPanel3Layout.createSequentialGroup()
+                                .addGap(0, 0, Short.MAX_VALUE)
+                                .addComponent(jLabel10)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(minDevCountTxt, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(jPanel3Layout.createSequentialGroup()
+                                .addComponent(jLabel2)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(fromPatTFCmb, javax.swing.GroupLayout.PREFERRED_SIZE, 77, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 18, Short.MAX_VALUE)
+                                .addComponent(jLabel9)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(minStrengthTxt, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE)))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jLabel8)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(minLengthTxt, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(freqPatLbl, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addComponent(minLengthTxt, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
         jPanel3Layout.setVerticalGroup(
@@ -310,15 +336,19 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
                 .addContainerGap()
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(minCountTxt, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(minStrengthTxt, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(jLabel9))
                     .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(jLabel2)
                         .addComponent(fromPatTFCmb, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(minLengthTxt, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(jLabel8)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(freqPatLbl, javax.swing.GroupLayout.DEFAULT_SIZE, 87, Short.MAX_VALUE)
+                .addGap(5, 5, 5)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(minDevCountTxt, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel10))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 142, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(freqInfoBtn)
@@ -326,7 +356,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
                 .addContainerGap())
         );
 
-        getContentPane().add(jPanel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 239, 370, -1));
+        getContentPane().add(jPanel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 239, 370, 260));
 
         jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder("Resource Utilization Prediction"));
 
@@ -344,12 +374,12 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
-                .addContainerGap(147, Short.MAX_VALUE)
+                .addContainerGap(63, Short.MAX_VALUE)
                 .addComponent(resourceInfoBtn)
                 .addContainerGap())
         );
 
-        getContentPane().add(jPanel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 432, 365, -1));
+        getContentPane().add(jPanel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 516, 365, 120));
 
         runBtn.setText("Run Algo");
         runBtn.addActionListener(new java.awt.event.ActionListener() {
@@ -357,7 +387,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
                 runBtnActionPerformed(evt);
             }
         });
-        getContentPane().add(runBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(923, 663, -1, -1));
+        getContentPane().add(runBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(920, 660, -1, -1));
 
         summaryBtn.setText("Show Summary");
         summaryBtn.addActionListener(new java.awt.event.ActionListener() {
@@ -365,7 +395,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
                 summaryBtnActionPerformed(evt);
             }
         });
-        getContentPane().add(summaryBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(1004, 663, -1, -1));
+        getContentPane().add(summaryBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(1000, 660, -1, -1));
         getContentPane().add(statusProgressBar, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 672, -1, -1));
 
         jLabel4.setText("Status:");
@@ -408,6 +438,30 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         });
         getContentPane().add(tempLinksChk, new org.netbeans.lib.awtextra.AbsoluteConstraints(980, 10, -1, -1));
 
+        saveImgBtn.setText("Save Img");
+        saveImgBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                saveImgBtnActionPerformed(evt);
+            }
+        });
+        getContentPane().add(saveImgBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(840, 660, -1, -1));
+
+        saveGnodeBtn.setText("Save GNodes (CSV)");
+        saveGnodeBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                saveGnodeBtnActionPerformed(evt);
+            }
+        });
+        getContentPane().add(saveGnodeBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(710, 660, -1, -1));
+
+        saveAnomBtn.setText("Save Anom");
+        saveAnomBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                saveAnomBtnActionPerformed(evt);
+            }
+        });
+        getContentPane().add(saveAnomBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(620, 660, -1, -1));
+
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
@@ -432,6 +486,8 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
 
     private void updateBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_updateBtnActionPerformed
         selectedStreamIdx = streamCmb.getSelectedIndex();
+        selectedStreamName = (String) streamCmb.getSelectedItem();
+
         CurrentJobState.CURR_LC = ikaslList.get(selectedStreamIdx).getCurrLC();
 
         allNodes = loadLastSetOfLC(DefaultValues.IN_MEMORY_LAYER_COUNT);
@@ -451,12 +507,13 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         ArrayList<VisGNode> anoVNodes = getVisGNodesByID(allVisNodes, anomIDs);
 
         int length = Integer.parseInt(minLengthTxt.getText());
-        int count = Integer.parseInt(minCountTxt.getText());
+        int minStrength = Integer.parseInt(minStrengthTxt.getText());
+        int minDevCount = Integer.parseInt(minDevCountTxt.getText());
         int startIdx = fromPatTFCmb.getSelectedIndex();
 
-        calcFullIntersectionLinksAndStrengths(length, count, startIdx);
+        calcFullIntersectionLinksAndStrengths(length, minStrength, minDevCount, startIdx);
 
-        String jobID = (String) streamCmb.getSelectedItem();
+        String jobID = selectedStreamName;
         visUtils.setData(dimensions.get(jobID), allNodes, allVisNodes, anoVNodes, new ArrayList<>(CurrentJobState.INT_LINKS));
         initiateAndVisualizeResult(startLC);
 
@@ -470,6 +527,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
 
     private void streamCmbItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_streamCmbItemStateChanged
         selectedStreamIdx = streamCmb.getSelectedIndex();
+        selectedStreamName = (String) streamCmb.getSelectedItem();
     }//GEN-LAST:event_streamCmbItemStateChanged
 
     private void anomalousChkItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_anomalousChkItemStateChanged
@@ -485,8 +543,9 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         if (freqPatChk.isSelected()) {
             int length = Integer.parseInt(minLengthTxt.getText());
             int startIdx = fromPatTFCmb.getSelectedIndex();
-            int minCount = Integer.parseInt(minCountTxt.getText());
-            calcFullIntersectionLinksAndStrengths(length, minCount, startIdx);
+            int minStrength = Integer.parseInt(minStrengthTxt.getText());
+            int minCount = Integer.parseInt(minDevCountTxt.getText());
+            calcFullIntersectionLinksAndStrengths(length, minStrength, minCount, startIdx);
             visUtils.setData(null, null, null, null, CurrentJobState.INT_LINKS);
 
             if (!tempLinksChk.isSelected()) {
@@ -512,44 +571,56 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         }
     }
 
-    public void calcFullIntersectionLinksAndStrengths(int minLength, int minCount, int startIdx) {
-        
-        InterLinkGenInputAdapter.adaptInputs(allNodes,startIdx);
+    public void calcFullIntersectionLinksAndStrengths(int minLength, int minStrength, int minDevCount, int startIdx) {
+
+        InterLinkGenInputAdapter.adaptInputs(allNodes, startIdx);
 
         CurrentJobState.ALL_NODE_INPUTS = InterLinkGenInputAdapter.getNodeInputMap();
         ArrayList<ArrayList<String>> gNodes = InterLinkGenInputAdapter.getNodes();
-        
+
         int inMemOffset = CurrentJobState.CURR_LC - DefaultValues.IN_MEMORY_LAYER_COUNT;
         if (inMemOffset < 0) {
             inMemOffset = 0;
         }
-        
+
         int offset = inMemOffset + fromPatTFCmb.getSelectedIndex();
 
-        linkGen.setData(gNodes,CurrentJobState.ALL_NODE_INPUTS, offset);
-        ArrayList<String> links = linkGen.getFullLinks(minLength, minCount);
+        linkGen.setData(gNodes, CurrentJobState.ALL_NODE_INPUTS, offset);
+        ArrayList<String> links = linkGen.getFullLinks(minLength, minStrength, minDevCount);
 
         CurrentJobState.INT_LINKS = links;
+
+        Map<String, Integer> strengthMap = new HashMap<>();
+        Map<String,ArrayList<String>> inputMap = new HashMap<>();
         
-        Map<String,ArrayList<Integer>> inputPercMap = new HashMap<>();
-        for(String link : links){
-            ArrayList<Integer> perc = linkGen.getIntLinkStrength(link);
-            inputPercMap.put(link, perc);
+        for (String link : links) {
+            int linkStrength = linkGen.getIntLinkMinStrength(link);
+            ArrayList<String> common = linkGen.getCommon(link);
+            strengthMap.put(link, linkStrength);
+            inputMap.put(link, common);
         }
-        CurrentJobState.INT_LINK_STRENGTHS = inputPercMap;
+
+        ValueComparator bvc = new ValueComparator(strengthMap);
+        CurrentJobState.INT_LINK_STRENGTHS = new TreeMap<>(bvc);
+        CurrentJobState.INT_LINK_STRENGTHS.putAll(strengthMap);
+        
+        CurrentJobState.INT_LINK_INPUTS = new HashMap<>();
+        CurrentJobState.INT_LINK_INPUTS.putAll(inputMap);
         
         String txt = "<html>";
 
-        for (String s : CurrentJobState.INT_LINKS) {
-            int sumStrength = 0;
-            for(int val : CurrentJobState.INT_LINK_STRENGTHS.get(s)){
-                sumStrength += val;
+        int entryCount = 0;
+        for (Map.Entry<String, Integer> e : CurrentJobState.INT_LINK_STRENGTHS.entrySet()) {
+            txt += e.getKey() + " -> " + e.getValue() + "%" + "<br/>";
+            entryCount++;
+            if (entryCount >= 5) {
+                break;
             }
-            int avgStrength = sumStrength/CurrentJobState.INT_LINK_STRENGTHS.get(s).size();
-            txt += s + " -> " + avgStrength +"%"+ "<br/>";
         }
+
         txt += "</html>";
-        //freqPatLbl.setText(txt);
+
+        freqPatLbl.setText(txt);
     }//GEN-LAST:event_freqPatChkItemStateChanged
 
     private void tempLinksChkItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_tempLinksChkItemStateChanged
@@ -577,8 +648,78 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
     }//GEN-LAST:event_tempLinksChkItemStateChanged
 
     private void fromPatTFCmbItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_fromPatTFCmbItemStateChanged
-        
     }//GEN-LAST:event_fromPatTFCmbItemStateChanged
+
+    private void saveImgBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveImgBtnActionPerformed
+        if (visPanel != null) {
+            createImage(visPanel);
+        }
+    }//GEN-LAST:event_saveImgBtnActionPerformed
+
+    private void saveGnodeBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveGnodeBtnActionPerformed
+        String dimTokenizer = "_";
+        ArrayList<ArrayList<String>> dataByTF = new ArrayList<>();
+        ArrayList<String> reqDims = dimensions.get(selectedStreamName);
+
+        for (int i = 0; i < allNodes.size(); i++) {
+            ArrayList<String> data = new ArrayList<>();
+            for (ReducedNode rn : allNodes.get(i)) {
+
+                String currStr = "";
+                currStr = reqDims.get(0).split(dimTokenizer)[0] + "-(" + rn.getId()[0] + ";" + rn.getId()[1] + ")" + "," + rn.getWeights()[0];
+                for (int j = 1; j < reqDims.size(); j++) {
+
+                    String cDim = reqDims.get(j).split(dimTokenizer)[0];
+                    String pDim = reqDims.get(j - 1).split(dimTokenizer)[0];
+
+                    if (cDim.equals(pDim)) {
+                        currStr += "," + rn.getWeights()[j];
+                    }
+                    if (!cDim.equals(pDim)) {
+                        data.add(currStr);
+                        currStr = cDim + "-(" + rn.getId()[0] + ";" + rn.getId()[1] + ")" + "," + rn.getWeights()[j];
+                    }
+                }
+            }
+            dataByTF.add(data);
+        }
+        String[] attrPrefixes = new String[]{"MemoryPhysical", "MemoryVirtual", "ProcessorLoad", "NetworkSent", "NetworkRecv"};
+
+        ArrayList<String> wData = new ArrayList<>();
+        for (int i = 0; i < dataByTF.size(); i++) {
+            wData.add("TimeFrame," + CurrentJobState.ALL_TIME_FRMS.get(i));
+            for (String attr : attrPrefixes) {
+                for (String s : dataByTF.get(i)) {
+                    if (s.contains(attr)) {
+                        wData.add(s);
+                    }
+                }
+                wData.add("\n");
+            }
+            wData.add("\n");
+        }
+        FileUtils.writeData(wData, "GNodeWeights.csv");
+    }//GEN-LAST:event_saveGnodeBtnActionPerformed
+
+    private void saveAnomBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveAnomBtnActionPerformed
+        populateAnomSummaryForGraph();
+        ArrayList<String> wData = new ArrayList<>();
+        
+        for(Map.Entry<String,ArrayList<Integer>> e : CurrentJobState.ANOM_SUMMARY.entrySet()){
+            wData.add(e.getKey());
+            for(int i=0;i< CurrentJobState.ALL_TIME_FRMS.size();i++){
+                wData.add(CurrentJobState.ALL_TIME_FRMS.get(i)+","+e.getValue().get(i));
+            }
+            wData.add("\n");
+        }
+        
+        FileUtils.writeData(wData, "Anom.csv");
+    }//GEN-LAST:event_saveAnomBtnActionPerformed
+
+    private void freqInfoBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_freqInfoBtnActionPerformed
+        IntLinkInputsDialog dialog = new IntLinkInputsDialog(null,false,CurrentJobState.INT_LINK_INPUTS);
+        dialog.setVisible(true);
+    }//GEN-LAST:event_freqInfoBtnActionPerformed
 
     private ArrayList<VisGNode> getVisGNodesByID(ArrayList<VisGNode> nodes, ArrayList<String> idStrings) {
         ArrayList<VisGNode> vNodes = new ArrayList<>();
@@ -601,7 +742,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
     }
 
     private void updateAnomalySummary() {
-        Map<String, Integer> anomaliesHigh = new HashMap<>(getHighestAnomaliesWithPercent((String) streamCmb.getSelectedItem(), anoTFCmb.getSelectedIndex()));
+        Map<String, Integer> anomaliesHigh = new HashMap<>(getHighestAnomaliesWithPercent(selectedStreamName, anoTFCmb.getSelectedIndex()));
         Map<String, Integer> maxAnomalies = new HashMap<>();
         int count = Math.min(5, anomaliesHigh.size());
         for (int i = 0; i < count; i++) {
@@ -633,7 +774,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         Vector anoVec = new Vector();
         Vector fromPatVec = new Vector();
 
-        for (String s : allTimeFrames) {
+        for (String s : CurrentJobState.ALL_TIME_FRMS) {
             anoVec.add(s);
             fromPatVec.add(s);
         }
@@ -728,6 +869,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
     private javax.swing.JLabel freqPatLbl;
     private javax.swing.JComboBox fromPatTFCmb;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
@@ -738,11 +880,16 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
+    private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JSeparator jSeparator1;
-    private javax.swing.JTextField minCountTxt;
+    private javax.swing.JTextField minDevCountTxt;
     private javax.swing.JTextField minLengthTxt;
+    private javax.swing.JTextField minStrengthTxt;
     private javax.swing.JButton resourceInfoBtn;
     private javax.swing.JButton runBtn;
+    private javax.swing.JButton saveAnomBtn;
+    private javax.swing.JButton saveGnodeBtn;
+    private javax.swing.JButton saveImgBtn;
     private javax.swing.JLabel statusLbl;
     private javax.swing.JProgressBar statusProgressBar;
     private javax.swing.JComboBox streamCmb;
@@ -763,6 +910,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         algoUI.dispose();
 
         selectedStreamIdx = streamCmb.getSelectedIndex();
+        selectedStreamName = (String) streamCmb.getSelectedItem();
 
         ImportantFileNames.DATA_DIRNAME = dPModel.getHomeDir();
         FileUtils.setUpDataDir(bPModel.getStreamIDs());
@@ -826,7 +974,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
     }
 
     private ArrayList<ArrayList<ReducedNode>> loadLastSetOfLC(int count) {
-        allTimeFrames = new ArrayList<>();
+        CurrentJobState.ALL_TIME_FRMS = new ArrayList<>();
         IKASLOutputXMLParser ikaslXMLParser = new IKASLOutputXMLParser();
         ArrayList<ArrayList<ReducedNode>> nodes = new ArrayList<>();
 
@@ -835,14 +983,14 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
                 String loc = ImportantFileNames.DATA_DIRNAME + File.separator
                         + bPModel.getStreamIDs().get(selectedStreamIdx) + File.separator + "LC" + i + ".xml";
                 nodes.add(ikaslXMLParser.parseXML(loc));
-                allTimeFrames.add(ikaslXMLParser.getTimeFram());
+                CurrentJobState.ALL_TIME_FRMS.add(ikaslXMLParser.getTimeFram());
             }
         } else {
             for (int i = CurrentJobState.CURR_LC - count + 1; i <= CurrentJobState.CURR_LC; i++) {
                 String loc = ImportantFileNames.DATA_DIRNAME + File.separator
                         + bPModel.getStreamIDs().get(selectedStreamIdx) + File.separator + "LC" + i + ".xml";
                 nodes.add(ikaslXMLParser.parseXML(loc));
-                allTimeFrames.add(ikaslXMLParser.getTimeFram());
+                CurrentJobState.ALL_TIME_FRMS.add(ikaslXMLParser.getTimeFram());
             }
         }
 
@@ -858,7 +1006,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
     private void initiateAndVisualizeResult(int startLC) {
         visContainerPanel.removeAll();
 
-        JPanel visPanel = visUtils.getVisJPanel();
+        visPanel = visUtils.getVisJPanel();
 
         JScrollPane scrollPane = new JScrollPane();
         scrollPane.getViewport().addChangeListener(this);
@@ -872,11 +1020,11 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         int scrollPaneHeight = visContainerPanel.getPreferredSize().height - (2 * verticalStartngGap);
 
         if (visPanel.getPreferredSize().width < visContainerPanel.getPreferredSize().width) {
-            scrollPaneWidth = visPanel.getPreferredSize().width + 25;
+            scrollPaneWidth = visPanel.getPreferredSize().width + 30;
         }
         if (visPanel.getPreferredSize().height < visContainerPanel.getPreferredSize().height) {
             //20 is there because otherwise when this conditions occur, vertical bar appears
-            scrollPaneHeight = visPanel.getPreferredSize().height + 22;
+            scrollPaneHeight = visPanel.getPreferredSize().height + 25;
         }
 
         scrollPane.setBounds(horizontalStartingGap, verticalStartngGap, scrollPaneWidth, scrollPaneHeight);
@@ -887,9 +1035,53 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         this.repaint();
     }
 
-    private Map<String, Integer> getHighestAnomaliesWithPercent(String stream, int idx) {
+    private void createImage(JPanel panel) {
+        BufferedImage bi = new BufferedImage(panel.getWidth(), panel.getHeight(), BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = bi.createGraphics();
+        panel.print(g);
+        try {
+            ImageIO.write(bi, "png", new File("result.png"));
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
+    private void populateAnomSummaryForGraph() {
+        CurrentJobState.ANOM_SUMMARY = new HashMap<>();
+        for (int i = 0; i < CurrentJobState.ALL_TIME_FRMS.size(); i++) {
+            Map<String, Integer> currAnom = getHighestAnomaliesWithPercent(selectedStreamName, i);
+            for (Map.Entry<String, Integer> e : currAnom.entrySet()) {
+                if (!CurrentJobState.ANOM_SUMMARY.containsKey(e.getKey())) {
+                    ArrayList<Integer> valList = new ArrayList<>();
+                    for (int j = 0; j < i; j++) {
+                        valList.add(0);
+                    }
+                    valList.add(e.getValue());
+                    CurrentJobState.ANOM_SUMMARY.put(e.getKey(), valList);
+                } else {
+                    ArrayList<Integer> currValList = CurrentJobState.ANOM_SUMMARY.get(e.getKey());
+                    currValList.add(e.getValue());
+                    CurrentJobState.ANOM_SUMMARY.put(e.getKey(), currValList);
+                }
+            }
+
+            //bringing all vectors to same number of elements
+            for (Map.Entry<String, ArrayList<Integer>> e : CurrentJobState.ANOM_SUMMARY.entrySet()) {
+                if (e.getValue().size() != CurrentJobState.ALL_TIME_FRMS.size()) {
+                    ArrayList<Integer> currValList = e.getValue();
+                    for (int k = 0; k <= i - currValList.size(); k++) {
+                        currValList.add(0);
+                    }
+                    e.setValue(currValList);
+                }
+            }
+        }
+    }
+
+    private Map<String, Integer> getHighestAnomaliesWithPercent(String stream, int lc) {
         Map<String, Integer> anomaliesWithPercent = new HashMap<>();
-        ArrayList<ReducedNode> nodes = allNodes.get(idx);
+        ArrayList<ReducedNode> nodes = allNodes.get(lc);
         int total = 0;
 
         for (ReducedNode rn : nodes) {
@@ -945,8 +1137,6 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
 
     }
 
-    
-
     class ReducedNodeInputComparator implements Comparator<ReducedNode> {
 
         @Override
@@ -956,6 +1146,24 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
             } else {
                 return -1;
             }
+        }
+    }
+
+    class ValueComparator implements Comparator<String> {
+
+        Map<String, Integer> base;
+
+        public ValueComparator(Map<String, Integer> base) {
+            this.base = base;
+        }
+
+        // Note: this comparator imposes orderings that are inconsistent with equals.    
+        public int compare(String a, String b) {
+            if (base.get(a) >= base.get(b)) {
+                return -1;
+            } else {
+                return 1;
+            } // returning 0 would merge keys
         }
     }
 }

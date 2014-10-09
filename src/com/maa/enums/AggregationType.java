@@ -9,5 +9,5 @@ package com.maa.enums;
  * @author Thush
  */
 public enum AggregationType {
-    FUZZY,AVERAGE
+    FUZZY,AVERAGE,NONE
 }

@@ -27,7 +27,8 @@ public class AlgoParameters {
     
     private double[] ANOMALY_THRESHOLDS;
     
-    private double MERGE_ONE_DIM_THRESHOLD=0.2;
+    private double MERGE_ONE_DIM_THRESHOLD=0.4;
+    private double MERGE_ALL_DIM_THRESHOLD = 0.15;
     
     private MiningType MINING_TYPE;
     
@@ -48,7 +49,7 @@ public class AlgoParameters {
     }
     
     public double getMergeThreshold(){
-        MERGE_THRESHOLD = Utils.calcDist(Utils.getUniformVector(0.1, getDIMENSIONS()), Utils.getZeroVector(getDIMENSIONS()), getDIMENSIONS(), this.getATTR_WEIGHTS(), getDistType());
+        MERGE_THRESHOLD = Utils.calcDist(Utils.getUniformVector(MERGE_ALL_DIM_THRESHOLD, getDIMENSIONS()), Utils.getZeroVector(getDIMENSIONS()), getDIMENSIONS(), this.getATTR_WEIGHTS(), getDistType());
         return getMERGE_THRESHOLD();
     }
     
