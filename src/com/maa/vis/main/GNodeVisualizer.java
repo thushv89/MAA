@@ -44,14 +44,17 @@ public class GNodeVisualizer {
 
                     String key = rn.getpID();
 
+
                     //if nodes is not a multi-parent node
                     if (!key.contains(Constants.PARENT_TOKENIZER)) {
+
                         int lc = Integer.parseInt(key.split(Constants.I_J_TOKENIZER)[0]);
                         int id = Integer.parseInt(key.split(Constants.I_J_TOKENIZER)[1]);
                         VisGNode parentVisNode = VisualizeUIUtils.getVisGNodeWithID(allVisNodes, lc, id);
                         if (parentVisNode != null) {
                             parentVisNode.incrementChildCount();
                         }
+
                     } //if node is a multi-parent node
                     else {
                         String[] pTokens = key.split(Constants.PARENT_TOKENIZER);
@@ -134,20 +137,20 @@ public class GNodeVisualizer {
                             int lc = Integer.parseInt(p.split(Constants.I_J_TOKENIZER)[0]);
                             int id = Integer.parseInt(p.split(Constants.I_J_TOKENIZER)[1]);
                             VisGNode tempPVgn = VisualizeUIUtils.getVisGNodeWithID(allVisNodes, lc, id);
-                            
-                            if(tempPVgn.getCoordinates()[0]>leftMostX){
+
+                            if (tempPVgn.getCoordinates()[0] > leftMostX) {
                                 leftMostX = tempPVgn.getCoordinates()[0];
                                 leftMostY = tempPVgn.getCoordinates()[1];
                             }
                         }
-                        
+
                         for (String p : pTokens) {
                             int lc = Integer.parseInt(p.split(Constants.I_J_TOKENIZER)[0]);
                             int id = Integer.parseInt(p.split(Constants.I_J_TOKENIZER)[1]);
                             VisGNode tempPVgn = VisualizeUIUtils.getVisGNodeWithID(allVisNodes, lc, id);
-                            if(tempPVgn.getCoordinates()[0]==leftMostX && tempPVgn.getCoordinates()[1]==leftMostY){
+                            if (tempPVgn.getCoordinates()[0] == leftMostX && tempPVgn.getCoordinates()[1] == leftMostY) {
                                 primaryPVgn = tempPVgn;
-                            }else{
+                            } else {
                                 otherPVgn.add(tempPVgn);
                             }
                         }

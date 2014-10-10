@@ -113,7 +113,7 @@ public class IKASLGeneralizer {
                     //We increase the gID only if creating a new node. Therefore, if a node is merged
                     //with an existing node, we give that node the same id as the merged node
                     if (!willMerge) {
-                        GNode node = new GNode(currLC, gID, gWeight, parentID);
+                        GNode node = new GNode(currLC, gID, gWeight, Constants.INIT_PARENT);
                         gLayer.addNode(node);
                         gID++;
                     } else {
@@ -121,7 +121,7 @@ public class IKASLGeneralizer {
                         double[] newWeight = mergeWeights(gWeight, mergeNode.getWeights(), new double[]{0.5, 0.5});
 
                         String newParentID = parentID + Constants.PARENT_TOKENIZER + mergeNode.getParentID();
-                        node = new GNode(mergeNode.getLc(), mergeNode.getId(), newWeight, newParentID);
+                        node = new GNode(mergeNode.getLc(), mergeNode.getId(), newWeight, Constants.INIT_PARENT);
                         
                         gLayer.addNode(node);
                         

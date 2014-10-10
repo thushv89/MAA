@@ -4,7 +4,9 @@
  */
 package com.maa.algo.objects;
 
+import com.maa.utils.DefaultValues;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Map;
 
 /**
@@ -13,56 +15,55 @@ import java.util.Map;
  */
 public class LastGenLayer implements Serializable{
     
-    private GenLayer gLayer;
-    private Map<String, String> inputMap;
-    private int LC;
+    private ArrayList<GenLayer> gLayers;
+    private ArrayList<Map<String, String>> inputMaps;
+    private int lastLC;
 
-    public LastGenLayer(GenLayer gLayer, int LC, Map<String, String> inputMap){
-        this.gLayer = gLayer;
-        this.LC = LC;
-        this.inputMap = inputMap;
+    public LastGenLayer(){
+        this.gLayers = new ArrayList<>();
+        this.inputMaps = new ArrayList<>();
     }
+    
+    public void addData(GenLayer gLayer, Map<String,String> inputMap, int lastLC){
+        if(gLayers.size()< DefaultValues.IKASL_LINK_DEPTH && inputMaps.size()< DefaultValues.IKASL_LINK_DEPTH){
+            this.gLayers.add(gLayer);
+            this.inputMaps.add(inputMap);
+        } else {
+            this.gLayers.remove(0);
+            this.inputMaps.remove(0);
+            this.gLayers.add(gLayer);
+            this.inputMaps.add(inputMap);
+        }
+        this.lastLC = lastLC;
+    }
+    
     /**
      * @return the gLayer
      */
-    public GenLayer getgLayer() {
-        return gLayer;
-    }
-
-    /**
-     * @param gLayer the gLayer to set
-     */
-    public void setgLayer(GenLayer gLayer) {
-        this.gLayer = gLayer;
+    public ArrayList<GenLayer> getgLayer() {
+        return gLayers;
     }
 
     /**
      * @return the LC
      */
     public int getLC() {
-        return LC;
+        return lastLC;
     }
 
     /**
      * @param LC the LC to set
      */
     public void setLC(int LC) {
-        this.LC = LC;
+        this.lastLC = LC;
     }
 
     /**
      * @return the inputMap
      */
-    public Map<String, String> getInputMap() {
-        return inputMap;
+    public ArrayList<Map<String, String>> getInputMap() {
+        return inputMaps;
     }
 
-    /**
-     * @param inputMap the inputMap to set
-     */
-    public void setInputMap(Map<String, String> inputMap) {
-        this.inputMap = inputMap;
-    }
-    
     
 }
