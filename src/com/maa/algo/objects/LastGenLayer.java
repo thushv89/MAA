@@ -5,6 +5,7 @@
 package com.maa.algo.objects;
 
 import java.io.Serializable;
+import java.util.Map;
 
 /**
  *
@@ -13,11 +14,13 @@ import java.io.Serializable;
 public class LastGenLayer implements Serializable{
     
     private GenLayer gLayer;
+    private Map<String, String> inputMap;
     private int LC;
 
-    public LastGenLayer(GenLayer gLayer, int LC){
+    public LastGenLayer(GenLayer gLayer, int LC, Map<String, String> inputMap){
         this.gLayer = gLayer;
         this.LC = LC;
+        this.inputMap = inputMap;
     }
     /**
      * @return the gLayer
@@ -46,4 +49,20 @@ public class LastGenLayer implements Serializable{
     public void setLC(int LC) {
         this.LC = LC;
     }
+
+    /**
+     * @return the inputMap
+     */
+    public Map<String, String> getInputMap() {
+        return inputMap;
+    }
+
+    /**
+     * @param inputMap the inputMap to set
+     */
+    public void setInputMap(Map<String, String> inputMap) {
+        this.inputMap = inputMap;
+    }
+    
+    
 }

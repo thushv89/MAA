@@ -41,6 +41,7 @@ import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -97,52 +98,59 @@ public class IKASLFacade {
         currTimeFrame = iParser.getTimeFrame();
         iWeights = Normalizer.normalizeWithBounds(iWeights, algoParams.getMIN_BOUNDS(), algoParams.getMAX_BOUNDS(), algoParams.getDIMENSIONS());
 
+        LearnLayer currLLayer;
+        GenLayer currGLayer;
+        GenLayer prevGLayer;
+        Map<String, String> currInputMap;
+        Map<String, String> prevInputMap;
+
         if (currLC == 0) {
             //run the GSOM algorithm and output LearnLayer
-            LearnLayer initLLayer = learner.trainAndGetLearnLayer(currLC, iWeights, iNames, null);
+            currLLayer = learner.trainAndGetLearnLayer(currLC, iWeights, iNames, null);
 
             //run IKASL aggregation and output GenLayer
             //ArrayList<String> bestHits = getHitNodeIDs(initLLayer, AlgoParameters.HIT_THRESHOLD, AlgoParameters.MAX_NEIGHBORHOOD_RADIUS);
-            GenLayer initGLayer = null;
+
             if (algoParams.getMINING_TYPE() == MiningType.ANOMALY) {
-                ArrayList<String> bestHits = HitThresholdGenerator.getHitNodeIDsAnomalies(initLLayer, algoParams.getHIT_THRESHOLD(), algoParams.getMAX_NEIGHBORHOOD_RADIUS(), algoParams);
-                initGLayer = generalizer.generalize(currLC, initLLayer, bestHits, algoParams.getGType());
+                ArrayList<String> bestHits = HitThresholdGenerator.getHitNodeIDsAnomalies(currLLayer, algoParams.getHIT_THRESHOLD(), algoParams.getMAX_NEIGHBORHOOD_RADIUS(), algoParams);
+                currGLayer = generalizer.generalize(currLC, currLLayer, bestHits, algoParams.getGType());
             } else {
-                ArrayList<String> bestHits = HitThresholdGenerator.getHitNodeIDsGeneral(initLLayer, algoParams.getHIT_THRESHOLD(), algoParams.getMAX_NEIGHBORHOOD_RADIUS(), algoParams);
-                initGLayer = generalizer.generalize(currLC, initLLayer, bestHits, algoParams.getGType());
+                ArrayList<String> bestHits = HitThresholdGenerator.getHitNodeIDsGeneral(currLLayer, algoParams.getHIT_THRESHOLD(), algoParams.getMAX_NEIGHBORHOOD_RADIUS(), algoParams);
+                currGLayer = generalizer.generalize(currLC, currLLayer, bestHits, algoParams.getGType());
             }
 
-            if (initGLayer == null) {
+            if (currGLayer == null) {
                 //error initlayer null
             }
 
-            Map<String, String> testResultMap = mapInputsToGNodes(currLC, initGLayer, iWeights, iNames);
-            Map<String, String> weights = getMapGNodeWeights(initGLayer);
-            for (GNode gn : initGLayer.getMap().values()) {
-                if (gn.getPrevHitVal()==0) {
-                    testResultMap.put(Utils.generateIndexString(gn.getLc(), gn.getId()) + Constants.NODE_TOKENIZER + gn.getParentID(), "");
+            currInputMap = mapInputsToGNodes(currLC, currGLayer, iWeights, iNames);
+            Map<String, String> weights = getMapGNodeWeights(currGLayer);
+            for (GNode gn : currGLayer.getMap().values()) {
+                if (gn.getPrevHitVal() == 0) {
+                    currInputMap.put(Utils.generateIndexString(gn.getLc(), gn.getId()) + Constants.NODE_TOKENIZER + gn.getParentID(), "");
                 }
             }
-            
+
             String loc = ImportantFileNames.DATA_DIRNAME + File.separator + getJobID() + File.separator + "LC" + currLC + ".xml";
-            ikaslXMLWriter.writeXML(loc, testResultMap, weights, currTimeFrame);
-            
+            ikaslXMLWriter.writeXML(loc, currInputMap, weights, currTimeFrame);
+
             //add it to allGLayers
-            saveLastGLayer(new LastGenLayer(initGLayer, currLC));
+            saveLastGLayer(new LastGenLayer(currGLayer, currLC, currInputMap));
 
             ikaslListener.IKASLStepCompleted(jobID);
         } else {
             //get currLC-1 genLayer
-            GenLayer prevGLayer = lastGLayer.getgLayer();
+            prevGLayer = lastGLayer.getgLayer();
+            prevInputMap = lastGLayer.getInputMap();
 
             //create a copy of prevGLayer to avoid modificatiosn to existing layer
             //call IKASLLearner.learn(genLayer(currLC-1)) and output LearnLayer
             GenLayer copyOfPrevGLayer = new GenLayer(prevGLayer.getCopyMap());
-            LearnLayer currLLayer = learner.trainAndGetLearnLayer(currLC, iWeights, iNames, copyOfPrevGLayer);
+            currLLayer = learner.trainAndGetLearnLayer(currLC, iWeights, iNames, copyOfPrevGLayer);
 
             //call IKASLAggregator.aggregate(learnLayer) and output Genlayer(currLC)
             //ArrayList<String> bestHits = getHitNodeIDs(currLLayer, AlgoParameters.HIT_THRESHOLD, AlgoParameters.MAX_NEIGHBORHOOD_RADIUS);
-            GenLayer currGLayer = null;
+            currGLayer = null;
 
             if (algoParams.getMINING_TYPE() == MiningType.ANOMALY) {
                 ArrayList<String> bestHits = HitThresholdGenerator.getHitNodeIDsAnomalies(currLLayer, algoParams.getHIT_THRESHOLD(), algoParams.getMAX_NEIGHBORHOOD_RADIUS(), algoParams);
@@ -160,32 +168,76 @@ public class IKASLFacade {
             //because otherwise it is possible to non-hit node to have inputs assigned
             //Intuitively it should not happen, because it appeared as a non-hit node at the first place, 
             //because there were no inputs similar to that.
-            Map<String, String> testResultMap = mapInputsToGNodes(currLC, currGLayer, iWeights, iNames);
-            ArrayList<GNode> nonHitNodes = learner.getNonHitNodes(currLC);
+            currInputMap = mapInputsToGNodes(currLC, currGLayer, iWeights, iNames);
+
             for (GNode gn : currGLayer.getMap().values()) {
-                if (gn.getPrevHitVal()==0) {
-                    testResultMap.put(Utils.generateIndexString(gn.getLc(), gn.getId()) + Constants.NODE_TOKENIZER + gn.getParentID(), "");
+                if (gn.getPrevHitVal() == 0) {
+                    currInputMap.put(Utils.generateIndexString(gn.getLc(), gn.getId()) + Constants.NODE_TOKENIZER + gn.getParentID(), "");
                 }
             }
 
+            connectGNodesToBelowLayer(currGLayer, prevGLayer, currInputMap, prevInputMap);
             //add non hit nodes to the GLyaer, but if the node is present in a previous layer, remove it
-            for (GNode gn : nonHitNodes) {
-                currGLayer.addNode(gn);
-                if (prevGLayer.getMap().containsValue(gn)) {
-                    prevGLayer.getMap().remove(Utils.generateIndexString(gn.getLc(), gn.getId()));
-                }
-            }
-            
+            /*ArrayList<GNode> nonHitNodes = learner.getNonHitNodes(currLC);
+             for (GNode gn : nonHitNodes) {
+             currGLayer.addNode(gn);
+             if (prevGLayer.getMap().containsValue(gn)) {
+             prevGLayer.getMap().remove(Utils.generateIndexString(gn.getLc(), gn.getId()));
+             }
+             }*/
+
             Map<String, String> weights = getMapGNodeWeights(currGLayer);
             String loc = ImportantFileNames.DATA_DIRNAME + File.separator + getJobID() + File.separator + "LC" + currLC + ".xml";
-            ikaslXMLWriter.writeXML(loc, testResultMap, weights, currTimeFrame);
+            ikaslXMLWriter.writeXML(loc, currInputMap, weights, currTimeFrame);
 
             //add Genlayer(currLC) to allGLayers
-            saveLastGLayer(new LastGenLayer(currGLayer, currLC));
+            saveLastGLayer(new LastGenLayer(currGLayer, currLC, currInputMap));
 
             ikaslListener.IKASLStepCompleted(jobID);
 
         }
+    }
+
+    private void connectGNodesToBelowLayer(GenLayer currLayer, GenLayer prevLayer, Map<String, String> currInputMap, Map<String, String> prevInputMap) {
+        for (Map.Entry<String,GNode> e1 : currLayer.getMap().entrySet()) {
+            GNode gn1 = e1.getValue();
+            String input1Str = currInputMap.get(Utils.generateIndexString(gn1.getLc(), gn1.getId()));
+            
+            double maxStrength = 0;
+            GNode maxPNode = null;
+                    
+            if (input1Str != null && !input1Str.isEmpty()) {
+                ArrayList<String> input1 = new ArrayList<>(Arrays.asList(input1Str.split(Constants.I_J_TOKENIZER)));
+                for (Map.Entry<String,GNode> e2 : prevLayer.getMap().entrySet()) {
+                    GNode gn2 = e2.getValue();
+                    String input2Str = currInputMap.get(Utils.generateIndexString(gn2.getLc(), gn2.getId()));
+                    
+                    if (input2Str != null && !input2Str.isEmpty()) {
+                        ArrayList<String> input2 = new ArrayList<>(Arrays.asList(input2Str.split(Constants.I_J_TOKENIZER)));
+                        
+                        if(getNodeIntersectStrength(input1, input2)>0.75){
+                            if(getNodeIntersectStrength(input1, input2)>maxStrength){
+                                maxStrength = getNodeIntersectStrength(input1, input2);
+                                maxPNode = gn2;
+                            }
+                        }
+                    }
+                }
+                
+                if(maxPNode != null){
+                    gn1.setParentID(Utils.generateIndexString(maxPNode.getLc(), maxPNode.getId()));
+                    e1.setValue(gn1);
+                }
+            }
+        }
+    }
+
+    private double getNodeIntersectStrength(ArrayList<String> list1, ArrayList<String> list2) {
+        int minVal = Math.min(list1.size(), list2.size());
+        list1.retainAll(list2);
+        int common = list1.size();
+
+        return (double) common * 1.0 / minVal;
     }
 
     public void saveLastGLayer(LastGenLayer gLayer) {
@@ -230,16 +282,16 @@ public class IKASLFacade {
     private Map<String, String> mapInputsToGNodes(int currLC, GenLayer gLayer, ArrayList<double[]> iWeights, ArrayList<String> iNames) {
 
         //for all GNodes, restore the PrevHitValue
-        for(Map.Entry<String,GNode> e: gLayer.getMap().entrySet()){
-            if(e.getValue().getPrevHitVal()>0){
+        for (Map.Entry<String, GNode> e : gLayer.getMap().entrySet()) {
+            if (e.getValue().getPrevHitVal() > 0) {
                 e.getValue().setPrevHitVal(0);
             }
         }
-        
+
         Map<String, String> testResultMap = new HashMap<String, String>();
         Map<String, GNode> nodeMap = gLayer.getMap();
 
-        
+
         for (int i = 0; i < iWeights.size(); i++) {
 
             GNode winner = Utils.selectGWinner(nodeMap, iWeights.get(i), algoParams.getDIMENSIONS(), algoParams.getATTR_WEIGHTS(), algoParams.getDistType());
