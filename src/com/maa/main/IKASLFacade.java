@@ -238,7 +238,7 @@ public class IKASLFacade {
                         ArrayList<String> input2 = new ArrayList<>(Arrays.asList(input2Str.split(Constants.I_J_TOKENIZER)));
 
                         double val = getNodeIntersectStrength(input1, input2);
-                        if (getNodeIntersectStrength(input1, input2) > 0.5) {
+                        if (getNodeIntersectStrength(input1, input2) > DefaultValues.IKASL_INTERSECT_STRENGTH) {
                             if (getNodeIntersectStrength(input1, input2) > maxStrength) {
                                 maxStrength = getNodeIntersectStrength(input1, input2);
                                 maxPNode = gn2;
