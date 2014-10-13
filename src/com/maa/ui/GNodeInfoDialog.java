@@ -27,6 +27,7 @@ public class GNodeInfoDialog extends javax.swing.JDialog {
         timeFrameLbl.setText(gInfo.getTimeFrame());
         synopLbl.setText(gInfo.getSynopsis());
         inputsLbl.setText(gInfo.getInputs());
+        parentIDLbl.setText(gInfo.getParentID());
     }
     /**
      * This method is called from within the constructor to initialize the form.
@@ -48,7 +49,7 @@ public class GNodeInfoDialog extends javax.swing.JDialog {
         nodeCoordsLbl = new javax.swing.JLabel();
         timeFrameLbl = new javax.swing.JLabel();
         percentageLbl = new javax.swing.JLabel();
-        purityLbl = new javax.swing.JLabel();
+        parentIDLbl = new javax.swing.JLabel();
         jLabel7 = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
         inputsLbl = new javax.swing.JLabel();
@@ -67,7 +68,7 @@ public class GNodeInfoDialog extends javax.swing.JDialog {
 
         jLabel5.setText("Percentage of Inputs:");
 
-        jLabel6.setText("Cluster Purity:");
+        jLabel6.setText("Parent ID:");
 
         jButton1.setText("Close");
 
@@ -79,7 +80,7 @@ public class GNodeInfoDialog extends javax.swing.JDialog {
 
         percentageLbl.setText("Display Percentage");
 
-        purityLbl.setText("Display Purity");
+        parentIDLbl.setText("Display Purity");
 
         jLabel7.setText("Inputs:");
 
@@ -120,7 +121,7 @@ public class GNodeInfoDialog extends javax.swing.JDialog {
                             .addComponent(jLabel6))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(purityLbl)
+                            .addComponent(parentIDLbl)
                             .addComponent(percentageLbl))
                         .addGap(0, 263, Short.MAX_VALUE))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
@@ -153,7 +154,7 @@ public class GNodeInfoDialog extends javax.swing.JDialog {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel6)
-                    .addComponent(purityLbl))
+                    .addComponent(parentIDLbl))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel5)
@@ -225,8 +226,8 @@ public class GNodeInfoDialog extends javax.swing.JDialog {
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JLabel nodeCoordsLbl;
     private javax.swing.JLabel nodeIDLbl;
+    private javax.swing.JLabel parentIDLbl;
     private javax.swing.JLabel percentageLbl;
-    private javax.swing.JLabel purityLbl;
     private javax.swing.JLabel synopLbl;
     private javax.swing.JLabel timeFrameLbl;
     // End of variables declaration//GEN-END:variables

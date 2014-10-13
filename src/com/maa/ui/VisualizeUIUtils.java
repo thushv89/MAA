@@ -197,13 +197,15 @@ public class VisualizeUIUtils {
                     }
                     final ReducedNode finalRedNode = tempRedNode;
                     
-                    if (inputs != null) {
+                    /*if (inputs != null) {
                         String inputsTxt = "";
                         for (String s : inputs) {
                             inputsTxt += s + ", ";
                         }
                         btn.setToolTipText(inputsTxt);
-                    }
+                    }*/
+                    
+                    btn.setToolTipText("ParentID: " + finalRedNode.getpID());
 
                     btn.setSize(new Dimension(btnWidth, btnHeight));
                     btn.setText(vgn.getID()[0] + "," + vgn.getID()[1]);
@@ -215,6 +217,7 @@ public class VisualizeUIUtils {
                         public void actionPerformed(ActionEvent e) {
                             GNodeInfo gInfo = new GNodeInfo();
                             gInfo.setNodeID(vgn.getID()[0]+ Tokenizers.I_J_TOKENIZER + vgn.getID()[1]);
+                            gInfo.setParentID(finalRedNode.getpID());
                             gInfo.setNodeCoords(vgn.getCoordinates());
                             gInfo.setSynopsis(dims, finalRedNode.getWeights());
                             gInfo.setInputs(finalRedNode.getInputs());

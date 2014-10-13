@@ -5,11 +5,9 @@
  */
 package com.maa.vis.main;
 
-import com.maa.algo.enums.NodeHitType;
 import com.maa.vis.objects.VisGNode;
 import com.maa.algo.utils.Constants;
 import com.maa.ui.VisualizeUIUtils;
-import com.maa.utils.Tokenizers;
 import com.maa.vis.objects.ReducedNode;
 import java.util.ArrayList;
 
@@ -43,7 +41,6 @@ public class GNodeVisualizer {
                 for (ReducedNode rn : gNodesByLC.get(i)) {
 
                     String key = rn.getpID();
-
 
                     //if nodes is not a multi-parent node
                     if (!key.contains(Constants.PARENT_TOKENIZER)) {

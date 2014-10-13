@@ -14,6 +14,7 @@ import java.util.ArrayList;
  */
 public class GNodeInfo {
     private String nodeID;
+    private String parentID;
     private String nodeCoords;
     private String timeFrame;
     private String synopsis;
@@ -118,6 +119,20 @@ public class GNodeInfo {
      */
     public void setInputPercentage(int inputPercentage) {
         this.inputPercentage = inputPercentage;
+    }
+
+    /**
+     * @return the parentID
+     */
+    public String getParentID() {
+        return parentID;
+    }
+
+    /**
+     * @param parentID the parentID to set
+     */
+    public void setParentID(String parentID) {
+        this.parentID = parentID;
     }
     
     
