@@ -4,7 +4,6 @@
  */
 package com.maa.algo.ikasl.auxi;
 
-import com.maa.algo.ikasl.core.IKASLRun;
 import com.maa.algo.objects.LNode;
 import com.maa.algo.objects.LearnLayer;
 import com.maa.algo.utils.AlgoParameters;

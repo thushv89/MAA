@@ -4,6 +4,8 @@
  */
 package com.maa.ui;
 
+import com.maa.algo.ikasl.links.IKASLLinkExtractor;
+import com.maa.algo.utils.Constants;
 import com.maa.vis.main.GNodeVisualizer;
 import com.maa.vis.main.InterLinkGenerator;
 import com.maa.main.IKASLFacade;
@@ -27,6 +29,7 @@ import com.maa.xml.DataXMLParser;
 import com.maa.xml.IKASLOutputXMLParser;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.io.Console;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -64,6 +67,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
     private VisualizeUIUtils visUtils;
     private InterLinkGenerator linkGen;
     private JPanel visPanel;
+    private IKASLLinkExtractor lnkExtractor;
 
     /**
      * Creates new form ResultsUI
@@ -144,6 +148,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         anoTFCmb = new javax.swing.JComboBox();
         jLabel1 = new javax.swing.JLabel();
         anoSummaryLbl = new javax.swing.JLabel();
+        potAnoChk = new javax.swing.JCheckBox();
         jPanel3 = new javax.swing.JPanel();
         freqInfoBtn = new javax.swing.JButton();
         freqPatChk = new javax.swing.JCheckBox();
@@ -174,6 +179,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         saveImgBtn = new javax.swing.JButton();
         saveGnodeBtn = new javax.swing.JButton();
         saveAnomBtn = new javax.swing.JButton();
+        printLinksBtn = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setResizable(false);
@@ -216,6 +222,13 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         anoSummaryLbl.setText("Anomaly information will appear here");
         anoSummaryLbl.setVerticalAlignment(javax.swing.SwingConstants.TOP);
 
+        potAnoChk.setText("Show Pot. Ano. Clusters");
+        potAnoChk.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                potAnoChkItemStateChanged(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
@@ -225,14 +238,16 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(anoSummaryLbl, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addComponent(anomalousChk)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 93, Short.MAX_VALUE)
-                        .addComponent(anomaliesInfoBtn))
-                    .addGroup(jPanel2Layout.createSequentialGroup()
                         .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(anoTFCmb, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 0, Short.MAX_VALUE)))
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                            .addComponent(potAnoChk, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(anomalousChk, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 93, Short.MAX_VALUE)
+                        .addComponent(anomaliesInfoBtn)))
                 .addContainerGap())
         );
         jPanel2Layout.setVerticalGroup(
@@ -242,9 +257,11 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
                     .addComponent(anoTFCmb, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel1))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(anoSummaryLbl, javax.swing.GroupLayout.DEFAULT_SIZE, 87, Short.MAX_VALUE)
+                .addComponent(anoSummaryLbl, javax.swing.GroupLayout.PREFERRED_SIZE, 68, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addComponent(potAnoChk)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(anomaliesInfoBtn)
                     .addComponent(anomalousChk))
                 .addContainerGap())
@@ -462,6 +479,14 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         });
         getContentPane().add(saveAnomBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(620, 660, -1, -1));
 
+        printLinksBtn.setText("Print Global Links");
+        printLinksBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                printLinksBtnActionPerformed(evt);
+            }
+        });
+        getContentPane().add(printLinksBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(620, 690, -1, -1));
+
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
@@ -504,7 +529,10 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         allVisNodes = visualizer.assignVisCoordinatesToGNodes(allNodes, startLC);
 
         ArrayList<String> anomIDs = getAnomalousClusters(startLC, CurrentJobState.CURR_LC);
+        ArrayList<String> potAnomIDs = getPotentialAnomalousClusters(startLC, CurrentJobState.CURR_LC);
+
         ArrayList<VisGNode> anoVNodes = getVisGNodesByID(allVisNodes, anomIDs);
+        ArrayList<VisGNode> potAnoVNodes = getVisGNodesByID(allVisNodes, potAnomIDs);
 
         int length = Integer.parseInt(minLengthTxt.getText());
         int minStrength = Integer.parseInt(minStrengthTxt.getText());
@@ -514,7 +542,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         calcFullIntersectionLinksAndStrengths(length, minStrength, minDevCount, startIdx);
 
         String jobID = selectedStreamName;
-        visUtils.setData(dimensions.get(jobID), allNodes, allVisNodes, anoVNodes, new ArrayList<>(CurrentJobState.INT_LINKS));
+        visUtils.setData(dimensions.get(jobID), allNodes, allVisNodes, anoVNodes, potAnoVNodes, new ArrayList<>(CurrentJobState.INT_LINKS));
         initiateAndVisualizeResult(startLC);
 
         updateAnomalySummary();
@@ -546,7 +574,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
             int minStrength = Integer.parseInt(minStrengthTxt.getText());
             int minCount = Integer.parseInt(minDevCountTxt.getText());
             calcFullIntersectionLinksAndStrengths(length, minStrength, minCount, startIdx);
-            visUtils.setData(null, null, null, null, CurrentJobState.INT_LINKS);
+            visUtils.setData(null, null, null, null, null, CurrentJobState.INT_LINKS);
 
             if (!tempLinksChk.isSelected()) {
                 visUtils.showIntersectionLinks(false);
@@ -591,8 +619,8 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         CurrentJobState.INT_LINKS = links;
 
         Map<String, Integer> strengthMap = new HashMap<>();
-        Map<String,ArrayList<String>> inputMap = new HashMap<>();
-        
+        Map<String, ArrayList<String>> inputMap = new HashMap<>();
+
         for (String link : links) {
             int linkStrength = linkGen.getIntLinkMinStrength(link);
             ArrayList<String> common = linkGen.getCommon(link);
@@ -603,10 +631,10 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         ValueComparator bvc = new ValueComparator(strengthMap);
         CurrentJobState.INT_LINK_STRENGTHS = new TreeMap<>(bvc);
         CurrentJobState.INT_LINK_STRENGTHS.putAll(strengthMap);
-        
+
         CurrentJobState.INT_LINK_INPUTS = new HashMap<>();
         CurrentJobState.INT_LINK_INPUTS.putAll(inputMap);
-        
+
         String txt = "<html>";
 
         int entryCount = 0;
@@ -688,7 +716,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         ArrayList<String> wData = new ArrayList<>();
         for (int i = 0; i < dataByTF.size(); i++) {
             wData.add("TimeFrame," + CurrentJobState.ALL_TIME_FRMS.get(i));
-            for (String attr : attrPrefixes) {
+            for (String attr : reqDims) {
                 for (String s : dataByTF.get(i)) {
                     if (s.contains(attr)) {
                         wData.add(s);
@@ -704,22 +732,91 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
     private void saveAnomBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveAnomBtnActionPerformed
         populateAnomSummaryForGraph();
         ArrayList<String> wData = new ArrayList<>();
-        
-        for(Map.Entry<String,ArrayList<Integer>> e : CurrentJobState.ANOM_SUMMARY.entrySet()){
+
+        for (Map.Entry<String, ArrayList<Integer>> e : CurrentJobState.ANOM_SUMMARY.entrySet()) {
             wData.add(e.getKey());
-            for(int i=0;i< CurrentJobState.ALL_TIME_FRMS.size();i++){
-                wData.add(CurrentJobState.ALL_TIME_FRMS.get(i)+","+e.getValue().get(i));
+            for (int i = 0; i < CurrentJobState.ALL_TIME_FRMS.size(); i++) {
+                wData.add(CurrentJobState.ALL_TIME_FRMS.get(i) + "," + e.getValue().get(i));
             }
             wData.add("\n");
         }
-        
+
         FileUtils.writeData(wData, "Anom.csv");
     }//GEN-LAST:event_saveAnomBtnActionPerformed
 
     private void freqInfoBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_freqInfoBtnActionPerformed
-        IntLinkInputsDialog dialog = new IntLinkInputsDialog(null,false,CurrentJobState.INT_LINK_INPUTS);
-        dialog.setVisible(true);
+        
     }//GEN-LAST:event_freqInfoBtnActionPerformed
+
+    private void potAnoChkItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_potAnoChkItemStateChanged
+        if (potAnoChk.isSelected()) {
+            visUtils.showPotAnomalousClusters();
+        } else {
+            visUtils.hidePotAnomalousClusters();
+        }
+    }//GEN-LAST:event_potAnoChkItemStateChanged
+
+    private void printLinksBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_printLinksBtnActionPerformed
+        allNodes = loadLastSetOfLC(DefaultValues.IN_MEMORY_LAYER_COUNT);
+        
+        ArrayList<String> links = ikaslList.get(selectedStreamIdx).getGlobalLinkUpdater().getAllLinksWithoutMergedLeftOvers();
+        ArrayList<String> linksWithMLeftOvers = ikaslList.get(selectedStreamIdx).getGlobalLinkUpdater().getAllLinksWithMergedLeftOvers();
+        
+        System.out.println("\n");
+        for (String s : links) {
+            System.out.println(s);
+        }
+        
+        System.out.println("");
+        HashMap<String, String> mLinks = ikaslList.get(selectedStreamIdx).getGlobalLinkUpdater().getMergedLinks();
+        for (Map.Entry<String, String> e : mLinks.entrySet()) {
+            System.out.println(e.getKey() + " -> " + e.getValue());
+        }
+
+        lnkExtractor = new IKASLLinkExtractor(linksWithMLeftOvers, mLinks, allNodes);
+        HashMap<String, ArrayList<String>> linkMap = lnkExtractor.performFiltering();
+
+        ArrayList<String> wData = new ArrayList<>();
+        System.out.println("Filtered Links ---------------------------------");
+        for (Map.Entry<String, ArrayList<String>> e : linkMap.entrySet()) {
+            String result = e.getKey() + " -> ";
+            for (String s : e.getValue()) {
+                result += s + ",";
+            }
+            System.out.println(result);
+
+            String startLink = "\n-------------------- LINK -------------------------";
+            wData.add(startLink);
+            String[] linkTokens = e.getKey().split(Constants.NODE_TOKENIZER);
+            
+            //formatting to match CSV format
+            for (int i = 0; i < linkTokens.length; i++) {
+                String s = linkTokens[i];
+                String line = s + ";";
+                int lc = Integer.parseInt(s.split(Constants.I_J_TOKENIZER)[0]);
+                int id = Integer.parseInt(s.split(Constants.I_J_TOKENIZER)[1]);
+                
+                for (int j = 0; j < allNodes.get(lc).size(); j++) {
+                    ReducedNode rn = allNodes.get(lc).get(j);
+                    if (rn.getId()[0] == lc && rn.getId()[1] == id) {
+                        String weightStr = "";
+                        for (double d : rn.getWeights()) {
+                            if(d<0.1){d=0;}
+                            else if(d>0.9){d=1;}
+                            weightStr += d + ",";
+                        }
+                        line += weightStr;
+                        break;
+                    }
+                }
+
+                wData.add(line);
+            }
+        }
+
+        //writing to CSV
+        FileUtils.writeData(wData, "LinkData.csv");
+    }//GEN-LAST:event_printLinksBtnActionPerformed
 
     private ArrayList<VisGNode> getVisGNodesByID(ArrayList<VisGNode> nodes, ArrayList<String> idStrings) {
         ArrayList<VisGNode> vNodes = new ArrayList<>();
@@ -885,6 +982,8 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
     private javax.swing.JTextField minDevCountTxt;
     private javax.swing.JTextField minLengthTxt;
     private javax.swing.JTextField minStrengthTxt;
+    private javax.swing.JCheckBox potAnoChk;
+    private javax.swing.JButton printLinksBtn;
     private javax.swing.JButton resourceInfoBtn;
     private javax.swing.JButton runBtn;
     private javax.swing.JButton saveAnomBtn;
@@ -1124,6 +1223,26 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         }
 
         return anomClusters;
+    }
+
+    private ArrayList<String> getPotentialAnomalousClusters(int startLC, int endLC) {
+        ArrayList<String> potAnomClusters = new ArrayList<>();
+        for (int i = 0; i <= endLC - startLC; i++) {
+            ArrayList<ReducedNode> nodes = allNodes.get(i);
+            for (ReducedNode rn : nodes) {
+                for (int j = 0; j < rn.getWeights().length; j++) {
+                    if (rn.getWeights()[j] > DefaultValues.POT_ANOMALY_HIGH_THRESHOLD_DEFAULT
+                            && rn.getWeights()[j] < DefaultValues.ANOMALY_HIGH_THRESHOLD_DEFAULT) {
+                        String id = rn.getId()[0] + Tokenizers.I_J_TOKENIZER + rn.getId()[1];
+                        if (!potAnomClusters.contains(id)) {
+                            potAnomClusters.add(id);
+                        }
+                    }
+                }
+            }
+        }
+
+        return potAnomClusters;
     }
 
     private VisGNode getVisGNodeWithID(ArrayList<VisGNode> list, int lc, int id) {

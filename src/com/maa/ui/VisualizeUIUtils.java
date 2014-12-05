@@ -39,6 +39,7 @@ public class VisualizeUIUtils {
     private ArrayList<VisGNode> allVisNodes;
     private ArrayList<ArrayList<ReducedNode>> allRedNodes;
     private ArrayList<VisGNode> anoNodes;
+    private ArrayList<VisGNode> potAnoNodes;
     private ArrayList<Line> tempLines;
     private ArrayList<Line> intLines;
     private VisOperations currOp;
@@ -48,7 +49,7 @@ public class VisualizeUIUtils {
         currOp = VisOperations.DRAW_TEMP_LINKS;
     }
 
-    public void setData(ArrayList<String> dims, ArrayList<ArrayList<ReducedNode>> redNodes, ArrayList<VisGNode> allVisNodes, ArrayList<VisGNode> anoNodes, ArrayList<String> intLinks) {
+    public void setData(ArrayList<String> dims, ArrayList<ArrayList<ReducedNode>> redNodes, ArrayList<VisGNode> allVisNodes, ArrayList<VisGNode> anoNodes, ArrayList<VisGNode> potAnoNodes, ArrayList<String> intLinks) {
         if (dims != null){
             this.dims = dims;
         }
@@ -64,6 +65,9 @@ public class VisualizeUIUtils {
         }
         if (redNodes != null) {
             this.allRedNodes = redNodes;
+        }
+        if (potAnoNodes != null) {
+            this.potAnoNodes = potAnoNodes;
         }
     }
 
@@ -313,6 +317,26 @@ public class VisualizeUIUtils {
         }
     }
 
+    public void showPotAnomalousClusters() {
+        for (VisGNode vgn : potAnoNodes) {
+            String coords = vgn.getCoordinates()[0] + "," + vgn.getCoordinates()[1];
+            JButton btn = jButtons.get(coords);
+            if (btn != null) {
+                btn.setBackground(Color.yellow);
+            }
+        }
+    }
+
+    public void hidePotAnomalousClusters() {
+        for (VisGNode vgn : potAnoNodes) {
+            String coords = vgn.getCoordinates()[0] + "," + vgn.getCoordinates()[1];
+            JButton btn = jButtons.get(coords);
+            if (btn != null) {
+                btn.setBackground(null);
+            }
+        }
+    }
+    
     private int[] getVisCoordinates(int x, int y, int btnWidth, int btnHeight, int hGap, int vGap) {
         double visX = ((double) btnWidth) / 2 + ((hGap + btnWidth) * x);
         double visY = ((double) btnHeight) / 2 + ((vGap + btnHeight) * y);

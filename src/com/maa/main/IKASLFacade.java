@@ -8,9 +8,9 @@ import com.maa.algo.enums.DistanceType;
 import com.maa.algo.enums.GenType;
 import com.maa.algo.enums.MiningType;
 import com.maa.algo.ikasl.auxi.HitThresholdGenerator;
-import com.maa.vis.main.InterLinkGenerator;
 import com.maa.algo.ikasl.core.IKASLGeneralizer;
 import com.maa.algo.ikasl.core.IKASLLearner;
+import com.maa.algo.ikasl.links.IKASLGlobalLinkUpdater;
 import com.maa.algo.input.Normalizer;
 import com.maa.algo.objects.GNode;
 import com.maa.algo.objects.GenLayer;
@@ -54,7 +54,6 @@ public class IKASLFacade {
     private AlgoParamModel aPModel;
     private IKASLLearner learner;
     private IKASLGeneralizer generalizer;
-    private InterLinkGenerator linkGen;
     private String dir;
     private IKASLOutputXMLWriter ikaslXMLWriter;
     private String jobID;
@@ -64,8 +63,9 @@ public class IKASLFacade {
     private IKASLStepListener ikaslListener;
     private int currLC;
 
+    IKASLGlobalLinkUpdater lnkUpdater;
+
     public IKASLFacade(String streamID, AlgoParamModel aPModel, DefaultValueListener defListener, IKASLStepListener ikaslListener) {
-        linkGen = new InterLinkGenerator();
         this.aPModel = aPModel;
         ikaslXMLWriter = new IKASLOutputXMLWriter();
         this.jobID = streamID;
@@ -76,6 +76,8 @@ public class IKASLFacade {
         learner = new IKASLLearner(algoParams);
         generalizer = new IKASLGeneralizer(algoParams);
 
+        lnkUpdater = new IKASLGlobalLinkUpdater();
+        
         this.ikaslListener = ikaslListener;
     }
 
@@ -91,7 +93,7 @@ public class IKASLFacade {
         InputParser iParser = new InputParser();
         String inputFileName = "input" + (currLC + 1) + ".txt";
         iParser.parseInput(ImportantFileNames.DATA_DIRNAME + File.separator + jobID + File.separator + inputFileName);
-        System.out.println("Processing " + inputFileName + " file");
+        System.out.println("\nProcessing " + inputFileName + " file");
         ArrayList<double[]> iWeights = iParser.getIWeights();
         ArrayList<String> iNames = iParser.getINames();
         currTimeFrame = iParser.getTimeFrame();
@@ -179,7 +181,7 @@ public class IKASLFacade {
 
             connectGNodesToBelowLayer(currGLayer, prevGLayers, currInputMap, prevInputMaps);
             updateCurrInputMap(currInputMap, currGLayer);
-            
+
             //add non hit nodes to the GLyaer, but if the node is present in a previous layer, remove it
             /*ArrayList<GNode> nonHitNodes = learner.getNonHitNodes(currLC);
              for (GNode gn : nonHitNodes) {
@@ -202,33 +204,43 @@ public class IKASLFacade {
         }
     }
 
-    private void updateCurrInputMap(Map<String,String> inputMap, GenLayer currGLayer){
-        Map<String,String> newInputMap = new HashMap<>();
-        
-        for (Map.Entry<String,String> e : inputMap.entrySet()){
+
+    //update the inputMap (after generating links) to have the correct parent
+    private void updateCurrInputMap(Map<String, String> inputMap, GenLayer currGLayer) {
+        Map<String, String> newInputMap = new HashMap<>();
+
+        for (Map.Entry<String, String> e : inputMap.entrySet()) {
             String key = e.getKey();
             String[] keyTokens = key.split(Constants.NODE_TOKENIZER);
-            String newKey = keyTokens[0]+Constants.NODE_TOKENIZER+currGLayer.getMap().get(keyTokens[0]).getParentID();
+            String newKey = keyTokens[0] + Constants.NODE_TOKENIZER + currGLayer.getMap().get(keyTokens[0]).getParentID();
             String newValue = e.getValue();
-            
+
             newInputMap.put(newKey, newValue);
         }
-        
+
         inputMap.clear();
         inputMap.putAll(newInputMap);
     }
-    
+
     private void connectGNodesToBelowLayer(GenLayer currLayer, ArrayList<GenLayer> prevLayers, Map<String, String> currInputMap, ArrayList<Map<String, String>> prevInputMaps) {
+
+        //do the following operation(s) for each node in the current GLayer
         for (Map.Entry<String, GNode> e1 : currLayer.getMap().entrySet()) {
             GNode gn1 = e1.getValue();
             String gn1Key = Utils.generateIndexString(gn1.getLc(), gn1.getId()) + Constants.NODE_TOKENIZER + gn1.getParentID();
             String input1Str = currInputMap.get(gn1Key);
 
-            double maxStrength = 0;
-            GNode maxPNode = null;
-
+            //if there are some inputs in the considered GNode
             if (input1Str != null && !input1Str.isEmpty()) {
+                //convert inputString to an ArrayList
                 ArrayList<String> input1 = new ArrayList<>(Arrays.asList(input1Str.split(Constants.I_J_TOKENIZER)));
+
+                ArrayList<String> parentIDs = new ArrayList<>();    //parentIDs of the considered node
+                ArrayList<Double> strengths = new ArrayList<>();    //corresponding strength to each parent
+
+                boolean noMatchInBelowLayer = false;    //this keeps a boolean to check if there are no matching nodes in the layer below
+
+                //do the following operation(s) for each node in the previous GLayer
                 for (Map.Entry<String, GNode> e2 : prevLayers.get(prevLayers.size() - 1).getMap().entrySet()) {
                     GNode gn2 = e2.getValue();
                     String gn2Key = Utils.generateIndexString(gn2.getLc(), gn2.getId()) + Constants.NODE_TOKENIZER + gn2.getParentID();
@@ -237,29 +249,69 @@ public class IKASLFacade {
                     if (input2Str != null && !input2Str.isEmpty()) {
                         ArrayList<String> input2 = new ArrayList<>(Arrays.asList(input2Str.split(Constants.I_J_TOKENIZER)));
 
-                        double val = getNodeIntersectStrength(input1, input2);
-                        if (getNodeIntersectStrength(input1, input2) > DefaultValues.IKASL_INTERSECT_STRENGTH) {
-                            if (getNodeIntersectStrength(input1, input2) > maxStrength) {
-                                maxStrength = getNodeIntersectStrength(input1, input2);
-                                maxPNode = gn2;
-                            }
+                        if (getNodeIntersectStrength(gn1.getLc(), input1, gn2.getLc(), input2) > DefaultValues.STD_INTERSECT_STRENGTH) {
+                            //if (getNodeIntersectStrength(input1, input2) > maxStrength) {
+                            parentIDs.add(Utils.generateIndexString(gn2.getLc(), gn2.getId()));
+                            strengths.add(getNodeIntersectStrength(gn1.getLc(), input1, gn2.getLc(), input2));
+                            //}
+                        } else {
+                            noMatchInBelowLayer = true;
                         }
                     }
                 }
 
-                if (maxPNode != null) {
-                    //need to write a recursive method to find the best matching parent
-                    String cPGn = Utils.generateIndexString(maxPNode.getLc(), maxPNode.getId());
+                //if we can't find a good match from the layer immediately below, we take the one with maximum
+                //strength and try to find if a best match parent exist
+                if (noMatchInBelowLayer) {
+                    String bestPgn;
+                    double maxStrength = 0;
+                    //take node by node from the previous layer
+                    for (Map.Entry<String, GNode> e2 : prevLayers.get(prevLayers.size() - 1).getMap().entrySet()) {
+                        GNode gn2 = e2.getValue();
+                        String gn2Key = Utils.generateIndexString(gn2.getLc(), gn2.getId()) + Constants.NODE_TOKENIZER + gn2.getParentID();
+                        String input2Str = prevInputMaps.get(prevInputMaps.size() - 1).get(gn2Key);
 
-                    String bestPGn = cPGn;
-                    if (maxStrength < 0.95) {
-                        bestPGn = findBestParent(cPGn, input1, prevLayers, prevInputMaps, currLC, cPGn, maxStrength);
+                        //if there is atleast 1 input in the gn2
+                        if (input2Str != null && !input2Str.isEmpty()) {
+                            ArrayList<String> input2 = new ArrayList<>(Arrays.asList(input2Str.split(Constants.I_J_TOKENIZER)));
+
+                            //if strength gn1 gn2 is greater than MIN_STRENGTH, get the bestParent which gives maximum strength
+                            if (getNodeIntersectStrength(gn1.getLc(), input1, gn2.getLc(), input2) > DefaultValues.MIN_INTERSECT_STRENGTH) {
+                                if (getNodeIntersectStrength(gn1.getLc(), input1, gn2.getLc(), input2) > maxStrength) {
+                                    bestPgn = Utils.generateIndexString(gn2.getLc(), gn2.getId());
+                                    maxStrength = getNodeIntersectStrength(gn1.getLc(), input1, gn2.getLc(), input2);
+                                }
+                            }
+                        }
                     }
-                    gn1.setParentID(bestPGn);
+                }
+                //if there is atleast one matching parent, then we check whether there are better parents
+                //in the earlier layers than the last previous layer.
+                if (!parentIDs.isEmpty()) {
+                    //need to write a recursive method to find the best matching parent
+                    for (int i = 0; i < parentIDs.size(); i++) {
+                        String cPGn = parentIDs.get(i);
+
+                        String bestPGn = cPGn;
+                        if (strengths.get(i) < DefaultValues.FIND_PARENT_THRESHOLD) {
+                            bestPGn = findBestParent(cPGn, input1, prevLayers, prevInputMaps, currLC, cPGn, strengths.get(i));
+                        }
+                        parentIDs.set(i, bestPGn);
+                    }
+
+                    String fullParentID = parentIDs.get(0);
+                    for (int i = 1; i < parentIDs.size(); i++) {
+                        fullParentID += Constants.PARENT_TOKENIZER + parentIDs.get(i);
+                    }
+
+                    gn1.setParentID(fullParentID);
                     e1.setValue(gn1);
+
                 }
             }
-        }
+        }        
+        
+        lnkUpdater.updateGlobalLinkList(currLayer, currLC);
     }
 
     private String findBestParent(String pgnID, ArrayList<String> inputs, ArrayList<GenLayer> gLayers, ArrayList<Map<String, String>> inputMaps,
@@ -269,30 +321,102 @@ public class IKASLFacade {
         int pgnIdx = Math.min(gLayers.size(), DefaultValues.IKASL_LINK_DEPTH) - (currLC - pgnLC);
 
         if (pgnIdx >= 0) {
-            GNode pgn = gLayers.get(pgnIdx).getMap().get(pgnID);
-            String ppgnID = pgn.getParentID();
+            if (!pgnID.contains(Constants.PARENT_TOKENIZER)) {
+                GNode pgn = gLayers.get(pgnIdx).getMap().get(pgnID);
+                String ppgnID = pgn.getParentID();
 
-            int ppgnLC = Integer.parseInt(ppgnID.split(Constants.I_J_TOKENIZER)[0]);
-            int ppgnIdx = Math.min(gLayers.size(), DefaultValues.IKASL_LINK_DEPTH) - (currLC - ppgnLC);
+                if (!ppgnID.contains(Constants.PARENT_TOKENIZER)) {
+                    int ppgnLC = Integer.parseInt(ppgnID.split(Constants.I_J_TOKENIZER)[0]);
+                    int ppgnIdx = Math.min(gLayers.size(), DefaultValues.IKASL_LINK_DEPTH) - (currLC - ppgnLC);
 
-            if (ppgnIdx >= 0) {
-                GNode ppgn = gLayers.get(ppgnIdx).getMap().get(ppgnID);
-                String ppgnKey = ppgnID + Constants.NODE_TOKENIZER + ppgn.getParentID();
+                    if (ppgnIdx >= 0) {
+                        GNode ppgn = gLayers.get(ppgnIdx).getMap().get(ppgnID);
 
+                        String ppgnKey = ppgnID + Constants.NODE_TOKENIZER + ppgn.getParentID();
 
-                ArrayList<String> ppgnInputs = new ArrayList<>(Arrays.asList(inputMaps.get(ppgnIdx).get(ppgnKey).split(Constants.I_J_TOKENIZER)));
-                double currStrength = getNodeIntersectStrength(inputs, ppgnInputs);
-                if (currStrength > maxStrength) {
-                    maxStrength = currStrength;
-                    bestPgnID = ppgnID;
+                        ArrayList<String> ppgnInputs = new ArrayList<>(Arrays.asList(inputMaps.get(ppgnIdx).get(ppgnKey).split(Constants.I_J_TOKENIZER)));
+                        double currStrength = getNodeIntersectStrength(currLC, inputs, ppgnLC, ppgnInputs);
+                        if (currStrength > maxStrength) {
+                            maxStrength = currStrength;
+                            bestPgnID = ppgnID;
+                        }
+                        findBestParent(ppgnID, ppgnInputs, gLayers, inputMaps, currLC, bestPgnID, maxStrength);
+                    }
+                } else {
+                    String[] ppgnIDTokens = ppgnID.split(Constants.PARENT_TOKENIZER);
+                    for (String ppgnIDTok : ppgnIDTokens) {
+                        int ppgnLC = Integer.parseInt(ppgnIDTok.split(Constants.I_J_TOKENIZER)[0]);
+                        int ppgnIdx = Math.min(gLayers.size(), DefaultValues.IKASL_LINK_DEPTH) - (currLC - ppgnLC);
+
+                        if (ppgnIdx >= 0) {
+                            GNode ppgn = gLayers.get(ppgnIdx).getMap().get(ppgnIDTok);
+
+                            String ppgnKey = ppgnIDTok + Constants.NODE_TOKENIZER + ppgn.getParentID();
+
+                            ArrayList<String> ppgnInputs = new ArrayList<>(Arrays.asList(inputMaps.get(ppgnIdx).get(ppgnKey).split(Constants.I_J_TOKENIZER)));
+                            double currStrength = getNodeIntersectStrength(currLC, inputs, ppgnLC, ppgnInputs);
+                            if (currStrength > maxStrength) {
+                                maxStrength = currStrength;
+                                bestPgnID = ppgnIDTok;
+                            }
+                            findBestParent(ppgnIDTok, ppgnInputs, gLayers, inputMaps, currLC, bestPgnID, maxStrength);
+                        }
+                    }
                 }
-                findBestParent(ppgnID, ppgnInputs, gLayers, inputMaps, currLC, bestPgnID, maxStrength);
+            } else {
+                String[] pgnIDTokens = pgnID.split(Constants.PARENT_TOKENIZER);
+
+                for (String pgnIDTok : pgnIDTokens) {
+                    GNode pgn = gLayers.get(pgnIdx).getMap().get(pgnIDTok);
+                    String ppgnID = pgn.getParentID();
+
+                    if (!ppgnID.contains(Constants.PARENT_TOKENIZER)) {
+                        int ppgnLC = Integer.parseInt(ppgnID.split(Constants.I_J_TOKENIZER)[0]);
+                        int ppgnIdx = Math.min(gLayers.size(), DefaultValues.IKASL_LINK_DEPTH) - (currLC - ppgnLC);
+
+                        if (ppgnIdx >= 0) {
+                            GNode ppgn = gLayers.get(ppgnIdx).getMap().get(ppgnID);
+                            String ppgnKey = ppgnID + Constants.NODE_TOKENIZER + ppgn.getParentID();
+
+
+                            ArrayList<String> ppgnInputs = new ArrayList<>(Arrays.asList(inputMaps.get(ppgnIdx).get(ppgnKey).split(Constants.I_J_TOKENIZER)));
+                            double currStrength = getNodeIntersectStrength(currLC, inputs, ppgnLC, ppgnInputs);
+                            if (currStrength > maxStrength) {
+                                maxStrength = currStrength;
+                                bestPgnID = ppgnID;
+                            }
+                            findBestParent(ppgnID, ppgnInputs, gLayers, inputMaps, currLC, bestPgnID, maxStrength);
+                        }
+                    } else {
+                        String[] ppgnIDTokens = ppgnID.split(Constants.PARENT_TOKENIZER);
+                        for (String ppgnIDTok : ppgnIDTokens) {
+                            int ppgnLC = Integer.parseInt(ppgnIDTok.split(Constants.I_J_TOKENIZER)[0]);
+                            int ppgnIdx = Math.min(gLayers.size(), DefaultValues.IKASL_LINK_DEPTH) - (currLC - ppgnLC);
+
+                            if (ppgnIdx >= 0) {
+                                GNode ppgn = gLayers.get(ppgnIdx).getMap().get(ppgnIDTok);
+                                String ppgnKey = ppgnIDTok + Constants.NODE_TOKENIZER + ppgn.getParentID();
+
+
+                                ArrayList<String> ppgnInputs = new ArrayList<>(Arrays.asList(inputMaps.get(ppgnIdx).get(ppgnKey).split(Constants.I_J_TOKENIZER)));
+                                double currStrength = getNodeIntersectStrength(currLC, inputs, ppgnLC, ppgnInputs);
+                                if (currStrength > maxStrength) {
+                                    maxStrength = currStrength;
+                                    bestPgnID = ppgnIDTok;
+                                }
+                                findBestParent(ppgnIDTok, ppgnInputs, gLayers, inputMaps, currLC, bestPgnID, maxStrength);
+                            }
+                        }
+
+                    }
+
+                }
             }
         }
         return bestPgnID;
     }
 
-    private double getNodeIntersectStrength(ArrayList<String> l1, ArrayList<String> l2) {
+    private double getNodeIntersectStrength(int lc1, ArrayList<String> l1, int lc2, ArrayList<String> l2) {
         ArrayList<String> list1 = new ArrayList<>(l1);
         ArrayList<String> list2 = new ArrayList<>(l2);
 
@@ -304,7 +428,13 @@ public class IKASLFacade {
         list1.retainAll(list2);
         int common = list1.size();
 
-        return (double) common * 1.0 / minVal;
+        //normalize the value to be in between 0.5 & 1
+        double numOfInputDiffCoeff = (double) (Math.max(l1.size(), l2.size()) - Math.abs(l1.size() - l2.size())) / Math.max(l1.size(), l2.size());
+        numOfInputDiffCoeff = 0.5 + (numOfInputDiffCoeff * (1 - 0.5));
+
+        double timeDiffCoeff = (double) (DefaultValues.IKASL_LINK_DEPTH - Math.abs(lc1 - lc2) - 1) / DefaultValues.IKASL_LINK_DEPTH;
+        timeDiffCoeff = 0.5 + (timeDiffCoeff * (1 - 0.5));
+        return (double) common * numOfInputDiffCoeff * 1.0 / minVal;
     }
 
     public void saveLastGLayer(LastGenLayer gLayer) {
@@ -451,4 +581,9 @@ public class IKASLFacade {
             return 0;
         }
     }
+
+    public IKASLGlobalLinkUpdater getGlobalLinkUpdater(){
+        return lnkUpdater;
+    }
+    
 }
