@@ -10,7 +10,4 @@ package com.maa.main;
  */
 public class LinkFacade {
     
-    public ArrayList<String> getIntersectionLinks(){
-    
-    }
 }

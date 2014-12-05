@@ -7,7 +7,6 @@ package com.maa.ui;
 import com.maa.algo.ikasl.links.IKASLLinkExtractor;
 import com.maa.algo.utils.Constants;
 import com.maa.vis.main.GNodeVisualizer;
-import com.maa.vis.main.InterLinkGenerator;
 import com.maa.main.IKASLFacade;
 import com.maa.io.FileUtils;
 import com.maa.listeners.ConfigCompleteListener;
@@ -20,7 +19,6 @@ import com.maa.utils.CurrentJobState;
 import com.maa.utils.DefaultValues;
 import com.maa.utils.ImportantFileNames;
 import com.maa.utils.Tokenizers;
-import com.maa.vis.main.InterLinkGenInputAdapter;
 import com.maa.vis.objects.ReducedNode;
 import com.maa.vis.objects.VisGNode;
 import com.maa.xml.AlgoXMLParser;
@@ -65,7 +63,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
     private int selectedStreamIdx;
     private String selectedStreamName;
     private VisualizeUIUtils visUtils;
-    private InterLinkGenerator linkGen;
+    
     private JPanel visPanel;
     private IKASLLinkExtractor lnkExtractor;
 
@@ -78,8 +76,6 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         setVisible(true);
 
         FileUtils.setUpConfigDir();
-
-        linkGen = new InterLinkGenerator();
 
         if (!FileUtils.allConfigFilesExist()) {
             this.setFocusableWindowState(false);
@@ -533,16 +529,9 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
 
         ArrayList<VisGNode> anoVNodes = getVisGNodesByID(allVisNodes, anomIDs);
         ArrayList<VisGNode> potAnoVNodes = getVisGNodesByID(allVisNodes, potAnomIDs);
-
-        int length = Integer.parseInt(minLengthTxt.getText());
-        int minStrength = Integer.parseInt(minStrengthTxt.getText());
-        int minDevCount = Integer.parseInt(minDevCountTxt.getText());
-        int startIdx = fromPatTFCmb.getSelectedIndex();
-
-        calcFullIntersectionLinksAndStrengths(length, minStrength, minDevCount, startIdx);
-
+        
         String jobID = selectedStreamName;
-        visUtils.setData(dimensions.get(jobID), allNodes, allVisNodes, anoVNodes, potAnoVNodes, new ArrayList<>(CurrentJobState.INT_LINKS));
+        visUtils.setData(dimensions.get(jobID), allNodes, allVisNodes, anoVNodes, potAnoVNodes, null);
         initiateAndVisualizeResult(startLC);
 
         updateAnomalySummary();
@@ -568,87 +557,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
     }//GEN-LAST:event_anomalousChkItemStateChanged
 
     private void freqPatChkItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_freqPatChkItemStateChanged
-        if (freqPatChk.isSelected()) {
-            int length = Integer.parseInt(minLengthTxt.getText());
-            int startIdx = fromPatTFCmb.getSelectedIndex();
-            int minStrength = Integer.parseInt(minStrengthTxt.getText());
-            int minCount = Integer.parseInt(minDevCountTxt.getText());
-            calcFullIntersectionLinksAndStrengths(length, minStrength, minCount, startIdx);
-            visUtils.setData(null, null, null, null, null, CurrentJobState.INT_LINKS);
-
-            if (!tempLinksChk.isSelected()) {
-                visUtils.showIntersectionLinks(false);
-                this.revalidate();
-                this.repaint();
-            } else {
-                visUtils.showIntersectionLinks(true);
-                this.revalidate();
-                this.repaint();
-            }
-        } else {
-            if (!tempLinksChk.isSelected()) {
-                visUtils.hideLinks();
-                this.revalidate();
-                this.repaint();
-            } else {
-                visUtils.showTemporalLinks(false);
-                this.revalidate();
-                this.repaint();
-            }
-
-        }
-    }
-
-    public void calcFullIntersectionLinksAndStrengths(int minLength, int minStrength, int minDevCount, int startIdx) {
-
-        InterLinkGenInputAdapter.adaptInputs(allNodes, startIdx);
-
-        CurrentJobState.ALL_NODE_INPUTS = InterLinkGenInputAdapter.getNodeInputMap();
-        ArrayList<ArrayList<String>> gNodes = InterLinkGenInputAdapter.getNodes();
-
-        int inMemOffset = CurrentJobState.CURR_LC - DefaultValues.IN_MEMORY_LAYER_COUNT;
-        if (inMemOffset < 0) {
-            inMemOffset = 0;
-        }
-
-        int offset = inMemOffset + fromPatTFCmb.getSelectedIndex();
-
-        linkGen.setData(gNodes, CurrentJobState.ALL_NODE_INPUTS, offset);
-        ArrayList<String> links = linkGen.getFullLinks(minLength, minStrength, minDevCount);
-
-        CurrentJobState.INT_LINKS = links;
-
-        Map<String, Integer> strengthMap = new HashMap<>();
-        Map<String, ArrayList<String>> inputMap = new HashMap<>();
-
-        for (String link : links) {
-            int linkStrength = linkGen.getIntLinkMinStrength(link);
-            ArrayList<String> common = linkGen.getCommon(link);
-            strengthMap.put(link, linkStrength);
-            inputMap.put(link, common);
-        }
-
-        ValueComparator bvc = new ValueComparator(strengthMap);
-        CurrentJobState.INT_LINK_STRENGTHS = new TreeMap<>(bvc);
-        CurrentJobState.INT_LINK_STRENGTHS.putAll(strengthMap);
-
-        CurrentJobState.INT_LINK_INPUTS = new HashMap<>();
-        CurrentJobState.INT_LINK_INPUTS.putAll(inputMap);
-
-        String txt = "<html>";
-
-        int entryCount = 0;
-        for (Map.Entry<String, Integer> e : CurrentJobState.INT_LINK_STRENGTHS.entrySet()) {
-            txt += e.getKey() + " -> " + e.getValue() + "%" + "<br/>";
-            entryCount++;
-            if (entryCount >= 5) {
-                break;
-            }
-        }
-
-        txt += "</html>";
-
-        freqPatLbl.setText(txt);
+        
     }//GEN-LAST:event_freqPatChkItemStateChanged
 
     private void tempLinksChkItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_tempLinksChkItemStateChanged

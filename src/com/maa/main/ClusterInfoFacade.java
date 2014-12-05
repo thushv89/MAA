@@ -11,17 +11,4 @@ package com.maa.main;
 public class ClusterInfoFacade {
     
     
-    public double getClusterPurity(int lc,int id){
-    
-    }
-    
-    public ArrayList<Integer> getClusterInputs(int lc,int id){
-    
-    }
-    
-    public ArrayList<Double> getClusterWeights(int lc,int id){
-    
-    }
-    
-    
 }
