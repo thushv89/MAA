@@ -187,10 +187,12 @@
 
       <Layout class="org.netbeans.modules.form.compat2.layouts.support.JScrollPaneSupportLayout"/>
       <SubComponents>
-        <Component class="javax.swing.JLabel" name="inputsLbl">
+        <Component class="javax.swing.JTextArea" name="inputsLbl">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Display Inputs"/>
-            <Property name="verticalAlignment" type="int" value="1"/>
+            <Property name="editable" type="boolean" value="false"/>
+            <Property name="columns" type="int" value="20"/>
+            <Property name="lineWrap" type="boolean" value="true"/>
+            <Property name="rows" type="int" value="5"/>
           </Properties>
         </Component>
       </SubComponents>

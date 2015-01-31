@@ -27,7 +27,8 @@ public class InputParser {
         //Otherwise data from previous learn cycle are present when getting data for current learn cycle
         weights = new ArrayList<double[]>();
         strForWeights = new ArrayList<String>();
-
+        dimensions = 0;
+        
         String tokenizer = ",";
         int tempDim = 0;
         boolean dimensionMismatch = false;
@@ -45,7 +46,7 @@ public class InputParser {
                     String text = line;
                     if (text != null && text.length() > 0) {
                         text = text.toLowerCase().trim();
-                        String textWithNoSpaces = text.replaceAll("\\s+","");
+                        String textWithNoSpaces = text.replaceAll("\\s+", "");
                         if (!textWithNoSpaces.contains(PreferenceNames.TIME_FRAME_TAG.trim().toLowerCase())) {
                             String[] tokens = text.split(tokenizer);
 
@@ -91,6 +92,79 @@ public class InputParser {
         }
     }
 
+    public void parseInput(String fileName, ArrayList<String> IDs) {
+
+        //clear the weights and strForWeights arraylists.
+        //Otherwise data from previous learn cycle are present when getting data for current learn cycle
+        weights = new ArrayList<double[]>();
+        strForWeights = IDs;
+
+        String tokenizer = ",";
+        int tempDim = 0;
+        boolean dimensionMismatch = false;
+        boolean notNormalized = false;
+
+        try {
+            //use buffering, reading one line at a time
+            //FileReader always assumes default encoding is OK!
+            File iFile = new File(fileName);
+            BufferedReader input = new BufferedReader(new FileReader(iFile));
+            try {
+                String line = null; //not declared within while loop
+
+                while ((line = input.readLine()) != null) {
+                    String text = line;
+                    if (text != null && text.length() > 0) {
+                        text = text.toLowerCase().trim();
+                        String textWithNoSpaces = text.replaceAll("\\s+", "");
+                        if (!textWithNoSpaces.contains(PreferenceNames.TIME_FRAME_TAG.trim().toLowerCase())) {
+                            String[] tokens = text.split(tokenizer);
+                            if (IDs.contains(tokens[0])) {
+                                double[] weightArr = new double[tokens.length - 1];
+                                for (int j = 1; j < tokens.length; j++) {
+                                    weightArr[j - 1] = Double.parseDouble(tokens[j]);
+                                    if (weightArr[j - 1] > 1 || weightArr[j - 1] < 0) {
+                                        notNormalized = true;
+                                    }
+                                    
+                                }
+                                weights.add(weightArr);
+
+                                if (tempDim == 0) {
+                                    tempDim = weightArr.length;
+                                }
+
+                                if (weightArr.length != tempDim) {
+                                    dimensionMismatch = true;
+                                    break;
+                                }
+                            }
+                        } else {
+                            if (text.split(tokenizer) != null && text.split(tokenizer).length == 2) {
+                                timeFrame = text.split(tokenizer)[1];
+                            }
+                        }
+                    }
+                }
+            } catch (IOException ex) {
+            }
+
+            input.close();
+
+            if (dimensionMismatch) {
+            }
+
+            if (notNormalized) {
+            }
+
+            if(!weights.isEmpty()){
+                dimensions = weights.get(0).length;
+            }
+
+        } catch (IOException ex) {
+        }
+    }
+
     public ArrayList<double[]> getIWeights() {
         return weights;
     }
@@ -98,8 +172,8 @@ public class InputParser {
     public ArrayList<String> getINames() {
         return strForWeights;
     }
-    
-    public String getTimeFrame(){
+
+    public String getTimeFrame() {
         return timeFrame;
     }
 }

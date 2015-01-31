@@ -14,9 +14,10 @@ import com.maa.algo.objects.GenLayer;
 import com.maa.algo.objects.LNode;
 import com.maa.algo.objects.LearnLayer;
 import com.maa.algo.utils.AlgoParameters;
+import com.maa.algo.utils.ClusterQualityUtils;
 import com.maa.algo.utils.Constants;
 import com.maa.algo.utils.LogMessages;
-import com.maa.algo.utils.Utils;
+import com.maa.algo.utils.AlgoUtils;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,13 +30,15 @@ public class IKASLLearner {
 
     private ArrayList<GNode> nonHitNodes;
     private AlgoParameters algoParam;
+    private ArrayList<double[]> clusterQMeasures;
     
     public IKASLLearner(AlgoParameters algoParam){
         this.algoParam = algoParam;
+        
     }
 
     public LearnLayer trainAndGetLearnLayer(int currLC, ArrayList<double[]> iWeights, ArrayList<String> iNames, GenLayer prevGLayer) {
-
+        clusterQMeasures = new ArrayList<>();
         //if currLC ==0 there is no prevGLayer. So ignore that parameter
         if (currLC == 0) {
             GSOMTrainer gTrainer = new GSOMTrainer(algoParam);
@@ -50,7 +53,8 @@ public class IKASLLearner {
 
             GSOMTester gTester = new GSOMTester(algoParam);
             gTester.testGSOM(adjustedMap, iWeights, iNames);
-
+            clusterQMeasures.add(calcRMSStdAndRSqr(gTester.getTestResultMap(),iWeights,iNames));
+            
             LearnLayer lLayer = new LearnLayer();
             lLayer.addMap(Constants.INIT_PARENT, adjustedMap);
             return lLayer;
@@ -87,7 +91,8 @@ public class IKASLLearner {
 
                     GSOMTester gTester = new GSOMTester(algoParam);
                     gTester.testGSOM(adjustedMap, gNodeIWeights.get(n.getKey()), gNodeINames.get(n.getKey()));
-
+                    clusterQMeasures.add(calcRMSStdAndRSqr(gTester.getTestResultMap(),iWeights,iNames));
+                    
                     lLayer.addMap(n.getKey(), adjustedMap);
                 }
             }
@@ -117,7 +122,7 @@ public class IKASLLearner {
             double minDist = Double.MAX_VALUE;
             String gID = "";
             for (Map.Entry<String, GNode> n : prevGNodes.entrySet()) {
-                double distance = Utils.calcDist(iWeights.get(i), n.getValue().getWeights(), 
+                double distance = AlgoUtils.calcDist(iWeights.get(i), n.getValue().getWeights(), 
                         algoParam.getDIMENSIONS(),algoParam.getATTR_WEIGHTS(),algoParam.getDistType());
                 if (distance < minDist) {
                     minDist = distance;
@@ -160,4 +165,15 @@ public class IKASLLearner {
     public ArrayList<GNode> getNonHitNodes(int currLC) {
         return nonHitNodes;
     }
+    
+    public double[] calcRMSStdAndRSqr(Map<String,String> gNodeInputs, ArrayList<double[]> iVals, ArrayList<String> iNames){
+        double rmsstd = ClusterQualityUtils.getRMSSTD(gNodeInputs, iVals, iNames, algoParam.getDIMENSIONS());
+        double rsqr = ClusterQualityUtils.getRS(gNodeInputs, iVals, iNames, algoParam.getDIMENSIONS());
+        return new double[]{rmsstd,rsqr};
+    }
+    
+    public ArrayList<double[]> getClusterQuality(){
+        return clusterQMeasures;
+    }    
+    
 }

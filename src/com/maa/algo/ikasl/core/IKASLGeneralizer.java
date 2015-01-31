@@ -12,7 +12,7 @@ import com.maa.algo.objects.LearnLayer;
 import com.maa.algo.enums.GenType;
 import com.maa.algo.utils.AlgoParameters;
 import com.maa.algo.utils.Constants;
-import com.maa.algo.utils.Utils;
+import com.maa.algo.utils.AlgoUtils;
 import java.util.ArrayList;
 import java.util.Map;
 
@@ -82,7 +82,7 @@ public class IKASLGeneralizer {
                     for (Map.Entry<String, GNode> e1 : gLayer.getMap().entrySet()) {
                         
                         if (!parentID.equals(e1.getValue().getParentID()) &&
-                                Utils.calcDist(gWeight, e1.getValue().getWeights(), algoParam.getDIMENSIONS(),algoParam.getATTR_WEIGHTS(),algoParam.getDistType()) < algoParam.getMergeThreshold()) {
+                                AlgoUtils.calcDist(gWeight, e1.getValue().getWeights(), algoParam.getDIMENSIONS(),algoParam.getATTR_WEIGHTS(),algoParam.getDistType()) < algoParam.getMergeThreshold()) {
                             
                             //Find whether any of the dimension difference between gweight and current GNode in map
                             //is greater than some threshold
@@ -153,14 +153,14 @@ public class IKASLGeneralizer {
         int X = Integer.parseInt(loc.split(Constants.I_J_TOKENIZER)[0]);
         int Y = Integer.parseInt(loc.split(Constants.I_J_TOKENIZER)[1]);
 
-        String lStr = Utils.generateIndexString(X - 1, Y);
-        String rStr = Utils.generateIndexString(X + 1, Y);
-        String bStr = Utils.generateIndexString(X, Y - 1);
-        String tStr = Utils.generateIndexString(X, Y + 1);
-        String lbStr = Utils.generateIndexString(X - 1, Y - 1);
-        String rbStr = Utils.generateIndexString(X + 1, Y - 1);
-        String rtStr = Utils.generateIndexString(X + 1, Y + 1);
-        String ltStr = Utils.generateIndexString(X - 1, Y + 1);
+        String lStr = AlgoUtils.generateIndexString(X - 1, Y);
+        String rStr = AlgoUtils.generateIndexString(X + 1, Y);
+        String bStr = AlgoUtils.generateIndexString(X, Y - 1);
+        String tStr = AlgoUtils.generateIndexString(X, Y + 1);
+        String lbStr = AlgoUtils.generateIndexString(X - 1, Y - 1);
+        String rbStr = AlgoUtils.generateIndexString(X + 1, Y - 1);
+        String rtStr = AlgoUtils.generateIndexString(X + 1, Y + 1);
+        String ltStr = AlgoUtils.generateIndexString(X - 1, Y + 1);
         String[] neighbors = {lStr, rStr, bStr, tStr, lbStr, rbStr, rtStr, ltStr};
 
         for (String neighbor : neighbors) {

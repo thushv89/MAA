@@ -19,7 +19,7 @@ import com.maa.algo.objects.LearnLayer;
 import com.maa.algo.utils.AlgoParameters;
 import com.maa.algo.utils.Constants;
 import com.maa.algo.utils.FileReader;
-import com.maa.algo.utils.Utils;
+import com.maa.algo.utils.AlgoUtils;
 import com.maa.enums.AggregationType;
 import com.maa.listeners.DefaultValueListener;
 import com.maa.listeners.IKASLStepListener;
@@ -62,7 +62,7 @@ public class IKASLFacade {
     private DefaultValueListener defListener;
     private IKASLStepListener ikaslListener;
     private int currLC;
-
+    private ArrayList<ArrayList<double[]>> allClusterQualityVals;
     IKASLGlobalLinkUpdater lnkUpdater;
 
     public IKASLFacade(String streamID, AlgoParamModel aPModel, DefaultValueListener defListener, IKASLStepListener ikaslListener) {
@@ -76,11 +76,20 @@ public class IKASLFacade {
         learner = new IKASLLearner(algoParams);
         generalizer = new IKASLGeneralizer(algoParams);
 
-        lnkUpdater = new IKASLGlobalLinkUpdater();
-        
+        allClusterQualityVals = new ArrayList<>();
+
+        if (retrieveGlobalLinkUpdater() == null) {
+            lnkUpdater = new IKASLGlobalLinkUpdater();
+        } else {
+            lnkUpdater = retrieveGlobalLinkUpdater();
+        }
+
         this.ikaslListener = ikaslListener;
     }
 
+    /**
+     * logic of a single step of IKASL algorithm
+     */
     public void runSingleStep() {
 
         LastGenLayer lastGLayer = retrieveLastGLayer();
@@ -90,6 +99,7 @@ public class IKASLFacade {
             currLC = lastGLayer.getLC() + 1;
         }
 
+        //reading and normalizing input data in the 'next' input file
         InputParser iParser = new InputParser();
         String inputFileName = "input" + (currLC + 1) + ".txt";
         iParser.parseInput(ImportantFileNames.DATA_DIRNAME + File.separator + jobID + File.separator + inputFileName);
@@ -108,7 +118,7 @@ public class IKASLFacade {
         if (currLC == 0) {
             //run the GSOM algorithm and output LearnLayer
             currLLayer = learner.trainAndGetLearnLayer(currLC, iWeights, iNames, null);
-
+            allClusterQualityVals.add(learner.getClusterQuality());
             //run IKASL aggregation and output GenLayer
             //ArrayList<String> bestHits = getHitNodeIDs(initLLayer, AlgoParameters.HIT_THRESHOLD, AlgoParameters.MAX_NEIGHBORHOOD_RADIUS);
 
@@ -128,7 +138,7 @@ public class IKASLFacade {
             Map<String, String> weights = getMapGNodeWeights(currGLayer);
             for (GNode gn : currGLayer.getMap().values()) {
                 if (gn.getPrevHitVal() == 0) {
-                    currInputMap.put(Utils.generateIndexString(gn.getLc(), gn.getId()) + Constants.NODE_TOKENIZER + gn.getParentID(), "");
+                    currInputMap.put(AlgoUtils.generateIndexString(gn.getLc(), gn.getId()) + Constants.NODE_TOKENIZER + gn.getParentID(), "");
                 }
             }
 
@@ -150,6 +160,7 @@ public class IKASLFacade {
             //call IKASLLearner.learn(genLayer(currLC-1)) and output LearnLayer
             GenLayer copyOfPrevGLayer = new GenLayer(prevGLayers.get(prevGLayers.size() - 1).getCopyMap());
             currLLayer = learner.trainAndGetLearnLayer(currLC, iWeights, iNames, copyOfPrevGLayer);
+            allClusterQualityVals.add(learner.getClusterQuality());
 
             //call IKASLAggregator.aggregate(learnLayer) and output Genlayer(currLC)
             //ArrayList<String> bestHits = getHitNodeIDs(currLLayer, AlgoParameters.HIT_THRESHOLD, AlgoParameters.MAX_NEIGHBORHOOD_RADIUS);
@@ -175,21 +186,12 @@ public class IKASLFacade {
 
             for (GNode gn : currGLayer.getMap().values()) {
                 if (gn.getPrevHitVal() == 0) {
-                    currInputMap.put(Utils.generateIndexString(gn.getLc(), gn.getId()) + Constants.NODE_TOKENIZER + gn.getParentID(), "");
+                    currInputMap.put(AlgoUtils.generateIndexString(gn.getLc(), gn.getId()) + Constants.NODE_TOKENIZER + gn.getParentID(), "");
                 }
             }
 
             connectGNodesToBelowLayer(currGLayer, prevGLayers, currInputMap, prevInputMaps);
             updateCurrInputMap(currInputMap, currGLayer);
-
-            //add non hit nodes to the GLyaer, but if the node is present in a previous layer, remove it
-            /*ArrayList<GNode> nonHitNodes = learner.getNonHitNodes(currLC);
-             for (GNode gn : nonHitNodes) {
-             currGLayer.addNode(gn);
-             if (prevGLayer.getMap().containsValue(gn)) {
-             prevGLayer.getMap().remove(Utils.generateIndexString(gn.getLc(), gn.getId()));
-             }
-             }*/
 
             Map<String, String> weights = getMapGNodeWeights(currGLayer);
             String loc = ImportantFileNames.DATA_DIRNAME + File.separator + getJobID() + File.separator + "LC" + currLC + ".xml";
@@ -204,8 +206,11 @@ public class IKASLFacade {
         }
     }
 
-
-    //update the inputMap (after generating links) to have the correct parent
+    /**
+     * Update the inputMap (after generating links) to have the correct parent
+     * @param inputMap inputMap (NodeID, inputs Map)
+     * @param currGLayer Current Generalized layer
+     */
     private void updateCurrInputMap(Map<String, String> inputMap, GenLayer currGLayer) {
         Map<String, String> newInputMap = new HashMap<>();
 
@@ -222,12 +227,20 @@ public class IKASLFacade {
         inputMap.putAll(newInputMap);
     }
 
+   
+    /**
+     * Connect nodes of the current layer with one of prevLayers depending on intersection strength
+     * @param currLayer Top layer of the two layers that links need to be generated
+     * @param prevLayers Bottom layer of the two layers that links need to be generated
+     * @param currInputMap Inputs of the top layer
+     * @param prevInputMaps Inputs of the bottom layer
+     */
     private void connectGNodesToBelowLayer(GenLayer currLayer, ArrayList<GenLayer> prevLayers, Map<String, String> currInputMap, ArrayList<Map<String, String>> prevInputMaps) {
 
         //do the following operation(s) for each node in the current GLayer
         for (Map.Entry<String, GNode> e1 : currLayer.getMap().entrySet()) {
             GNode gn1 = e1.getValue();
-            String gn1Key = Utils.generateIndexString(gn1.getLc(), gn1.getId()) + Constants.NODE_TOKENIZER + gn1.getParentID();
+            String gn1Key = AlgoUtils.generateIndexString(gn1.getLc(), gn1.getId()) + Constants.NODE_TOKENIZER + gn1.getParentID();
             String input1Str = currInputMap.get(gn1Key);
 
             //if there are some inputs in the considered GNode
@@ -243,16 +256,16 @@ public class IKASLFacade {
                 //do the following operation(s) for each node in the previous GLayer
                 for (Map.Entry<String, GNode> e2 : prevLayers.get(prevLayers.size() - 1).getMap().entrySet()) {
                     GNode gn2 = e2.getValue();
-                    String gn2Key = Utils.generateIndexString(gn2.getLc(), gn2.getId()) + Constants.NODE_TOKENIZER + gn2.getParentID();
+                    String gn2Key = AlgoUtils.generateIndexString(gn2.getLc(), gn2.getId()) + Constants.NODE_TOKENIZER + gn2.getParentID();
                     String input2Str = prevInputMaps.get(prevInputMaps.size() - 1).get(gn2Key);
 
                     if (input2Str != null && !input2Str.isEmpty()) {
                         ArrayList<String> input2 = new ArrayList<>(Arrays.asList(input2Str.split(Constants.I_J_TOKENIZER)));
 
-                        if (getNodeIntersectStrength(gn1.getLc(), input1, gn2.getLc(), input2) > DefaultValues.STD_INTERSECT_STRENGTH) {
+                        if (AlgoUtils.getNodeIntersectStrength(gn1.getLc(), input1, gn2.getLc(), input2) > DefaultValues.STD_INTERSECT_STRENGTH) {
                             //if (getNodeIntersectStrength(input1, input2) > maxStrength) {
-                            parentIDs.add(Utils.generateIndexString(gn2.getLc(), gn2.getId()));
-                            strengths.add(getNodeIntersectStrength(gn1.getLc(), input1, gn2.getLc(), input2));
+                            parentIDs.add(AlgoUtils.generateIndexString(gn2.getLc(), gn2.getId()));
+                            strengths.add(AlgoUtils.getNodeIntersectStrength(gn1.getLc(), input1, gn2.getLc(), input2));
                             //}
                         } else {
                             noMatchInBelowLayer = true;
@@ -268,7 +281,7 @@ public class IKASLFacade {
                     //take node by node from the previous layer
                     for (Map.Entry<String, GNode> e2 : prevLayers.get(prevLayers.size() - 1).getMap().entrySet()) {
                         GNode gn2 = e2.getValue();
-                        String gn2Key = Utils.generateIndexString(gn2.getLc(), gn2.getId()) + Constants.NODE_TOKENIZER + gn2.getParentID();
+                        String gn2Key = AlgoUtils.generateIndexString(gn2.getLc(), gn2.getId()) + Constants.NODE_TOKENIZER + gn2.getParentID();
                         String input2Str = prevInputMaps.get(prevInputMaps.size() - 1).get(gn2Key);
 
                         //if there is atleast 1 input in the gn2
@@ -276,15 +289,17 @@ public class IKASLFacade {
                             ArrayList<String> input2 = new ArrayList<>(Arrays.asList(input2Str.split(Constants.I_J_TOKENIZER)));
 
                             //if strength gn1 gn2 is greater than MIN_STRENGTH, get the bestParent which gives maximum strength
-                            if (getNodeIntersectStrength(gn1.getLc(), input1, gn2.getLc(), input2) > DefaultValues.MIN_INTERSECT_STRENGTH) {
-                                if (getNodeIntersectStrength(gn1.getLc(), input1, gn2.getLc(), input2) > maxStrength) {
-                                    bestPgn = Utils.generateIndexString(gn2.getLc(), gn2.getId());
-                                    maxStrength = getNodeIntersectStrength(gn1.getLc(), input1, gn2.getLc(), input2);
+                            if (AlgoUtils.getNodeIntersectStrength(gn1.getLc(), input1, gn2.getLc(), input2) > DefaultValues.MIN_INTERSECT_STRENGTH) {
+                                if (AlgoUtils.getNodeIntersectStrength(gn1.getLc(), input1, gn2.getLc(), input2) > maxStrength) {
+                                    bestPgn = AlgoUtils.generateIndexString(gn2.getLc(), gn2.getId());
+                                    maxStrength = AlgoUtils.getNodeIntersectStrength(gn1.getLc(), input1, gn2.getLc(), input2);
                                 }
                             }
                         }
                     }
                 }
+
+
                 //if there is atleast one matching parent, then we check whether there are better parents
                 //in the earlier layers than the last previous layer.
                 if (!parentIDs.isEmpty()) {
@@ -293,9 +308,14 @@ public class IKASLFacade {
                         String cPGn = parentIDs.get(i);
 
                         String bestPGn = cPGn;
-                        if (strengths.get(i) < DefaultValues.FIND_PARENT_THRESHOLD) {
-                            bestPGn = findBestParent(cPGn, input1, prevLayers, prevInputMaps, currLC, cPGn, strengths.get(i));
-                        }
+                        /*-----------------------------------------------------------------------------------
+                         * I HAVE COMMENTED THIS BECAUSE AT THE MOMENT IT IS BETTER TO HAVE CONSECUTIVE LINKS
+                         * OTHERWISE IT MAKES PRE-ANOMALY LOGIC UNNECESSARILY COMPLEX
+                         * ----------------------------------------------------------------------------------
+                         */
+                        /*if (strengths.get(i) < DefaultValues.FIND_PARENT_THRESHOLD) {
+                         bestPGn = findBestParent(cPGn, input1, prevLayers, prevInputMaps, currLC, cPGn, strengths.get(i));
+                         }*/
                         parentIDs.set(i, bestPGn);
                     }
 
@@ -308,16 +328,34 @@ public class IKASLFacade {
                     e1.setValue(gn1);
 
                 }
+
             }
-        }        
-        
+        }
+
         lnkUpdater.updateGlobalLinkList(currLayer, currLC);
     }
 
+    /*
+     * 
+     */
+   
+    /**
+     * Find best parent method goes through the links and, if a parent of the selected node is better than the current node, select parent for the link
+     * IMPORTANT: Currently this method is not used as, going deep into the network is costly and it affects 
+     * negatively to the periodicity of the patterns found.
+     * @param pgnID 
+     * @param inputs
+     * @param gLayers
+     * @param inputMaps
+     * @param currLC
+     * @param bestPgnID
+     * @param maxStrength
+     * @return ID of the best parent
+     */
     private String findBestParent(String pgnID, ArrayList<String> inputs, ArrayList<GenLayer> gLayers, ArrayList<Map<String, String>> inputMaps,
             int currLC, String bestPgnID, double maxStrength) {
 
-        int pgnLC = Integer.parseInt(pgnID.split(Constants.I_J_TOKENIZER)[0]);
+        int pgnLC = Integer.parseInt(pgnID.split(Constants.I_J_TOKENIZER)[0]);  //parent's learning cycle
         int pgnIdx = Math.min(gLayers.size(), DefaultValues.IKASL_LINK_DEPTH) - (currLC - pgnLC);
 
         if (pgnIdx >= 0) {
@@ -335,7 +373,7 @@ public class IKASLFacade {
                         String ppgnKey = ppgnID + Constants.NODE_TOKENIZER + ppgn.getParentID();
 
                         ArrayList<String> ppgnInputs = new ArrayList<>(Arrays.asList(inputMaps.get(ppgnIdx).get(ppgnKey).split(Constants.I_J_TOKENIZER)));
-                        double currStrength = getNodeIntersectStrength(currLC, inputs, ppgnLC, ppgnInputs);
+                        double currStrength = AlgoUtils.getNodeIntersectStrength(currLC, inputs, ppgnLC, ppgnInputs);
                         if (currStrength > maxStrength) {
                             maxStrength = currStrength;
                             bestPgnID = ppgnID;
@@ -354,7 +392,7 @@ public class IKASLFacade {
                             String ppgnKey = ppgnIDTok + Constants.NODE_TOKENIZER + ppgn.getParentID();
 
                             ArrayList<String> ppgnInputs = new ArrayList<>(Arrays.asList(inputMaps.get(ppgnIdx).get(ppgnKey).split(Constants.I_J_TOKENIZER)));
-                            double currStrength = getNodeIntersectStrength(currLC, inputs, ppgnLC, ppgnInputs);
+                            double currStrength = AlgoUtils.getNodeIntersectStrength(currLC, inputs, ppgnLC, ppgnInputs);
                             if (currStrength > maxStrength) {
                                 maxStrength = currStrength;
                                 bestPgnID = ppgnIDTok;
@@ -380,7 +418,7 @@ public class IKASLFacade {
 
 
                             ArrayList<String> ppgnInputs = new ArrayList<>(Arrays.asList(inputMaps.get(ppgnIdx).get(ppgnKey).split(Constants.I_J_TOKENIZER)));
-                            double currStrength = getNodeIntersectStrength(currLC, inputs, ppgnLC, ppgnInputs);
+                            double currStrength = AlgoUtils.getNodeIntersectStrength(currLC, inputs, ppgnLC, ppgnInputs);
                             if (currStrength > maxStrength) {
                                 maxStrength = currStrength;
                                 bestPgnID = ppgnID;
@@ -399,7 +437,7 @@ public class IKASLFacade {
 
 
                                 ArrayList<String> ppgnInputs = new ArrayList<>(Arrays.asList(inputMaps.get(ppgnIdx).get(ppgnKey).split(Constants.I_J_TOKENIZER)));
-                                double currStrength = getNodeIntersectStrength(currLC, inputs, ppgnLC, ppgnInputs);
+                                double currStrength = AlgoUtils.getNodeIntersectStrength(currLC, inputs, ppgnLC, ppgnInputs);
                                 if (currStrength > maxStrength) {
                                     maxStrength = currStrength;
                                     bestPgnID = ppgnIDTok;
@@ -416,27 +454,10 @@ public class IKASLFacade {
         return bestPgnID;
     }
 
-    private double getNodeIntersectStrength(int lc1, ArrayList<String> l1, int lc2, ArrayList<String> l2) {
-        ArrayList<String> list1 = new ArrayList<>(l1);
-        ArrayList<String> list2 = new ArrayList<>(l2);
-
-        if (list1.isEmpty() || list2.isEmpty()) {
-            return 0;
-        }
-
-        int minVal = Math.min(list1.size(), list2.size());
-        list1.retainAll(list2);
-        int common = list1.size();
-
-        //normalize the value to be in between 0.5 & 1
-        double numOfInputDiffCoeff = (double) (Math.max(l1.size(), l2.size()) - Math.abs(l1.size() - l2.size())) / Math.max(l1.size(), l2.size());
-        numOfInputDiffCoeff = 0.5 + (numOfInputDiffCoeff * (1 - 0.5));
-
-        double timeDiffCoeff = (double) (DefaultValues.IKASL_LINK_DEPTH - Math.abs(lc1 - lc2) - 1) / DefaultValues.IKASL_LINK_DEPTH;
-        timeDiffCoeff = 0.5 + (timeDiffCoeff * (1 - 0.5));
-        return (double) common * numOfInputDiffCoeff * 1.0 / minVal;
-    }
-
+    /**
+     * Save the last IKASL Layer (node IDs, parent ID, inputs) in to a serialized file
+     * @param gLayer Generalized layer that needs to be saved
+     */
     public void saveLastGLayer(LastGenLayer gLayer) {
         try (OutputStream file = new FileOutputStream(ImportantFileNames.DATA_DIRNAME + File.separator + getJobID() + File.separator + Constants.LAST_LAYER_FILE_NAME);
                 OutputStream buffer = new BufferedOutputStream(file);
@@ -462,7 +483,12 @@ public class IKASLFacade {
         }
         return null;
     }
-
+    
+    /**
+     * Find the gNode IDs and corresponding weights of the nodes
+     * @param gLayer The Generalized layer with nodes whose weights are required
+     * @return A Hashmap where key is GNode ID (String) and value is weights (String)
+     */
     private Map<String, String> getMapGNodeWeights(GenLayer gLayer) {
         Map<String, String> gNodeWeights = new HashMap<>();
 
@@ -476,6 +502,14 @@ public class IKASLFacade {
         return gNodeWeights;
     }
 
+    /**
+     * This method selects each input (iWeight,iName pair) and assign it to a node in gLayer based on the proximity (i.e. euclidean)
+     * @param currLC The current Learning Cycle Index (# of IKASL runs + 1)
+     * @param gLayer The Generalized Layer whose nodes need to be mapped to inputs
+     * @param iWeights The weights of the inputs (Required to calculate proximity)
+     * @param iNames The names of the inputs (Required to identify the input)
+     * @return A Hashmap where key is each Gnode ID (String), value is input list (String)
+     */
     private Map<String, String> mapInputsToGNodes(int currLC, GenLayer gLayer, ArrayList<double[]> iWeights, ArrayList<String> iNames) {
 
         //for all GNodes, restore the PrevHitValue
@@ -491,9 +525,9 @@ public class IKASLFacade {
 
         for (int i = 0; i < iWeights.size(); i++) {
 
-            GNode winner = Utils.selectGWinner(nodeMap, iWeights.get(i), algoParams.getDIMENSIONS(), algoParams.getATTR_WEIGHTS(), algoParams.getDistType());
+            GNode winner = AlgoUtils.selectGWinner(nodeMap, iWeights.get(i), algoParams.getDIMENSIONS(), algoParams.getATTR_WEIGHTS(), algoParams.getDistType());
 
-            String winnerStr = Utils.generateIndexString(winner.getLc(), winner.getId());
+            String winnerStr = AlgoUtils.generateIndexString(winner.getLc(), winner.getId());
             String testResultKey = winnerStr + Constants.NODE_TOKENIZER + winner.getParentID();
             GNode winnerNode = nodeMap.get(winnerStr);
             winnerNode.increasePrevHitVal();
@@ -511,6 +545,11 @@ public class IKASLFacade {
         return testResultMap;
     }
 
+    /**
+     * Get a AlgoParamModel object and returns an AlgoParameter object. This can be identified as an adapter pattern.
+     * @param aPModel AlgoParamModel object which contains all the user-specified parameters required by the algorithm
+     * @return An AlgoParameter object with all the parameter values
+     */
     private AlgoParameters readAndSetAlgoParameters(AlgoParamModel aPModel) {
 
         GenType selectedGType = GenType.FUZZY;
@@ -560,8 +599,14 @@ public class IKASLFacade {
             defListener.useDefaultWeights(getJobID());
         }
 
+        double[] gran = new double[aPModel.getDimensions()];
+        for (int i = 0; i < gran.length; i++) {
+            gran[i] = 1 / (max[i] - min[i]);
+        }
+
         AlgoParameters params = new AlgoParameters(aPModel.getDimensions(), aPModel.getSpreadFactor(), aPModel.getNeighRad(), aPModel.getLearningRate(), aPModel.getIterations(),
                 aPModel.getHitThreshold(), min, max, weights, selectedGType, MiningType.GENERAL, DistanceType.EUCLIDEAN);
+        params.setRANGE_GRANULARITY(gran);
 
         return params;
     }
@@ -582,8 +627,50 @@ public class IKASLFacade {
         }
     }
 
-    public IKASLGlobalLinkUpdater getGlobalLinkUpdater(){
+    /**
+     * This method persists the GlobalLinkUpdater. GlobalLinkUpdater is responsible for generating
+     * links between GNodes. Therefore saving GlobalLinkUpdater is important as it is required to load
+     * links after the program is started.
+     */
+    public void saveGlobalLinkUpdater() {
+        try (OutputStream file = new FileOutputStream(ImportantFileNames.DATA_DIRNAME + File.separator + getJobID() + File.separator + Constants.LINK_UPDATER_FILE_NAME);
+                OutputStream buffer = new BufferedOutputStream(file);
+                ObjectOutput output = new ObjectOutputStream(buffer);) {
+            output.writeObject(lnkUpdater);
+        } catch (IOException ex) {
+            //SERIALIZE ERROR
+        }
+    }
+
+    /**
+     * This retrieves the GlobalLinkUpdater object from the persisted location (i.e. LINK_UPDATER_FILE_NAME variable) 
+     * @return GlobalLinkUpdater object with all the link data
+     */
+    public final IKASLGlobalLinkUpdater retrieveGlobalLinkUpdater() {
+        try (
+                InputStream file = new FileInputStream(ImportantFileNames.DATA_DIRNAME + File.separator + getJobID() + File.separator + Constants.LINK_UPDATER_FILE_NAME);
+                InputStream buffer = new BufferedInputStream(file);
+                ObjectInput input = new ObjectInputStream(buffer);) {
+            //deserialize the List
+            return (IKASLGlobalLinkUpdater) input.readObject();
+
+        } catch (ClassNotFoundException ex) {
+            //error
+        } catch (IOException ex) {
+            //error
+        }
+        return null;
+    }
+
+    public IKASLGlobalLinkUpdater getGlobalLinkUpdater() {
         return lnkUpdater;
     }
-    
+
+    public ArrayList<ArrayList<double[]>> getClusterQualityMeasures() {
+        return allClusterQualityVals;
+    }
+
+    public AlgoParameters getAlgoParam() {
+        return algoParams;
+    }
 }

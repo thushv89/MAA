@@ -8,7 +8,7 @@ package com.maa.algo.ikasl.core;
 import com.maa.algo.enums.DistanceType;
 import com.maa.algo.objects.Node;
 import com.maa.algo.utils.AlgoParameters;
-import com.maa.algo.utils.Utils;
+import com.maa.algo.utils.AlgoUtils;
 import java.util.*;
 
 /**
@@ -37,7 +37,7 @@ public class FuzzyGenType implements IKASLGenType {
         //calculate euclidean distances for all the nodes with respect to winning node.
         //(1-distance) to get the fuzzy g(X) value
         for (int i = 0; i < allNodes.size(); i++) {
-            allNodesDistances.add(1 - (Utils.calcDist(allNodes.get(0).getWeights(), allNodes.get(i).getWeights(), dimensions, attrWeights,distType)) / 2 * Math.sqrt(2));
+            allNodesDistances.add(1 - (AlgoUtils.calcDist(allNodes.get(0).getWeights(), allNodes.get(i).getWeights(), dimensions, attrWeights,distType)) / 2 * Math.sqrt(2));
         }
 
         ArrayList<Double> tempWeights = new ArrayList<Double>();

@@ -4,6 +4,7 @@
  */
 package com.maa.ui;
 
+import com.maa.algo.ikasl.links.GlobalRawLinkGenerator;
 import com.maa.algo.ikasl.links.IKASLLinkExtractor;
 import com.maa.algo.utils.Constants;
 import com.maa.vis.main.GNodeVisualizer;
@@ -18,6 +19,7 @@ import com.maa.models.DataParamModel;
 import com.maa.utils.CurrentJobState;
 import com.maa.utils.DefaultValues;
 import com.maa.utils.ImportantFileNames;
+import com.maa.utils.PreAnomUtil;
 import com.maa.utils.Tokenizers;
 import com.maa.vis.objects.ReducedNode;
 import com.maa.vis.objects.VisGNode;
@@ -63,10 +65,10 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
     private int selectedStreamIdx;
     private String selectedStreamName;
     private VisualizeUIUtils visUtils;
-    
     private JPanel visPanel;
     private IKASLLinkExtractor lnkExtractor;
-
+    private GlobalRawLinkGenerator rawLinkGenerator;
+    private int startLC = 0;
     /**
      * Creates new form ResultsUI
      */
@@ -97,6 +99,8 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
             initializeStreamsCombo();
             dimensions = getDimensionsOfStreams();
             initializeIKASLComponents();
+
+
         }
 
         selectedStreamIdx = streamCmb.getSelectedIndex();
@@ -104,12 +108,19 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
 
     }
 
+    /**
+     * Initialize the combo box which shows the Job (pattern extraction task) ID
+     */
     private void initializeStreamsCombo() {
         for (String s : bPModel.getStreamIDs()) {
             streamCmb.addItem(s);
         }
     }
 
+    /**
+     * Initialize a list of IKASLFacade objects with user-specified parameters.
+     * A single IKASLFacades is created for each Job
+     */
     private void initializeIKASLComponents() {
         ikaslList = new ArrayList<>();
         for (AlgoParamModel aPModel : aPModels) {
@@ -117,6 +128,11 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         }
     }
 
+    /**
+     * This method returns the dimensions (attributes) of each job
+     * Each job can use different attributes in data, to learn
+     * @return A Hashmap where key is Job ID (String) and dimensions (Arraylist) are the value
+     */
     private Map<String, ArrayList<String>> getDimensionsOfStreams() {
         Map<String, ArrayList<String>> dimNames = new HashMap<>();
 
@@ -176,6 +192,8 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         saveGnodeBtn = new javax.swing.JButton();
         saveAnomBtn = new javax.swing.JButton();
         printLinksBtn = new javax.swing.JButton();
+        clusterQualityBtn = new javax.swing.JButton();
+        preAnomBehavExtBtn = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setResizable(false);
@@ -204,6 +222,11 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         anomalousChk.addItemListener(new java.awt.event.ItemListener() {
             public void itemStateChanged(java.awt.event.ItemEvent evt) {
                 anomalousChkItemStateChanged(evt);
+            }
+        });
+        anomalousChk.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                anomalousChkActionPerformed(evt);
             }
         });
 
@@ -483,6 +506,22 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         });
         getContentPane().add(printLinksBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(620, 690, -1, -1));
 
+        clusterQualityBtn.setText("Print Clus Quality");
+        clusterQualityBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                clusterQualityBtnActionPerformed(evt);
+            }
+        });
+        getContentPane().add(clusterQualityBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(740, 690, -1, -1));
+
+        preAnomBehavExtBtn.setText("Pre-Anomaly Behavior");
+        preAnomBehavExtBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                preAnomBehavExtBtnActionPerformed(evt);
+            }
+        });
+        getContentPane().add(preAnomBehavExtBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(860, 690, -1, -1));
+
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
@@ -490,6 +529,11 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         // TODO add your handling code here:
     }//GEN-LAST:event_freqPatChkActionPerformed
 
+    /**
+     * Currently ikasl algorithm needs to be performed manually for each step.
+     * But by using a timer's execute step and same logic specified in the methods, this can be automated
+     * @param evt 
+     */
     private void runBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_runBtnActionPerformed
 
         if (!ikaslList.isEmpty()) {
@@ -512,7 +556,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         CurrentJobState.CURR_LC = ikaslList.get(selectedStreamIdx).getCurrLC();
 
         allNodes = loadLastSetOfLC(DefaultValues.IN_MEMORY_LAYER_COUNT);
-        int startLC = 0;
+        
 
         if (CurrentJobState.CURR_LC >= DefaultValues.IN_MEMORY_LAYER_COUNT) {
             startLC = CurrentJobState.CURR_LC - DefaultValues.IN_MEMORY_LAYER_COUNT + 1;
@@ -524,18 +568,32 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         GNodeVisualizer visualizer = new GNodeVisualizer();
         allVisNodes = visualizer.assignVisCoordinatesToGNodes(allNodes, startLC);
 
-        ArrayList<String> anomIDs = getAnomalousClusters(startLC, CurrentJobState.CURR_LC);
+        HashMap<String, ArrayList<String>> anomIDs = getAnomalousClusters(startLC, CurrentJobState.CURR_LC, DefaultValues.ANOMALY_HIGH_THRESHOLD_DEFAULT);
+
+        ArrayList<String> normIDs = getNormalClusters(startLC, CurrentJobState.CURR_LC, DefaultValues.NORMAL_THRESHOLD_DEFAULT);
+        CurrentJobState.ALL_NORM_GNODES = new ArrayList<>(normIDs);
+
         ArrayList<String> potAnomIDs = getPotentialAnomalousClusters(startLC, CurrentJobState.CURR_LC);
 
-        ArrayList<VisGNode> anoVNodes = getVisGNodesByID(allVisNodes, anomIDs);
+        CurrentJobState.ANOM_GNODES_BY_TYPE = new HashMap<>(anomIDs);
+
+        ArrayList<String> allAnom = new ArrayList<>();
+        for (ArrayList<String> list : anomIDs.values()) {
+            allAnom.addAll(list);
+        }
+        CurrentJobState.ALL_ANOM_GNODES = new ArrayList<>(allAnom);
+
+        ArrayList<VisGNode> anoVNodes = getVisGNodesByID(allVisNodes, allAnom);
         ArrayList<VisGNode> potAnoVNodes = getVisGNodesByID(allVisNodes, potAnomIDs);
-        
+
         String jobID = selectedStreamName;
         visUtils.setData(dimensions.get(jobID), allNodes, allVisNodes, anoVNodes, potAnoVNodes, null);
+        visUtils.setParameters(startLC);
         initiateAndVisualizeResult(startLC);
 
         updateAnomalySummary();
 
+        ikaslList.get(selectedStreamIdx).saveGlobalLinkUpdater();
     }//GEN-LAST:event_updateBtnActionPerformed
 
     private void anoTFCmbItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_anoTFCmbItemStateChanged
@@ -548,7 +606,6 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
     }//GEN-LAST:event_streamCmbItemStateChanged
 
     private void anomalousChkItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_anomalousChkItemStateChanged
-
         if (anomalousChk.isSelected()) {
             visUtils.showAnomalousClusters();
         } else {
@@ -557,7 +614,6 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
     }//GEN-LAST:event_anomalousChkItemStateChanged
 
     private void freqPatChkItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_freqPatChkItemStateChanged
-        
     }//GEN-LAST:event_freqPatChkItemStateChanged
 
     private void tempLinksChkItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_tempLinksChkItemStateChanged
@@ -642,7 +698,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         populateAnomSummaryForGraph();
         ArrayList<String> wData = new ArrayList<>();
 
-        for (Map.Entry<String, ArrayList<Integer>> e : CurrentJobState.ANOM_SUMMARY.entrySet()) {
+        for (Map.Entry<String, ArrayList<Double>> e : CurrentJobState.ANOM_SUMMARY.entrySet()) {
             wData.add(e.getKey());
             for (int i = 0; i < CurrentJobState.ALL_TIME_FRMS.size(); i++) {
                 wData.add(CurrentJobState.ALL_TIME_FRMS.get(i) + "," + e.getValue().get(i));
@@ -654,7 +710,6 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
     }//GEN-LAST:event_saveAnomBtnActionPerformed
 
     private void freqInfoBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_freqInfoBtnActionPerformed
-        
     }//GEN-LAST:event_freqInfoBtnActionPerformed
 
     private void potAnoChkItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_potAnoChkItemStateChanged
@@ -667,26 +722,32 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
 
     private void printLinksBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_printLinksBtnActionPerformed
         allNodes = loadLastSetOfLC(DefaultValues.IN_MEMORY_LAYER_COUNT);
-        
+
         ArrayList<String> links = ikaslList.get(selectedStreamIdx).getGlobalLinkUpdater().getAllLinksWithoutMergedLeftOvers();
         ArrayList<String> linksWithMLeftOvers = ikaslList.get(selectedStreamIdx).getGlobalLinkUpdater().getAllLinksWithMergedLeftOvers();
-        
-        System.out.println("\n");
+
+        System.out.println("\n Links Before Filtering ---------------------------------------");
         for (String s : links) {
             System.out.println(s);
         }
+
         
         System.out.println("");
         HashMap<String, String> mLinks = ikaslList.get(selectedStreamIdx).getGlobalLinkUpdater().getMergedLinks();
+        /*
         for (Map.Entry<String, String> e : mLinks.entrySet()) {
             System.out.println(e.getKey() + " -> " + e.getValue());
-        }
+        }*/
 
-        lnkExtractor = new IKASLLinkExtractor(linksWithMLeftOvers, mLinks, allNodes);
+        rawLinkGenerator = new GlobalRawLinkGenerator();
+        ArrayList<String> rawLinks = rawLinkGenerator.getRawLinkGenerator2(linksWithMLeftOvers, mLinks);
+        lnkExtractor = new IKASLLinkExtractor(rawLinks, mLinks, allNodes,startLC);
         HashMap<String, ArrayList<String>> linkMap = lnkExtractor.performFiltering();
+        CurrentJobState.FILT_LINKS = new HashMap<>(linkMap);
 
         ArrayList<String> wData = new ArrayList<>();
         System.out.println("Filtered Links ---------------------------------");
+        
         for (Map.Entry<String, ArrayList<String>> e : linkMap.entrySet()) {
             String result = e.getKey() + " -> ";
             for (String s : e.getValue()) {
@@ -694,24 +755,27 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
             }
             System.out.println(result);
 
-            String startLink = "\n-------------------- LINK -------------------------";
+            String startLink = "\n";
             wData.add(startLink);
             String[] linkTokens = e.getKey().split(Constants.NODE_TOKENIZER);
-            
+
             //formatting to match CSV format
             for (int i = 0; i < linkTokens.length; i++) {
                 String s = linkTokens[i];
-                String line = s + ";";
+                String line = s + ",";
                 int lc = Integer.parseInt(s.split(Constants.I_J_TOKENIZER)[0]);
                 int id = Integer.parseInt(s.split(Constants.I_J_TOKENIZER)[1]);
-                
-                for (int j = 0; j < allNodes.get(lc).size(); j++) {
-                    ReducedNode rn = allNodes.get(lc).get(j);
+
+                for (int j = 0; j < allNodes.get(lc-startLC).size(); j++) {
+                    ReducedNode rn = allNodes.get(lc-startLC).get(j);
                     if (rn.getId()[0] == lc && rn.getId()[1] == id) {
                         String weightStr = "";
                         for (double d : rn.getWeights()) {
-                            if(d<0.1){d=0;}
-                            else if(d>0.9){d=1;}
+                            if (d < 0.1) {
+                                d = 0;
+                            } else if (d > 0.9) {
+                                d = 1;
+                            }
                             weightStr += d + ",";
                         }
                         line += weightStr;
@@ -725,16 +789,77 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
 
         //writing to CSV
         FileUtils.writeData(wData, "LinkData.csv");
+
+        //percentage of nodes with 1st attr <0.1 or >0.9
+        int ambIdx0 = 0;
+        int ambIdx2 = 0;
+        int ambIdx15 = 0;
+        int total = 0;
+        for (int i = 0; i < allNodes.size(); i++) {
+            for (int j = 0; j < allNodes.get(i).size(); j++) {
+                ReducedNode rn = allNodes.get(i).get(j);
+                if (rn.getWeights()[0] > 0.2 && rn.getWeights()[0] < 0.7) {
+                    ambIdx0++;
+                }
+                if ((rn.getWeights()[2] > 0.1 && rn.getWeights()[2] < 0.4) || (rn.getWeights()[2] > 0.6 && rn.getWeights()[2] < 0.9)) {
+                    ambIdx2++;
+                }
+                if ((rn.getWeights()[15] > 0.1 && rn.getWeights()[15] < 0.4) || (rn.getWeights()[15] > 0.6 && rn.getWeights()[15] < 0.9)) {
+                    ambIdx15++;
+                }
+                total++;
+            }
+        }
+
+        System.out.println("Percentage Ambiguous Idx 0: " + (double) (ambIdx0 * 100 / total));
+        System.out.println("Percentage Ambiguous Idx 2: " + (double) (ambIdx2 * 100 / total));
+        System.out.println("Percentage Ambiguous Idx 15: " + (double) (ambIdx15 * 100 / total));
     }//GEN-LAST:event_printLinksBtnActionPerformed
 
-    private ArrayList<VisGNode> getVisGNodesByID(ArrayList<VisGNode> nodes, ArrayList<String> idStrings) {
+    private void clusterQualityBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clusterQualityBtnActionPerformed
+        ArrayList<ArrayList<double[]>> allClusterQVals = ikaslList.get(selectedStreamIdx).getClusterQualityMeasures();
+        System.out.println("RMS_STD,R_SQR");
+        for (int i = 0; i < allClusterQVals.size(); i++) {
+            System.out.println("Layer " + i);
+            for (double[] arr : allClusterQVals.get(i)) {
+                System.out.println(arr[0] + "," + arr[1]);
+            }
+        }
+    }//GEN-LAST:event_clusterQualityBtnActionPerformed
+
+    private void anomalousChkActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_anomalousChkActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_anomalousChkActionPerformed
+
+    private void preAnomBehavExtBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_preAnomBehavExtBtnActionPerformed
+        ArrayList<String> preAnomLinkList = new ArrayList<>();
+        HashMap<String, ArrayList<String>> preAnomDevIDMap = new HashMap<>();
+
+        ArrayList<String> normalLinkList = new ArrayList<>();
+        HashMap<String, ArrayList<String>> normalLinkDevIDMap = new HashMap<>();
+        PreAnomUtil.updatePreAnomalyData(preAnomLinkList, preAnomDevIDMap, normalLinkList, normalLinkDevIDMap, false, true);
+
+        //create a hash map with preAnomLinkList which maps Anom to Link
+        HashMap<String, ArrayList<String>> preAnomLinkMap = new HashMap<>();
+        PreAnomUtil.mapAnomsToPreAnomLinks(preAnomLinkList, preAnomLinkMap);
+
+        PreAnomDialog paDialog = new PreAnomDialog(null, false);
+        paDialog.setBasicData(allNodes);
+        paDialog.setPreAnomData(preAnomLinkList, preAnomLinkMap, preAnomDevIDMap);
+        paDialog.setNormalData(normalLinkList, normalLinkDevIDMap);
+        paDialog.setAlertTypes(dimensions.get(selectedStreamName));
+        paDialog.populateAlertCmb();
+        paDialog.setVisible(true);
+    }//GEN-LAST:event_preAnomBehavExtBtnActionPerformed
+
+    private ArrayList<VisGNode> getVisGNodesByID(ArrayList<VisGNode> nodes, ArrayList<String> copyOfIdStrings) {
         ArrayList<VisGNode> vNodes = new ArrayList<>();
-        Iterator<String> it = idStrings.iterator();
+        Iterator<String> it = copyOfIdStrings.iterator();
         while (it.hasNext()) {
             String s = it.next();
             String[] tokens = s.split(Tokenizers.I_J_TOKENIZER);
             for (VisGNode vgn : nodes) {
-                if (idStrings.isEmpty()) {
+                if (copyOfIdStrings.isEmpty()) {
                     return vNodes;
                 }
                 if (vgn.getID()[0] == Integer.parseInt(tokens[0])
@@ -748,11 +873,11 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
     }
 
     private void updateAnomalySummary() {
-        Map<String, Integer> anomaliesHigh = new HashMap<>(getHighestAnomaliesWithPercent(selectedStreamName, anoTFCmb.getSelectedIndex()));
-        Map<String, Integer> maxAnomalies = new HashMap<>();
+        Map<String, Double> anomaliesHigh = new HashMap<>(getHighestAnomalyPercentage(selectedStreamName, anoTFCmb.getSelectedIndex()));
+        Map<String, Double> maxAnomalies = new HashMap<>();
         int count = Math.min(5, anomaliesHigh.size());
         for (int i = 0; i < count; i++) {
-            int maxVal = 0;
+            double maxVal = 0.0;
             String maxKey = null;
             for (String key : anomaliesHigh.keySet()) {
                 if (anomaliesHigh.get(key) > maxVal) {
@@ -870,6 +995,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
     private javax.swing.JComboBox anoTFCmb;
     private javax.swing.JButton anomaliesInfoBtn;
     private javax.swing.JCheckBox anomalousChk;
+    private javax.swing.JButton clusterQualityBtn;
     private javax.swing.JButton freqInfoBtn;
     private javax.swing.JCheckBox freqPatChk;
     private javax.swing.JLabel freqPatLbl;
@@ -892,6 +1018,7 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
     private javax.swing.JTextField minLengthTxt;
     private javax.swing.JTextField minStrengthTxt;
     private javax.swing.JCheckBox potAnoChk;
+    private javax.swing.JButton preAnomBehavExtBtn;
     private javax.swing.JButton printLinksBtn;
     private javax.swing.JButton resourceInfoBtn;
     private javax.swing.JButton runBtn;
@@ -1058,28 +1185,28 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
     private void populateAnomSummaryForGraph() {
         CurrentJobState.ANOM_SUMMARY = new HashMap<>();
         for (int i = 0; i < CurrentJobState.ALL_TIME_FRMS.size(); i++) {
-            Map<String, Integer> currAnom = getHighestAnomaliesWithPercent(selectedStreamName, i);
-            for (Map.Entry<String, Integer> e : currAnom.entrySet()) {
+            Map<String, Double> currAnom = getHighestAnomalyPercentage(selectedStreamName, i);
+            for (Map.Entry<String, Double> e : currAnom.entrySet()) {
                 if (!CurrentJobState.ANOM_SUMMARY.containsKey(e.getKey())) {
-                    ArrayList<Integer> valList = new ArrayList<>();
+                    ArrayList<Double> valList = new ArrayList<>();
                     for (int j = 0; j < i; j++) {
-                        valList.add(0);
+                        valList.add(0.0);
                     }
                     valList.add(e.getValue());
                     CurrentJobState.ANOM_SUMMARY.put(e.getKey(), valList);
                 } else {
-                    ArrayList<Integer> currValList = CurrentJobState.ANOM_SUMMARY.get(e.getKey());
+                    ArrayList<Double> currValList = CurrentJobState.ANOM_SUMMARY.get(e.getKey());
                     currValList.add(e.getValue());
                     CurrentJobState.ANOM_SUMMARY.put(e.getKey(), currValList);
                 }
             }
 
             //bringing all vectors to same number of elements
-            for (Map.Entry<String, ArrayList<Integer>> e : CurrentJobState.ANOM_SUMMARY.entrySet()) {
+            for (Map.Entry<String, ArrayList<Double>> e : CurrentJobState.ANOM_SUMMARY.entrySet()) {
                 if (e.getValue().size() != CurrentJobState.ALL_TIME_FRMS.size()) {
-                    ArrayList<Integer> currValList = e.getValue();
+                    ArrayList<Double> currValList = e.getValue();
                     for (int k = 0; k <= i - currValList.size(); k++) {
-                        currValList.add(0);
+                        currValList.add(0.0);
                     }
                     e.setValue(currValList);
                 }
@@ -1087,8 +1214,8 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
         }
     }
 
-    private Map<String, Integer> getHighestAnomaliesWithPercent(String stream, int lc) {
-        Map<String, Integer> anomaliesWithPercent = new HashMap<>();
+    private Map<String, Double> getHighestAnomalyPercentage(String stream, int lc) {
+        Map<String, Double> anomaliesWithPercent = new HashMap<>();
         ArrayList<ReducedNode> nodes = allNodes.get(lc);
         int total = 0;
 
@@ -1097,9 +1224,9 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
                 if (rn.getWeights()[i] > DefaultValues.ANOMALY_HIGH_THRESHOLD_DEFAULT) {
                     String key = dimensions.get(stream).get(i);
                     if (!anomaliesWithPercent.containsKey(key)) {
-                        anomaliesWithPercent.put(key, rn.getInputs().size());
+                        anomaliesWithPercent.put(key, (double)rn.getInputs().size());
                     } else {
-                        int val = anomaliesWithPercent.get(key);
+                        double val = anomaliesWithPercent.get(key);
                         val += rn.getInputs().size();
                         anomaliesWithPercent.put(key, val);
                     }
@@ -1108,30 +1235,66 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
             total += rn.getInputs().size();
         }
 
-        for (Map.Entry<String, Integer> e : anomaliesWithPercent.entrySet()) {
-            e.setValue(e.getValue() * 100 / total);
+        for (Map.Entry<String, Double> e : anomaliesWithPercent.entrySet()) {
+            e.setValue(e.getValue() * 100.0 / total);
         }
 
         return anomaliesWithPercent;
     }
 
-    private ArrayList<String> getAnomalousClusters(int startLC, int endLC) {
-        ArrayList<String> anomClusters = new ArrayList<>();
+    private HashMap<String, ArrayList<String>> getAnomalousClusters(int startLC, int endLC, double thresh) {
+        HashMap<String, ArrayList<String>> anomClusters = new HashMap<>();
         for (int i = 0; i <= endLC - startLC; i++) {
             ArrayList<ReducedNode> nodes = allNodes.get(i);
             for (ReducedNode rn : nodes) {
+                String id = rn.getId()[0] + Tokenizers.I_J_TOKENIZER + rn.getId()[1];
+                String key = "";
                 for (int j = 0; j < rn.getWeights().length; j++) {
-                    if (rn.getWeights()[j] > DefaultValues.ANOMALY_HIGH_THRESHOLD_DEFAULT) {
-                        String id = rn.getId()[0] + Tokenizers.I_J_TOKENIZER + rn.getId()[1];
-                        if (!anomClusters.contains(id)) {
-                            anomClusters.add(id);
-                        }
+                    if (ikaslList.get(selectedStreamIdx).getAlgoParam().getATTR_WEIGHTS()[j] != 0
+                            && rn.getWeights()[j] > thresh) {
+
+                        key += getDimensionsOfStreams().get(selectedStreamName).get(j) + Constants.INPUT_TOKENIZER;
+                    }
+                }
+                //we add new finindgs to hashmap only if key is not empty
+                if (!key.isEmpty()) {
+                    key = key.substring(0, key.length() - 1);
+                    ArrayList<String> anomIDsForKey = anomClusters.get(key);
+                    if (anomIDsForKey == null) {
+                        anomIDsForKey = new ArrayList<>();
+                    }
+                    if (!anomIDsForKey.contains(id)) {
+                        anomIDsForKey.add(id);
+                        anomClusters.put(key, anomIDsForKey);
                     }
                 }
             }
         }
 
         return anomClusters;
+    }
+
+    private ArrayList<String> getNormalClusters(int startLC, int endLC, double thresh) {
+        ArrayList<String> normClusters = new ArrayList<>();
+        for (int i = 0; i <= endLC - startLC; i++) {
+            ArrayList<ReducedNode> nodes = allNodes.get(i);
+            for (ReducedNode rn : nodes) {
+                boolean isNormal = false;
+                String id = rn.getId()[0] + Tokenizers.I_J_TOKENIZER + rn.getId()[1];
+                for (int j = 0; j < rn.getWeights().length; j++) {
+                    if (ikaslList.get(selectedStreamIdx).getAlgoParam().getATTR_WEIGHTS()[j] != 0
+                            && rn.getWeights()[j] > thresh) {
+                        isNormal = false;
+                        break;
+                    }
+                    isNormal = true;
+                }
+                if (isNormal) {
+                    normClusters.add(id);
+                }
+            }
+        }
+        return normClusters;
     }
 
     private ArrayList<String> getPotentialAnomalousClusters(int startLC, int endLC) {
@@ -1161,10 +1324,8 @@ public class ResultsUI extends javax.swing.JFrame implements ChangeListener, Con
             }
         }
         return null;
-
-
     }
-
+    
     class ReducedNodeInputComparator implements Comparator<ReducedNode> {
 
         @Override

@@ -7,8 +7,9 @@ package com.maa.algo.ikasl.links;
 import com.maa.algo.objects.GNode;
 import com.maa.algo.objects.GenLayer;
 import com.maa.algo.utils.Constants;
-import com.maa.algo.utils.Utils;
+import com.maa.algo.utils.AlgoUtils;
 import com.sun.xml.internal.fastinfoset.util.ContiguousCharArrayArray;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,7 +18,7 @@ import java.util.Map;
  *
  * @author Thush
  */
-public class IKASLGlobalLinkUpdater {
+public class IKASLGlobalLinkUpdater implements Serializable{
 
     private ArrayList<GlobalLink> allGlobalIntersectLinks;
     private HashMap<String, Integer> nodeChildCountMap;
@@ -39,7 +40,7 @@ public class IKASLGlobalLinkUpdater {
             //but we do not need to explicitly do that here, as that part is handled in
             // addOrConcatGlobalLink
             for (Map.Entry<String, GNode> e : currGLayer.getMap().entrySet()) {
-                String gID = Utils.generateIndexString(e.getValue().getLc(), e.getValue().getId());
+                String gID = AlgoUtils.generateIndexString(e.getValue().getLc(), e.getValue().getId());
                 String pID = e.getValue().getParentID();
                 // if node has atleast 1 parent
                 if (pID != null && !pID.isEmpty() && !pID.equals(Constants.INIT_PARENT)) {

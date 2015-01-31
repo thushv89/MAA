@@ -1,7 +1,7 @@
 package com.maa.algo.gsom;
 
 import com.maa.algo.objects.LNode;
-import com.maa.algo.utils.Utils;
+import com.maa.algo.utils.AlgoUtils;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,7 +31,7 @@ public class GCoordAdjuster {
 			node.setX(node.getX()+(-minX));
 			node.setY(node.getY()+(-minY));
 			//System.out.print(" to "+node.getX()+","+node.getY()+"\n");
-			newMap.put(Utils.generateIndexString(node.getX(), node.getY()), node);
+			newMap.put(AlgoUtils.generateIndexString(node.getX(), node.getY()), node);
 		}
 		//discard the previous map
 		

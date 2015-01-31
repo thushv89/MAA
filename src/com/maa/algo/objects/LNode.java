@@ -6,7 +6,7 @@ package com.maa.algo.objects;
 
 import com.maa.algo.enums.DistanceType;
 import com.maa.algo.utils.AlgoParameters;
-import com.maa.algo.utils.Utils;
+import com.maa.algo.utils.AlgoUtils;
 
 /**
  *
@@ -52,6 +52,6 @@ public class LNode extends Node {
     }
 
     public void calcAndUpdateErr(double[] iWeight, int dim, double[] weights, DistanceType dType) {
-        this.errorValue += Utils.calcDist(this.weights, iWeight, dim, weights, dType);
+        this.errorValue += AlgoUtils.calcDist(this.weights, iWeight, dim, weights, dType);
     }
 }

@@ -4,11 +4,13 @@
  */
 package com.maa.algo.ikasl.links;
 
+import java.io.Serializable;
+
 /**
  *
  * @author Thush
  */
-public class GlobalLink {
+public class GlobalLink implements Serializable{
 
     private String link;
     private boolean isMergedLeftOver;

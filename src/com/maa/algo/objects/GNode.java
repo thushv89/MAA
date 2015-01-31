@@ -5,7 +5,7 @@
 package com.maa.algo.objects;
 
 import com.maa.algo.enums.Behavior;
-import com.maa.algo.utils.Utils;
+import com.maa.algo.utils.AlgoUtils;
 import java.io.Serializable;
 import org.omg.CORBA.TRANSIENT;
 
@@ -99,8 +99,8 @@ public class GNode extends Node implements Serializable{
  
     @Override
     public boolean equals(Object o){
-        if(Utils.generateIndexString(((GNode)o).getLc(),((GNode)o).getId()).equals(
-                Utils.generateIndexString(lc, id))){
+        if(AlgoUtils.generateIndexString(((GNode)o).getLc(),((GNode)o).getId()).equals(
+                AlgoUtils.generateIndexString(lc, id))){
             return true;
         }
         return false;

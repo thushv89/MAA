@@ -18,6 +18,7 @@ public class Constants {
     public static final String BOUNDS_FILE = "bounds.txt";
     public static final String WEIGHT_FILE = "weights.txt";
     public static final String LAST_LAYER_FILE_NAME = "LastGLayer.ser";
+    public static final String LINK_UPDATER_FILE_NAME = "LinkUpdater.ser";
     public static final String ATTR_NAME_FILE = "attributes.txt";
     public static final String MERGED_TOKENIZER = "+";
     public static final String EMPTY_NODE = "--";

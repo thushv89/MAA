@@ -43,6 +43,7 @@ public class VisualizeUIUtils {
     private ArrayList<Line> tempLines;
     private ArrayList<Line> intLines;
     private VisOperations currOp;
+    private int startLC;
 
     public VisualizeUIUtils() {
         jButtons = new HashMap<>();
@@ -50,10 +51,10 @@ public class VisualizeUIUtils {
     }
 
     public void setData(ArrayList<String> dims, ArrayList<ArrayList<ReducedNode>> redNodes, ArrayList<VisGNode> allVisNodes, ArrayList<VisGNode> anoNodes, ArrayList<VisGNode> potAnoNodes, ArrayList<String> intLinks) {
-        if (dims != null){
+        if (dims != null) {
             this.dims = dims;
         }
-        
+
         if (allVisNodes != null) {
             this.allVisNodes = allVisNodes;
         }
@@ -69,6 +70,10 @@ public class VisualizeUIUtils {
         if (potAnoNodes != null) {
             this.potAnoNodes = potAnoNodes;
         }
+    }
+
+    public void setParameters(int startLC) {
+        this.startLC = startLC;
     }
 
     public JPanel getVisJPanel() {
@@ -189,46 +194,40 @@ public class VisualizeUIUtils {
                     //        + " - " + vgn.getID()[0] + "," + vgn.getID()[1] + ";" + vgn.getParent().getID()[0] + "," + vgn.getParent().getID()[1]);
                     ArrayList<String> inputs = null;
                     //get the layer of reduced nodes corresponding to vgn learn cycle
-                    ArrayList<ReducedNode> redNodes = allRedNodes.get(vgn.getID()[0]);
-                    
-                    ReducedNode tempRedNode = null;
-                    for (ReducedNode rn : redNodes) {
-                        if (rn.getId()[0] == vgn.getID()[0] && rn.getId()[1] == vgn.getID()[1]) {
-                            tempRedNode = rn;
-                            inputs = rn.getInputs();
-                            break;
-                        }
-                    }
-                    final ReducedNode finalRedNode = tempRedNode;
-                    
-                    /*if (inputs != null) {
-                        String inputsTxt = "";
-                        for (String s : inputs) {
-                            inputsTxt += s + ", ";
-                        }
-                        btn.setToolTipText(inputsTxt);
-                    }*/
-                    
-                    btn.setToolTipText("ParentID: " + finalRedNode.getpID());
+                    if (vgn.getID()[0] - startLC >= 0) {
+                        ArrayList<ReducedNode> redNodes = allRedNodes.get(vgn.getID()[0] - startLC);
 
-                    btn.setSize(new Dimension(btnWidth, btnHeight));
-                    btn.setText(vgn.getID()[0] + "," + vgn.getID()[1]);
-                    btnPanel.add(btn);
-                    jButtons.put(x + "," + y, btn);
-                    btn.addActionListener(new ActionListener() {
-                        
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            GNodeInfo gInfo = new GNodeInfo();
-                            gInfo.setNodeID(vgn.getID()[0]+ Tokenizers.I_J_TOKENIZER + vgn.getID()[1]);
-                            gInfo.setParentID(finalRedNode.getpID());
-                            gInfo.setNodeCoords(vgn.getCoordinates());
-                            gInfo.setSynopsis(dims, finalRedNode.getWeights());
-                            gInfo.setInputs(finalRedNode.getInputs());
-                            GNodeInfoDialog gnodeDialog = new GNodeInfoDialog(null, false, gInfo);
-                            gnodeDialog.setVisible(true);
+                        ReducedNode tempRedNode = null;
+                        for (ReducedNode rn : redNodes) {
+                            if (rn.getId()[0] == vgn.getID()[0] && rn.getId()[1] == vgn.getID()[1]) {
+                                tempRedNode = rn;
+                                inputs = rn.getInputs();
+                                break;
+                            }
                         }
-                    }); 
+                        final ReducedNode finalRedNode = tempRedNode;
+                        if (finalRedNode != null) {
+                            btn.setToolTipText("ParentID: " + finalRedNode.getpID());
+                        }
+
+                        btn.setSize(new Dimension(btnWidth, btnHeight));
+                        btn.setText(vgn.getID()[0] + "," + vgn.getID()[1]);
+                        btnPanel.add(btn);
+                        jButtons.put(x + "," + y, btn);
+                        btn.addActionListener(new ActionListener() {
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                GNodeInfo gInfo = new GNodeInfo();
+                                gInfo.setNodeID(vgn.getID()[0] + Tokenizers.I_J_TOKENIZER + vgn.getID()[1]);
+                                gInfo.setParentID(finalRedNode.getpID());
+                                gInfo.setNodeCoords(vgn.getCoordinates());
+                                gInfo.setSynopsis(dims, finalRedNode.getWeights());
+                                gInfo.setInputs(finalRedNode.getInputs());
+                                GNodeInfoDialog gnodeDialog = new GNodeInfoDialog(null, false, gInfo);
+                                gnodeDialog.setVisible(true);
+                            }
+                        });
+                    }
                 } else {
                     JLabel lbl = new JLabel();
                     lbl.setSize(btnWidth, btnHeight);
@@ -336,7 +335,7 @@ public class VisualizeUIUtils {
             }
         }
     }
-    
+
     private int[] getVisCoordinates(int x, int y, int btnWidth, int btnHeight, int hGap, int vGap) {
         double visX = ((double) btnWidth) / 2 + ((hGap + btnWidth) * x);
         double visY = ((double) btnHeight) / 2 + ((vGap + btnHeight) * y);

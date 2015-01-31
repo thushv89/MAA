@@ -8,7 +8,7 @@ import com.maa.algo.objects.LNode;
 import com.maa.algo.objects.LearnLayer;
 import com.maa.algo.utils.AlgoParameters;
 import com.maa.algo.utils.Constants;
-import com.maa.algo.utils.Utils;
+import com.maa.algo.utils.AlgoUtils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -29,8 +29,8 @@ public class HitThresholdGenerator {
         ArrayList<String> selectedNodeIDs = new ArrayList<String>();
 
         //double threshold = hitThresh * Math.sqrt(neighRad) * Math.sqrt(AlgoParameters.MERGE_ONE_DIM_THRESHOLD*AlgoParameters.DIMENSIONS);
-        double distThreshold = Utils.calcDist(Utils.getUniformVector(algoParams.getMERGE_ONE_DIM_THRESHOLD(), algoParams.getDIMENSIONS()),
-                Utils.getZeroVector(algoParams.getDIMENSIONS()), algoParams.getDIMENSIONS(), algoParams.getATTR_WEIGHTS(), algoParams.getDistType());
+        double distThreshold = AlgoUtils.calcDist(AlgoUtils.getUniformVector(algoParams.getMERGE_ONE_DIM_THRESHOLD(), algoParams.getDIMENSIONS()),
+                AlgoUtils.getZeroVector(algoParams.getDIMENSIONS()), algoParams.getDIMENSIONS(), algoParams.getATTR_WEIGHTS(), algoParams.getDistType());
         double threshold = hitThresh * Math.sqrt(neighRad) * Math.pow(distThreshold, 2);
 
         for (Map.Entry<String, Map<String, LNode>> eMap : lMap.entrySet()) {
@@ -66,7 +66,7 @@ public class HitThresholdGenerator {
 
             for (int i = 0; i < nodes.size(); i++) {
                 LNode n = nodes.get(i);
-                String fullNodeID = eMap.getKey() + Constants.NODE_TOKENIZER + Utils.generateIndexString(n.getX(), n.getY());
+                String fullNodeID = eMap.getKey() + Constants.NODE_TOKENIZER + AlgoUtils.generateIndexString(n.getX(), n.getY());
 
                 //if the current node hit value is not atleaset half of hit threshold -> ignore the node
                 if (n.getHitValue() < hitThresh / 2) {
@@ -84,7 +84,7 @@ public class HitThresholdGenerator {
                                 + (nodes.get(i).getY() - nodes.get(j).getY()) * (nodes.get(i).getY() - nodes.get(j).getY());
                         pDistance = Math.sqrt(pDistance);
 
-                        double eDistance = Utils.calcDist(nodes.get(i).getWeights(), nodes.get(j).getWeights(), 
+                        double eDistance = AlgoUtils.calcDist(nodes.get(i).getWeights(), nodes.get(j).getWeights(), 
                                 algoParams.getDIMENSIONS(),algoParams.getATTR_WEIGHTS(),algoParams.getDistType());
 
                         if (pDistance < minPDist) {
@@ -128,8 +128,8 @@ public class HitThresholdGenerator {
         ArrayList<String> selectedNodeIDs = new ArrayList<String>();
 
         //double threshold = hitThresh * Math.sqrt(neighRad) * Math.sqrt(AlgoParameters.MERGE_ONE_DIM_THRESHOLD*AlgoParameters.DIMENSIONS);
-        double distThreshold = Utils.calcDist(Utils.getUniformVector(algoParams.getMERGE_ONE_DIM_THRESHOLD(),algoParams.getDIMENSIONS()),
-                Utils.getZeroVector(algoParams.getDIMENSIONS()), algoParams.getDIMENSIONS(),algoParams.getATTR_WEIGHTS(),algoParams.getDistType());
+        double distThreshold = AlgoUtils.calcDist(AlgoUtils.getUniformVector(algoParams.getMERGE_ONE_DIM_THRESHOLD(),algoParams.getDIMENSIONS()),
+                AlgoUtils.getZeroVector(algoParams.getDIMENSIONS()), algoParams.getDIMENSIONS(),algoParams.getATTR_WEIGHTS(),algoParams.getDistType());
         double threshold = Math.sqrt(neighRad) * Math.pow(distThreshold, 2)/hitThresh;
 
         for (Map.Entry<String, Map<String, LNode>> eMap : lMap.entrySet()) {
@@ -173,7 +173,7 @@ public class HitThresholdGenerator {
 
             for (int i = 0; i < nodes.size(); i++) {
                 LNode n = nodes.get(i);
-                String fullNodeID = eMap.getKey() + Constants.NODE_TOKENIZER + Utils.generateIndexString(n.getX(), n.getY());
+                String fullNodeID = eMap.getKey() + Constants.NODE_TOKENIZER + AlgoUtils.generateIndexString(n.getX(), n.getY());
 
                 //if the current node hit value is not atmost twice the hit threshold -> ignore the node
                 if (n.getHitValue() > hitThresh * 2) {
@@ -191,7 +191,7 @@ public class HitThresholdGenerator {
                                 + (nodes.get(i).getY() - nodes.get(j).getY()) * (nodes.get(i).getY() - nodes.get(j).getY());
                         pDistance = Math.sqrt(pDistance);
 
-                        double eDistance = Utils.calcDist(nodes.get(i).getWeights(), nodes.get(j).getWeights(), 
+                        double eDistance = AlgoUtils.calcDist(nodes.get(i).getWeights(), nodes.get(j).getWeights(), 
                                 algoParams.getDIMENSIONS(),algoParams.getATTR_WEIGHTS(),algoParams.getDistType());
 
                         if (pDistance < minPDist) {

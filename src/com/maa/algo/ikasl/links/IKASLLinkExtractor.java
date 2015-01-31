@@ -20,11 +20,13 @@ public class IKASLLinkExtractor {
     ArrayList<String> allGlobalLinks;   //need to get all links including MergedLeftOvers, because we're ignoring the merged list
     HashMap<String, String> mergeList;
     ArrayList<ArrayList<ReducedNode>> allNodes;
-
-    public IKASLLinkExtractor(ArrayList<String> allGlobalLinks, HashMap<String, String> mergeList, ArrayList<ArrayList<ReducedNode>> allNodes) {
+    int startLC;
+    
+    public IKASLLinkExtractor(ArrayList<String> allGlobalLinks, HashMap<String, String> mergeList, ArrayList<ArrayList<ReducedNode>> allNodes,int startLC) {
         this.allGlobalLinks = allGlobalLinks;
         this.mergeList = mergeList;
         this.allNodes = allNodes;
+        this.startLC = startLC;
     }
 
     public HashMap<String, ArrayList<String>> performFiltering() {
@@ -69,9 +71,7 @@ public class IKASLLinkExtractor {
                 for (int j = 1; j <= i; j++) {
                     parLink += Constants.NODE_TOKENIZER + linkTokens[j];
                 }
-                if(parLink.startsWith(";")){
-                    System.out.println("");
-                }
+                
                 ArrayList<String> common = CheckDevThreshSingleLink(parLink);
                 if (common != null) {
                     reqLink = parLink;
@@ -134,8 +134,15 @@ public class IKASLLinkExtractor {
             
             int lc = Integer.parseInt(s.split(Constants.I_J_TOKENIZER)[0]);
             int id = Integer.parseInt(s.split(Constants.I_J_TOKENIZER)[1]);
-            for (int j = 0; j < allNodes.get(lc).size(); j++) {
-                ReducedNode rn = allNodes.get(lc).get(j);
+            
+            //this part is introduced if totalLC > inMemoryLC. So if we get a lc 
+            //which is not in memory we simply ignore that 
+            if(lc<startLC){
+                continue;
+            }
+
+            for (int j = 0; j < allNodes.get(lc-startLC).size(); j++) {
+                ReducedNode rn = allNodes.get(lc-startLC).get(j);
                 if (lc == rn.getId()[0] && id == rn.getId()[1]) {
                     if (i == 0) {
                         common.addAll(rn.getInputs());

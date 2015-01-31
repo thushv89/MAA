@@ -96,6 +96,13 @@ public class GNodeInfo {
      * @param inputs the inputs to set
      */
     public void setInputs(ArrayList<String> inputs) {        
+        this.inputs = inputs.get(0);
+        for(int i=1; i<inputs.size();i++){
+            this.inputs += Tokenizers.INPUT_TOKENIZER + inputs.get(i);
+        }
+    }
+    
+    public void setInputsWithHTML(ArrayList<String> inputs) {        
         this.inputs = "<html>"+inputs.get(0);
         for(int i=1; i<inputs.size();i++){
             this.inputs += Tokenizers.INPUT_TOKENIZER + " " + inputs.get(i);

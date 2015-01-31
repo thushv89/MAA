@@ -22,6 +22,8 @@ public class AlgoParameters {
     
     private double[] MIN_BOUNDS;
     private double[] MAX_BOUNDS;
+    private double[] RANGE_GRANULARITY;
+    private double THRESH_MAX_BOUND = 5;
     
     private double[] ATTR_WEIGHTS;
     
@@ -49,7 +51,7 @@ public class AlgoParameters {
     }
     
     public double getMergeThreshold(){
-        MERGE_THRESHOLD = Utils.calcDist(Utils.getUniformVector(MERGE_ALL_DIM_THRESHOLD, getDIMENSIONS()), Utils.getZeroVector(getDIMENSIONS()), getDIMENSIONS(), this.getATTR_WEIGHTS(), getDistType());
+        MERGE_THRESHOLD = AlgoUtils.calcDist(AlgoUtils.getUniformVector(MERGE_ALL_DIM_THRESHOLD, getDIMENSIONS()), AlgoUtils.getZeroVector(getDIMENSIONS()), getDIMENSIONS(), this.getATTR_WEIGHTS(), getDistType());
         return getMERGE_THRESHOLD();
     }
     
@@ -173,6 +175,27 @@ public class AlgoParameters {
      */
     public void setSTART_LEARNING_RATE(double START_LEARNING_RATE) {
         this.START_LEARNING_RATE = START_LEARNING_RATE;
+    }
+
+    /**
+     * @return the RANGE_GRANULARITY
+     */
+    public double[] getRANGE_GRANULARITY() {
+        return RANGE_GRANULARITY;
+    }
+
+    /**
+     * @param RANGE_GRANULARITY the RANGE_GRANULARITY to set
+     */
+    public void setRANGE_GRANULARITY(double[] RANGE_GRANULARITY) {
+        this.RANGE_GRANULARITY = RANGE_GRANULARITY;
+    }
+
+    /**
+     * @return the THRESH_MAX_BOUND
+     */
+    public double getTHRESH_MAX_BOUND() {
+        return THRESH_MAX_BOUND;
     }
     
     

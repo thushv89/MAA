@@ -4,7 +4,7 @@ import java.util.Map;
 import com.maa.algo.objects.LNode;
 import com.maa.algo.utils.AlgoParameters;
 import com.maa.algo.utils.ArrayHelper;
-import com.maa.algo.utils.Utils;
+import com.maa.algo.utils.AlgoUtils;
 
 public class NodeGrowthHandler {
     //This class is responsible of growing nodes in the GSOM map.
@@ -20,21 +20,21 @@ public class NodeGrowthHandler {
 		int Y = winner.getY();
 		
 		for(int i=X-1;i<=X+1;i=i+2){
-			String nodeStr = Utils.generateIndexString(i, Y);
+			String nodeStr = AlgoUtils.generateIndexString(i, Y);
 			if(!map.containsKey(nodeStr)){
 				//grow new node
 				LNode newNode = new LNode(i, Y, getNewNodeWeights(winner, i, Y));
 				//System.out.println("Node "+X+","+Y+" grown from Node "+i+","+Y);
-				map.put(Utils.generateIndexString(i, Y), newNode);
+				map.put(AlgoUtils.generateIndexString(i, Y), newNode);
 			}
 		}
 		for(int i=Y-1;i<=Y+1;i=i+2){
-			String nodeStr = Utils.generateIndexString(X, i);
+			String nodeStr = AlgoUtils.generateIndexString(X, i);
 			if(!map.containsKey(nodeStr)){
 				//grow new node
 				LNode newNode = new LNode(X, i, getNewNodeWeights(winner, X, i));
 				//System.out.println("Node "+X+","+Y+" grown from Node "+X+","+i);
-				map.put(Utils.generateIndexString(X, i), newNode);
+				map.put(AlgoUtils.generateIndexString(X, i), newNode);
 			}
 		}
 		return;
@@ -50,10 +50,10 @@ public class NodeGrowthHandler {
 			
 			//winnerX,otherX
 			if(X == winner.getX()+1){
-				String nextNodeStr = Utils.generateIndexString(X+1, Y); //nX
-				String othrSideNodeStr = Utils.generateIndexString(X-2, Y); //oX
-				String topNodeStr = Utils.generateIndexString(winner.getX(), Y+1);  //tX
-				String botNodeStr = Utils.generateIndexString(winner.getX(), Y-1);  //bX
+				String nextNodeStr = AlgoUtils.generateIndexString(X+1, Y); //nX
+				String othrSideNodeStr = AlgoUtils.generateIndexString(X-2, Y); //oX
+				String topNodeStr = AlgoUtils.generateIndexString(winner.getX(), Y+1);  //tX
+				String botNodeStr = AlgoUtils.generateIndexString(winner.getX(), Y-1);  //bX
 				
 				//new node has one direct neighbor, 
 				//but neighbor has a neighbor in the opposing directly
@@ -84,10 +84,10 @@ public class NodeGrowthHandler {
 			}
 			//otherX,winnerX
 			else if(X == winner.getX()-1){
-				String nextNodeStr = Utils.generateIndexString(X-1, Y);
-				String othrSideNodeStr = Utils.generateIndexString(X+2, Y);
-				String topNodeStr = Utils.generateIndexString(winner.getX(), Y+1);
-				String botNodeStr = Utils.generateIndexString(winner.getX(), Y-1);
+				String nextNodeStr = AlgoUtils.generateIndexString(X-1, Y);
+				String othrSideNodeStr = AlgoUtils.generateIndexString(X+2, Y);
+				String topNodeStr = AlgoUtils.generateIndexString(winner.getX(), Y+1);
+				String botNodeStr = AlgoUtils.generateIndexString(winner.getX(), Y-1);
 				
 				//new node has one direct neighbor, 
 				//but neighbor has a neighbor in the opposing directly
@@ -120,10 +120,10 @@ public class NodeGrowthHandler {
 			//otherY
 			//winnerY
 			if(Y == winner.getY()+1){
-				String nextNodeStr = Utils.generateIndexString(X, Y+1);
-				String othrSideNodeStr = Utils.generateIndexString(X, Y-2);
-				String leftNodeStr = Utils.generateIndexString(X-1, winner.getY());
-				String rightNodeStr = Utils.generateIndexString(X+1, winner.getY());
+				String nextNodeStr = AlgoUtils.generateIndexString(X, Y+1);
+				String othrSideNodeStr = AlgoUtils.generateIndexString(X, Y-2);
+				String leftNodeStr = AlgoUtils.generateIndexString(X-1, winner.getY());
+				String rightNodeStr = AlgoUtils.generateIndexString(X+1, winner.getY());
 				
 				//new node has one direct neighbor, 
 				//but neighbor has a neighbor in the opposing directly
@@ -152,10 +152,10 @@ public class NodeGrowthHandler {
 			//winnerY
 			//otherY
 			else if(Y == winner.getY()-1){
-				String nextNodeStr = Utils.generateIndexString(X, Y-1);
-				String othrSideNodeStr = Utils.generateIndexString(X, Y+2);
-				String leftNodeStr = Utils.generateIndexString(X-1, winner.getY());
-				String rightNodeStr = Utils.generateIndexString(X+1, winner.getY());
+				String nextNodeStr = AlgoUtils.generateIndexString(X, Y-1);
+				String othrSideNodeStr = AlgoUtils.generateIndexString(X, Y+2);
+				String leftNodeStr = AlgoUtils.generateIndexString(X-1, winner.getY());
+				String rightNodeStr = AlgoUtils.generateIndexString(X+1, winner.getY());
 				
 				//new node has one direct neighbor, 
 				//but neighbor has a neighbor in the opposing directly

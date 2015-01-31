@@ -7,7 +7,7 @@ import com.maa.algo.listeners.TaskListener;
 import com.maa.algo.objects.LNode;
 import com.maa.algo.utils.AlgoParameters;
 import com.maa.algo.utils.LogMessages;
-import com.maa.algo.utils.Utils;
+import com.maa.algo.utils.AlgoUtils;
 
 public class GSOMSmoothner {
 
@@ -30,8 +30,8 @@ public class GSOMSmoothner {
         }
         
         for (int iter = 0; iter < algoParams.getMAX_ITERATIONS(); iter++) {
-            double learningRate = Utils.getLearningRate(iter, map.size(),algoParams.getMAX_ITERATIONS(),algoParams.getSTART_LEARNING_RATE(),algoParams.getMAX_NEIGHBORHOOD_RADIUS());
-            double radius = Utils.getRadius(iter, Utils.getTimeConst(algoParams.getMAX_ITERATIONS(),algoParams.getMAX_NEIGHBORHOOD_RADIUS()),algoParams.getDIMENSIONS());
+            double learningRate = AlgoUtils.getLearningRate(iter, map.size(),algoParams.getMAX_ITERATIONS(),algoParams.getSTART_LEARNING_RATE(),algoParams.getMAX_NEIGHBORHOOD_RADIUS());
+            double radius = AlgoUtils.getRadius(iter, AlgoUtils.getTimeConst(algoParams.getMAX_ITERATIONS(),algoParams.getMAX_NEIGHBORHOOD_RADIUS()),algoParams.getDIMENSIONS());
             for (double[] singleInput : inputs) {
                 if (singleInput.length == algoParams.getDIMENSIONS()) {
                     smoothSingleIterSingleInput(map, iter, singleInput, learningRate, radius);
@@ -48,21 +48,25 @@ public class GSOMSmoothner {
     }
 
     private void smoothSingleIterSingleInput(Map<String, LNode> map, int iter, double[] input, double learningRate, double radius) {
-        LNode winner = Utils.selectLWinner(map, input,algoParams.getDIMENSIONS(),algoParams.getATTR_WEIGHTS(),algoParams.getDistType());
+        LNode winner = AlgoUtils.selectLWinner(map, input,algoParams.getDIMENSIONS(),algoParams.getATTR_WEIGHTS(),algoParams.getDistType());
 
-        String leftNode = Utils.generateIndexString(winner.getX() - 1, winner.getY());
-        String rightNode = Utils.generateIndexString(winner.getX() + 1, winner.getY());
-        String topNode = Utils.generateIndexString(winner.getX(), winner.getY() + 1);
-        String bottomNode = Utils.generateIndexString(winner.getX(), winner.getY() - 1);
+        String leftNode = AlgoUtils.generateIndexString(winner.getX() - 1, winner.getY());
+        String rightNode = AlgoUtils.generateIndexString(winner.getX() + 1, winner.getY());
+        String topNode = AlgoUtils.generateIndexString(winner.getX(), winner.getY() + 1);
+        String bottomNode = AlgoUtils.generateIndexString(winner.getX(), winner.getY() - 1);
 
         if (map.containsKey(leftNode)) {
-            map.put(leftNode, Utils.adjustNeighbourWeight(map.get(leftNode), winner, input, radius, learningRate, algoParams.getDIMENSIONS()));
+            map.put(leftNode, AlgoUtils.adjustNeighbourWeight(map.get(leftNode), winner, input, radius, learningRate, algoParams.getDIMENSIONS(),
+                    true, algoParams.getRANGE_GRANULARITY(), algoParams.getMIN_BOUNDS(), algoParams.getMAX_BOUNDS(),algoParams.getTHRESH_MAX_BOUND()));
         } else if (map.containsKey(rightNode)) {
-            map.put(rightNode, Utils.adjustNeighbourWeight(map.get(rightNode), winner, input, radius, learningRate, algoParams.getDIMENSIONS()));
+            map.put(rightNode, AlgoUtils.adjustNeighbourWeight(map.get(rightNode), winner, input, radius, learningRate, algoParams.getDIMENSIONS(),
+                    true, algoParams.getRANGE_GRANULARITY(), algoParams.getMIN_BOUNDS(), algoParams.getMAX_BOUNDS(),algoParams.getTHRESH_MAX_BOUND()));
         } else if (map.containsKey(topNode)) {
-            map.put(topNode, Utils.adjustNeighbourWeight(map.get(topNode), winner, input, radius, learningRate, algoParams.getDIMENSIONS()));
+            map.put(topNode, AlgoUtils.adjustNeighbourWeight(map.get(topNode), winner, input, radius, learningRate, algoParams.getDIMENSIONS(),
+                    true, algoParams.getRANGE_GRANULARITY(), algoParams.getMIN_BOUNDS(), algoParams.getMAX_BOUNDS(),algoParams.getTHRESH_MAX_BOUND()));
         } else if (map.containsKey(bottomNode)) {
-            map.put(bottomNode, Utils.adjustNeighbourWeight(map.get(bottomNode), winner, input, radius, learningRate, algoParams.getDIMENSIONS()));
+            map.put(bottomNode, AlgoUtils.adjustNeighbourWeight(map.get(bottomNode), winner, input, radius, learningRate, algoParams.getDIMENSIONS(),
+                    true, algoParams.getRANGE_GRANULARITY(), algoParams.getMIN_BOUNDS(), algoParams.getMAX_BOUNDS(),algoParams.getTHRESH_MAX_BOUND()));
         }
     }
 }

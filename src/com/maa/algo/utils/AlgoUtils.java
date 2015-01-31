@@ -6,10 +6,11 @@ import java.util.Map;
 
 import com.maa.algo.objects.LNode;
 import com.maa.algo.objects.Node;
+import com.maa.utils.DefaultValues;
 import java.util.ArrayList;
 import java.util.Collections;
 
-public class Utils {
+public class AlgoUtils {
 
     public static double[] generateRandomArray(int dimensions) {
         double[] arr = new double[dimensions];
@@ -51,7 +52,7 @@ public class Utils {
         double currDist = Double.MAX_VALUE;
         double minDist = Double.MAX_VALUE;
         for (Map.Entry<String, LNode> entry : nodeMap.entrySet()) {
-            currDist = Utils.calcDist(input, entry.getValue().getWeights(), dim, weights, dType);
+            currDist = AlgoUtils.calcDist(input, entry.getValue().getWeights(), dim, weights, dType);
             if (currDist < minDist) {
                 winner = entry.getValue();
                 minDist = currDist;
@@ -90,7 +91,7 @@ public class Utils {
         double currDist = Double.MAX_VALUE;
         double minDist = Double.MAX_VALUE;
         for (Map.Entry<String, GNode> entry : nodeMap.entrySet()) {
-            currDist = Utils.calcDist(input, entry.getValue().getWeights(), dim, weights, dType);
+            currDist = AlgoUtils.calcDist(input, entry.getValue().getWeights(), dim, weights, dType);
             if (currDist < minDist) {
                 winner = entry.getValue();
                 minDist = currDist;
@@ -100,14 +101,14 @@ public class Utils {
         return winner;
     }
 
-    public static LNode adjustNeighbourWeight(LNode node, LNode winner, double[] input, double radius, double learningRate, int dim) {
+    public static LNode adjustNeighbourWeight(LNode node, LNode winner, double[] input, double radius, double learningRate, int dim, boolean boost, double[] gran, double[] minBound, double[] maxBound, double maxBoundThresh) {
         double nodeDistSqr = Math.pow(winner.getX() - node.getX(), 2) + Math.pow(winner.getY() - node.getY(), 2);
         double radiusSqr = radius * radius;
 
         //if node is within the radius
         if (nodeDistSqr < radiusSqr) {
             double influence = Math.exp(-(double) nodeDistSqr / (2 * radiusSqr));
-            node.adjustWeights(input, influence, learningRate,dim);
+            node.adjustWeights(input, influence, learningRate,dim, boost, gran, minBound, maxBound, maxBoundThresh);
         }
         return node;
     }
@@ -156,5 +157,26 @@ public class Utils {
         result[3] = Collections.max(allY);
 
         return result;
+    }
+    
+    public static double getNodeIntersectStrength(int lc1, ArrayList<String> l1, int lc2, ArrayList<String> l2) {
+        ArrayList<String> list1 = new ArrayList<>(l1);
+        ArrayList<String> list2 = new ArrayList<>(l2);
+
+        if (list1.isEmpty() || list2.isEmpty()) {
+            return 0;
+        }
+
+        int minVal = Math.min(list1.size(), list2.size());
+        list1.retainAll(list2);
+        int common = list1.size();
+
+        //normalize the value to be in between 0.5 & 1
+        double numOfInputDiffCoeff = (double) (Math.max(l1.size(), l2.size()) - Math.abs(l1.size() - l2.size())) / Math.max(l1.size(), l2.size());
+        numOfInputDiffCoeff = 0.9 + (numOfInputDiffCoeff * (1 - 0.9));
+
+        double timeDiffCoeff = (double) (DefaultValues.IKASL_LINK_DEPTH - Math.abs(lc1 - lc2) - 1) / DefaultValues.IKASL_LINK_DEPTH;
+        timeDiffCoeff = 0.5 + (timeDiffCoeff * (1 - 0.5));
+        return (double) common * 1.0 / minVal;
     }
 }

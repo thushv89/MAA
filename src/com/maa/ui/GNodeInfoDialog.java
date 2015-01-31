@@ -52,7 +52,7 @@ public class GNodeInfoDialog extends javax.swing.JDialog {
         parentIDLbl = new javax.swing.JLabel();
         jLabel7 = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
-        inputsLbl = new javax.swing.JLabel();
+        inputsLbl = new javax.swing.JTextArea();
         jScrollPane2 = new javax.swing.JScrollPane();
         synopLbl = new javax.swing.JLabel();
 
@@ -84,8 +84,10 @@ public class GNodeInfoDialog extends javax.swing.JDialog {
 
         jLabel7.setText("Inputs:");
 
-        inputsLbl.setText("Display Inputs");
-        inputsLbl.setVerticalAlignment(javax.swing.SwingConstants.TOP);
+        inputsLbl.setEditable(false);
+        inputsLbl.setColumns(20);
+        inputsLbl.setLineWrap(true);
+        inputsLbl.setRows(5);
         jScrollPane1.setViewportView(inputsLbl);
 
         synopLbl.setText("Display Synopsis");
@@ -213,7 +215,7 @@ public class GNodeInfoDialog extends javax.swing.JDialog {
         });
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JLabel inputsLbl;
+    private javax.swing.JTextArea inputsLbl;
     private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;

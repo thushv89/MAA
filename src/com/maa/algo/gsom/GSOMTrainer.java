@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import com.maa.algo.objects.LNode;
 import com.maa.algo.utils.AlgoParameters;
-import com.maa.algo.utils.Utils;
+import com.maa.algo.utils.AlgoUtils;
 
 public class GSOMTrainer {
 
@@ -25,8 +25,8 @@ public class GSOMTrainer {
         initFourNodes();	//init the map with four nodes
         for (int i = 0; i < algoParams.getMAX_ITERATIONS(); i++) {
             int k = 0;
-            double learningRate = Utils.getLearningRate(i, nodeMap.size(),algoParams.getMAX_ITERATIONS(),algoParams.getSTART_LEARNING_RATE(),algoParams.getMAX_NEIGHBORHOOD_RADIUS());
-            double radius = Utils.getRadius(i, Utils.getTimeConst(algoParams.getMAX_ITERATIONS(),algoParams.getMAX_NEIGHBORHOOD_RADIUS()),algoParams.getDIMENSIONS());
+            double learningRate = AlgoUtils.getLearningRate(i, nodeMap.size(),algoParams.getMAX_ITERATIONS(),algoParams.getSTART_LEARNING_RATE(),algoParams.getMAX_NEIGHBORHOOD_RADIUS());
+            double radius = AlgoUtils.getRadius(i, AlgoUtils.getTimeConst(algoParams.getMAX_ITERATIONS(),algoParams.getMAX_NEIGHBORHOOD_RADIUS()),algoParams.getDIMENSIONS());
             for (double[] input : iWeights) {
                 trainForSingleIterAndSingleInput(i, input, iStrings.get(k), learningRate, radius);
                 k++;
@@ -46,13 +46,13 @@ public class GSOMTrainer {
         //TODO : Convert GNOde to LNode
         for(GNode n : map.values()){
             LNode initNode = new LNode(0,0, n.getWeights());
-            this.nodeMap.put(Utils.generateIndexString(initNode.getX(), initNode.getY()), initNode);
+            this.nodeMap.put(AlgoUtils.generateIndexString(initNode.getX(), initNode.getY()), initNode);
         }   
         
         for (int i = 0; i < algoParams.getMAX_ITERATIONS(); i++) {
             int k = 0;
-            double learningRate = Utils.getLearningRate(i, this.nodeMap.size(),algoParams.getMAX_ITERATIONS(),algoParams.getSTART_LEARNING_RATE(),algoParams.getMAX_NEIGHBORHOOD_RADIUS());
-            double radius = Utils.getRadius(i, Utils.getTimeConst(algoParams.getMAX_ITERATIONS(),algoParams.getMAX_NEIGHBORHOOD_RADIUS()),algoParams.getDIMENSIONS());
+            double learningRate = AlgoUtils.getLearningRate(i, this.nodeMap.size(),algoParams.getMAX_ITERATIONS(),algoParams.getSTART_LEARNING_RATE(),algoParams.getMAX_NEIGHBORHOOD_RADIUS());
+            double radius = AlgoUtils.getRadius(i, AlgoUtils.getTimeConst(algoParams.getMAX_ITERATIONS(),algoParams.getMAX_NEIGHBORHOOD_RADIUS()),algoParams.getDIMENSIONS());
             
             for (double[] input : iWeights) {
                 trainForSingleIterAndSingleInput(i, input, iStrings.get(k), learningRate, radius);
@@ -65,10 +65,11 @@ public class GSOMTrainer {
     
     private void trainForSingleIterAndSingleInput(int iter, double[] input, String str, double learningRate, double radius) {
 
-        LNode winner = Utils.selectLWinner(nodeMap, input,algoParams.getDIMENSIONS(),algoParams.getATTR_WEIGHTS(),algoParams.getDistType());
+        LNode winner = AlgoUtils.selectLWinner(nodeMap, input,algoParams.getDIMENSIONS(),algoParams.getATTR_WEIGHTS(),algoParams.getDistType());
 
         for (Map.Entry<String, LNode> entry : nodeMap.entrySet()) {
-            entry.setValue(Utils.adjustNeighbourWeight(entry.getValue(), winner, input, radius, learningRate,algoParams.getDIMENSIONS()));
+            entry.setValue(AlgoUtils.adjustNeighbourWeight(entry.getValue(), winner, input, radius, learningRate,algoParams.getDIMENSIONS(), 
+                    false, algoParams.getRANGE_GRANULARITY(), algoParams.getMIN_BOUNDS(), algoParams.getMAX_BOUNDS(),algoParams.getTHRESH_MAX_BOUND()));
         }
 
         winner.calcAndUpdateErr(input,algoParams.getDIMENSIONS(),algoParams.getATTR_WEIGHTS(),algoParams.getDistType());
@@ -85,8 +86,8 @@ public class GSOMTrainer {
 
         for (int i = 0; i < 2; i++) {
             for (int j = 0; j < 2; j++) {
-                LNode initNode = new LNode(i, j, Utils.generateRandomArray(algoParams.getDIMENSIONS()));
-                nodeMap.put(Utils.generateIndexString(i, j), initNode);
+                LNode initNode = new LNode(i, j, AlgoUtils.generateRandomArray(algoParams.getDIMENSIONS()));
+                nodeMap.put(AlgoUtils.generateIndexString(i, j), initNode);
             }
         }
 
@@ -96,12 +97,12 @@ public class GSOMTrainer {
     private void adjustWinnerError(LNode winner) {
 
         //on x-axis
-        String nodeLeftStr = Utils.generateIndexString(winner.getX() - 1, winner.getY());
-        String nodeRightStr = Utils.generateIndexString(winner.getX() + 1, winner.getY());
+        String nodeLeftStr = AlgoUtils.generateIndexString(winner.getX() - 1, winner.getY());
+        String nodeRightStr = AlgoUtils.generateIndexString(winner.getX() + 1, winner.getY());
 
         //on y-axis
-        String nodeTopStr = Utils.generateIndexString(winner.getX(), winner.getY() + 1);
-        String nodeBottomStr = Utils.generateIndexString(winner.getX(), winner.getY());
+        String nodeTopStr = AlgoUtils.generateIndexString(winner.getX(), winner.getY() + 1);
+        String nodeBottomStr = AlgoUtils.generateIndexString(winner.getX(), winner.getY());
 
         if (nodeMap.containsKey(nodeLeftStr)
                 && nodeMap.containsKey(nodeRightStr)

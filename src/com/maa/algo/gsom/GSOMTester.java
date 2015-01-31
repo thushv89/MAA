@@ -2,7 +2,7 @@ package com.maa.algo.gsom;
 
 import com.maa.algo.objects.LNode;
 import com.maa.algo.utils.AlgoParameters;
-import com.maa.algo.utils.Utils;
+import com.maa.algo.utils.AlgoUtils;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,10 +19,10 @@ public class GSOMTester {
     public void testGSOM(Map<String,LNode> nodeMap,ArrayList<double[]> iWeights,ArrayList<String> iStrings){
         for(int i = 0; i<iWeights.size();i++){
             
-            LNode winner = Utils.selectLWinner(nodeMap, iWeights.get(i),algoParam.getDIMENSIONS(),algoParam.getATTR_WEIGHTS(),algoParam.getDistType());
+            LNode winner = AlgoUtils.selectLWinner(nodeMap, iWeights.get(i),algoParam.getDIMENSIONS(),algoParam.getATTR_WEIGHTS(),algoParam.getDistType());
             //System.out.println("Winner for "+iStrings.get(i)+" is "+winner.getX()+","+winner.getY());
             
-            String winnerStr = Utils.generateIndexString(winner.getX(), winner.getY());
+            String winnerStr = AlgoUtils.generateIndexString(winner.getX(), winner.getY());
             LNode winnerNode = nodeMap.get(winnerStr);
             winnerNode.setHitValue(winner.getHitValue()+1);
             
@@ -44,4 +44,5 @@ public class GSOMTester {
     public Map<String,String> getTestResultMap() {
         return testResultMap;
     }
+    
 }

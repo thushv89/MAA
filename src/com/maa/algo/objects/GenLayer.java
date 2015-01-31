@@ -4,7 +4,7 @@
  */
 package com.maa.algo.objects;
 
-import com.maa.algo.utils.Utils;
+import com.maa.algo.utils.AlgoUtils;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,7 +27,7 @@ public class GenLayer extends Layer implements Serializable{
     }
     
     public void addNode(GNode node){
-        getMap().put(Utils.generateIndexString(node.getLc(), node.getId()), node);
+        getMap().put(AlgoUtils.generateIndexString(node.getLc(), node.getId()), node);
     }
     
     public void addNodes(ArrayList<GNode> nodes){
@@ -37,7 +37,7 @@ public class GenLayer extends Layer implements Serializable{
     }
     
     public void removeNode(GNode node){
-        getMap().remove(Utils.generateIndexString(node.getLc(), node.getId()));
+        getMap().remove(AlgoUtils.generateIndexString(node.getLc(), node.getId()));
     }
 
     /**
